@@ -1,0 +1,122 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TuHame – Find, Move, Settle. Kenya's smartest housing platform for apartments, rentals, villas and BNBs." />
+  <title> {% block title %}{% endblock title %} TuHame – Find. Move. Settle.</title>
+  <link rel="stylesheet" href="{% static "assets/css/style.css" %}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+</head>
+<body>
+
+<!-- ─── NAVBAR ─── -->
+<nav class="navbar transparent">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🏠</div>
+      TuHame
+    </a>
+    <ul class="nav-menu">
+      <li><a href="index.html" class="nav-link active">Home</a></li>
+      <li><a href="properties.html" class="nav-link">Properties</a></li>
+      <li><a href="map.html" class="nav-link">Map Search</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
+      <a href="login.html" class="nav-btn-login">Login</a>
+      <a href="register.html" class="nav-btn-register">Register</a>
+    </div>
+    <button class="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu">
+  <a href="index.html">🏠 Home</a>
+  <a href="properties.html">🏘 Properties</a>
+  <a href="map.html">🗺 Map Search</a>
+  <a href="profile.html">👤 Profile</a>
+  <div class="mobile-actions">
+    <a href="login.html" class="btn btn-outline-dark btn-sm">Login</a>
+    <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+  </div>
+</div>
+
+{% block content %}{% endblock content %}
+
+<!-- ─── FOOTER ─── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-logo">
+          <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
+          TuHame
+        </div>
+        <div class="footer-tagline">Find • Move • Settle</div>
+        <p class="footer-desc">Kenya's smartest housing platform. Discover, compare, and move into your perfect home with ease and confidence.</p>
+        <div class="footer-social">
+          <a href="#" title="Facebook">📘</a>
+          <a href="#" title="Twitter/X">🐦</a>
+          <a href="#" title="Instagram">📸</a>
+          <a href="#" title="LinkedIn">💼</a>
+          <a href="#" title="YouTube">▶️</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-heading">Quick Links</div>
+        <ul class="footer-links">
+          <li><a href="index.html">→ Home</a></li>
+          <li><a href="properties.html">→ Properties</a></li>
+          <li><a href="map.html">→ Map Search</a></li>
+          <li><a href="profile.html">→ My Dashboard</a></li>
+          <li><a href="#">→ Post a Property</a></li>
+          <li><a href="#">→ Move Cost Calculator</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Support</div>
+        <ul class="footer-links">
+          <li><a href="#">→ Help Center</a></li>
+          <li><a href="#">→ Safety Tips</a></li>
+          <li><a href="#">→ Report an Issue</a></li>
+          <li><a href="#">→ Privacy Policy</a></li>
+          <li><a href="#">→ Terms of Service</a></li>
+          <li><a href="#">→ Sitemap</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Contact Us</div>
+        <ul class="footer-links" style="margin-bottom:1.25rem;">
+          <li><a href="#">📍 Nairobi, Kenya</a></li>
+          <li><a href="tel:+254700000000">📞 +254 700 000 000</a></li>
+          <li><a href="mailto:hello@tuhame.co.ke">✉️ hello@tuhame.co.ke</a></li>
+        </ul>
+        <div class="footer-heading">Newsletter</div>
+        <p style="font-size:0.85rem;margin-bottom:0.5rem;">Get new listings & housing tips weekly.</p>
+        <div class="footer-newsletter-form">
+          <input type="email" class="footer-newsletter-input" placeholder="Your email" />
+          <button class="btn btn-primary btn-sm">Join</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 TuHame. All rights reserved. Powered by <strong style="color:var(--primary);">BlackCodeLabs</strong></p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="{% static "assets/js/main.js" %}"></script>
+</body>
+</html>
