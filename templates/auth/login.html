@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In – TuHame</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .auth-left {
+      background-image: url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1000&auto=format&fit=crop&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .feature-pill {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius-full); padding: 0.4rem 0.9rem;
+      font-size: 0.82rem; color: rgba(255,255,255,0.9); margin-bottom: 0.5rem;
+      margin-right: 0.4rem;
+    }
+    .password-toggle {
+      position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+      cursor: pointer; color: var(--gray-400); font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-layout">
+
+  <!-- Left: Image + Brand -->
+  <div class="auth-left">
+    <div class="auth-left-overlay">
+      <div style="margin-bottom:auto;padding-top:2rem;">
+        <a href="index.html" style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;">
+          <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
+          TuHame
+        </a>
+      </div>
+      <div>
+        <h2>Find your perfect home in Kenya</h2>
+        <p>Join 8,200+ happy tenants who found their home on TuHame</p>
+        <div style="margin-top:1.5rem;">
+          <span class="feature-pill">✅ Verified Listings</span>
+          <span class="feature-pill">📍 Interactive Maps</span>
+          <span class="feature-pill">🏅 Move Score™</span>
+          <span class="feature-pill">💳 Rent Tracking</span>
+          <span class="feature-pill">📱 Digital QR ID</span>
+        </div>
+        <!-- Testimonial -->
+        <div style="margin-top:2rem;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:var(--radius-lg);padding:1.25rem;border:1px solid rgba(255,255,255,0.2);">
+          <div style="display:flex;gap:0.75rem;align-items:center;margin-bottom:0.75rem;">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" alt="" />
+            <div>
+              <div style="font-weight:700;color:#fff;font-size:0.9rem;">Wanjiru Njoroge</div>
+              <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);">Found her Kilimani home via TuHame</div>
+            </div>
+          </div>
+          <p style="font-size:0.875rem;color:rgba(255,255,255,0.85);line-height:1.6;">"TuHame made moving so much easier. I found my apartment in 3 days, everything was transparent, and the QR ID feature is genius!"</p>
+          <div style="color:var(--warning);margin-top:0.5rem;">⭐⭐⭐⭐⭐</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Form -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-logo">
+        <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
+        TuHame
+      </div>
+
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-subtitle">Sign in to your TuHame account</p>
+
+      <!-- Social Login -->
+      <div class="social-btns" style="margin-bottom:1.5rem;">
+        <button class="social-btn" onclick="socialLogin('Google')">
+          <span style="font-size:1.1rem;">🌐</span> Continue with Google
+        </button>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="social-btn" style="flex:1;" onclick="socialLogin('Facebook')">
+            <span style="font-size:1.1rem;">📘</span> Facebook
+          </button>
+          <button class="social-btn" style="flex:1;" onclick="socialLogin('Apple')">
+            <span style="font-size:1.1rem;">🍎</span> Apple
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-divider"><span>or sign in with email</span></div>
+
+      <form id="login-form" style="margin-top:1.5rem;">
+        <div class="form-group">
+          <label class="form-label" for="email">Email address</label>
+          <div class="form-input-icon">
+            <span class="icon">✉️</span>
+            <input type="email" id="email" class="form-input" placeholder="you@email.com" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="form-input-icon" style="position:relative;">
+            <span class="icon">🔒</span>
+            <input type="password" id="password" class="form-input" placeholder="Enter your password" required style="padding-right:3rem;" />
+            <span class="password-toggle" onclick="togglePwd(this)">👁</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+          <label class="form-checkbox">
+            <input type="checkbox" /> Remember me
+          </label>
+          <a href="#" class="form-forgot">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+          Sign In →
+        </button>
+      </form>
+
+      <div class="auth-link">
+        Don't have an account? <a href="register.html">Create one free →</a>
+      </div>
+
+      <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--gray-200);text-align:center;">
+        <div style="font-size:0.78rem;color:var(--gray-400);">
+          🔒 Secured with 256-bit SSL encryption<br />
+          <span style="margin-top:0.25rem;display:block;">By signing in you agree to our <a href="#" style="color:var(--primary);">Terms</a> & <a href="#" style="color:var(--primary);">Privacy Policy</a></span>
+        </div>
+      </div>
+
+      <!-- Dark mode toggle -->
+      <div style="text-align:center;margin-top:1rem;">
+        <button class="dark-toggle" style="background:var(--gray-100);border-radius:var(--radius-full);padding:0.4rem 1rem;font-size:0.85rem;color:var(--gray-600);">🌙 Toggle Dark Mode</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/main.js"></script>
+<script>
+  function togglePwd(el) {
+    const input = el.previousElementSibling;
+    if (input.type === 'password') { input.type = 'text'; el.textContent = '🙈'; }
+    else { input.type = 'password'; el.textContent = '👁'; }
+  }
+  function socialLogin(provider) {
+    let c = document.querySelector('.toast-container');
+    if (!c) { c = document.createElement('div'); c.className = 'toast-container'; document.body.appendChild(c); }
+    const t = document.createElement('div'); t.className = 'toast';
+    t.innerHTML = `<span class="toast-icon">🔐</span><span>Connecting with ${provider}…</span>`;
+    c.appendChild(t);
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); window.location.href = 'profile.html'; }, 1500);
+  }
+</script>
+</body>
+</html>

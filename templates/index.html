@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TuHame – Find, Move, Settle. Kenya's smartest housing platform for apartments, rentals, villas and BNBs." />
+  <title>TuHame – Find. Move. Settle.</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+</head>
+<body>
+
+<!-- ─── NAVBAR ─── -->
+<nav class="navbar transparent">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🏠</div>
+      TuHame
+    </a>
+    <ul class="nav-menu">
+      <li><a href="index.html" class="nav-link active">Home</a></li>
+      <li><a href="properties.html" class="nav-link">Properties</a></li>
+      <li><a href="map.html" class="nav-link">Map Search</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
+      <a href="login.html" class="nav-btn-login">Login</a>
+      <a href="register.html" class="nav-btn-register">Register</a>
+    </div>
+    <button class="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu">
+  <a href="index.html">🏠 Home</a>
+  <a href="properties.html">🏘 Properties</a>
+  <a href="map.html">🗺 Map Search</a>
+  <a href="profile.html">👤 Profile</a>
+  <div class="mobile-actions">
+    <a href="login.html" class="btn btn-outline-dark btn-sm">Login</a>
+    <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+  </div>
+</div>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-carousel">
+    <!-- Slide 1 -->
+    <div class="hero-slide active">
+      <div class="hero-bg" style="background: linear-gradient(135deg, #1a3a6b 0%, #2563EB 50%, #0a192f 100%); width:100%; height:100%; position:absolute; inset:0;">
+        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;opacity:0.45;"></div>
+      </div>
+      <div class="hero-overlay"></div>
+    </div>
+    <!-- Slide 2 -->
+    <div class="hero-slide">
+      <div class="hero-bg" style="position:absolute;inset:0;">
+        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+      </div>
+      <div class="hero-overlay"></div>
+    </div>
+    <!-- Slide 3 -->
+    <div class="hero-slide">
+      <div class="hero-bg" style="position:absolute;inset:0;">
+        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+      </div>
+      <div class="hero-overlay"></div>
+    </div>
+    <!-- Slide 4 -->
+    <div class="hero-slide">
+      <div class="hero-bg" style="position:absolute;inset:0;">
+        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+      </div>
+      <div class="hero-overlay"></div>
+    </div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span>🏆</span> Kenya's #1 Smart Housing Platform
+    </div>
+    <h1 class="hero-title">Find Your Next <em>Home</em> With Ease</h1>
+    <p class="hero-subtitle">Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast.</p>
+
+    <!-- Search Bar -->
+    <div class="hero-search">
+      <span class="hero-search-icon">🔍</span>
+      <input class="hero-search-input live-search" type="text" placeholder="Search by location, property name…" />
+      <div class="hero-search-divider"></div>
+      <select class="hero-search-select">
+        <option>All Types</option>
+        <option>Apartment</option>
+        <option>Villa</option>
+        <option>BnB</option>
+        <option>Rental</option>
+        <option>Commercial</option>
+      </select>
+      <div class="hero-search-divider"></div>
+      <a href="properties.html" class="btn btn-primary btn-sm">Search</a>
+    </div>
+
+    <div class="hero-buttons">
+      <a href="properties.html" class="btn btn-primary btn-lg">🏘 Explore Properties</a>
+      <a href="map.html" class="btn btn-outline btn-lg">🗺 View Map</a>
+    </div>
+  </div>
+
+  <div class="hero-dots">
+    <span class="hero-dot active"></span>
+    <span class="hero-dot"></span>
+    <span class="hero-dot"></span>
+    <span class="hero-dot"></span>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num" data-target="12500" data-suffix="+">0</div>
+      <div class="hero-stat-label">Properties</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" data-target="8200" data-suffix="+">0</div>
+      <div class="hero-stat-label">Happy Tenants</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" data-target="47">0</div>
+      <div class="hero-stat-label">Cities</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CATEGORIES ─── -->
+<section class="section" style="background:var(--light-bg);">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Browse by Category</h2>
+      <p class="section-subtitle">Find exactly the type of home you're looking for</p>
+    </div>
+    <div class="categories-grid">
+      <a href="properties.html?type=apartment" class="category-card fade-up">
+        <span class="category-icon">🏠</span>
+        <div class="category-name">Apartments</div>
+        <div class="category-count">4,230 listings</div>
+      </a>
+      <a href="properties.html?type=rental" class="category-card fade-up">
+        <span class="category-icon">🏡</span>
+        <div class="category-name">Rentals</div>
+        <div class="category-count">3,180 listings</div>
+      </a>
+      <a href="properties.html?type=villa" class="category-card fade-up">
+        <span class="category-icon">🏘</span>
+        <div class="category-name">Villas</div>
+        <div class="category-count">1,090 listings</div>
+      </a>
+      <a href="properties.html?type=bnb" class="category-card fade-up">
+        <span class="category-icon">🛏</span>
+        <div class="category-name">BnBs</div>
+        <div class="category-count">2,560 listings</div>
+      </a>
+      <a href="properties.html?type=commercial" class="category-card fade-up">
+        <span class="category-icon">🏢</span>
+        <div class="category-name">Commercial</div>
+        <div class="category-count">1,440 listings</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── WHY TUHAME ─── -->
+<section class="section features-bg">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title" style="color:#fff;">Why Choose TuHame?</h2>
+      <p class="section-subtitle" style="color:rgba(255,255,255,0.65);">Everything you need to find, move, and settle into your perfect home</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="feature-icon">✅</div>
+        <div class="feature-title">Verified Properties</div>
+        <div class="feature-desc">Every listing is verified by our team to ensure accuracy, safety, and legitimacy before it appears on the platform.</div>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">📞</div>
+        <div class="feature-title">Direct Landlord Contacts</div>
+        <div class="feature-desc">Connect directly with property owners via call, WhatsApp or email — zero middlemen, zero extra fees.</div>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-title">Smart Location Search</div>
+        <div class="feature-desc">Our AI-powered search understands neighbourhoods, distance, and lifestyle fit to show you the most relevant homes.</div>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">🗺</div>
+        <div class="feature-title">Interactive Maps</div>
+        <div class="feature-desc">Explore properties on a live map with custom markers, radius search, and real-time availability filters.</div>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Secure Communication</div>
+        <div class="feature-desc">End-to-end encrypted chats, secure document sharing, and a safe environment for every conversation.</div>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Real-time Availability</div>
+        <div class="feature-desc">Live availability updates so you never waste time pursuing a property that's already been taken.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURED LISTINGS ─── -->
+<section class="section" style="background:var(--light-bg);">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Featured Listings</h2>
+      <p class="section-subtitle">Hand-picked properties with exceptional value and quality</p>
+    </div>
+    <div class="properties-grid">
+
+      <!-- Card 1 -->
+      <div class="property-card fade-up" data-name="Kilimani Heights" data-location="Kilimani, Nairobi">
+        <div class="property-img-wrap">
+          <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+          <div class="property-badge featured">Featured</div>
+          <div class="property-save" data-id="prop-1">🤍</div>
+          <div class="property-move-score">🏅 Move Score: <span class="score-val">91</span></div>
+        </div>
+        <div class="property-body">
+          <div class="property-name">Kilimani Heights Apartment</div>
+          <div class="property-location">📍 Kilimani, Nairobi</div>
+          <div class="property-meta">
+            <div class="property-meta-item">🛏 3 Beds</div>
+            <div class="property-meta-item">🚿 2 Baths</div>
+            <div class="property-meta-item">📐 125 m²</div>
+          </div>
+          <div class="property-footer">
+            <div class="property-price">KES 85,000 <span>/month</span></div>
+            <div class="property-rating"><span class="rating-star">⭐</span> 4.8 (42)</div>
+          </div>
+        </div>
+        <div style="padding:0 1.25rem 1.25rem;">
+          <a href="property_detail.html" class="btn btn-primary" style="width:100%;justify-content:center;">View Details</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="property-card fade-up" data-name="Karen Garden Villa" data-location="Karen, Nairobi">
+        <div class="property-img-wrap">
+          <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+          <div class="property-badge new">New</div>
+          <div class="property-save" data-id="prop-2">🤍</div>
+          <div class="property-move-score">🏅 Move Score: <span class="score-val">88</span></div>
+        </div>
+        <div class="property-body">
+          <div class="property-name">Karen Garden Villa</div>
+          <div class="property-location">📍 Karen, Nairobi</div>
+          <div class="property-meta">
+            <div class="property-meta-item">🛏 4 Beds</div>
+            <div class="property-meta-item">🚿 3 Baths</div>
+            <div class="property-meta-item">📐 280 m²</div>
+          </div>
+          <div class="property-footer">
+            <div class="property-price">KES 180,000 <span>/month</span></div>
+            <div class="property-rating"><span class="rating-star">⭐</span> 4.9 (17)</div>
+          </div>
+        </div>
+        <div style="padding:0 1.25rem 1.25rem;">
+          <a href="property_detail.html" class="btn btn-primary" style="width:100%;justify-content:center;">View Details</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="property-card fade-up" data-name="Westlands Studio" data-location="Westlands, Nairobi">
+        <div class="property-img-wrap">
+          <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+          <div class="property-badge" style="background:var(--info);">BnB</div>
+          <div class="property-save" data-id="prop-3">🤍</div>
+          <div class="property-move-score">🏅 Move Score: <span class="score-val">79</span></div>
+        </div>
+        <div class="property-body">
+          <div class="property-name">Westlands Studio Loft</div>
+          <div class="property-location">📍 Westlands, Nairobi</div>
+          <div class="property-meta">
+            <div class="property-meta-item">🛏 1 Bed</div>
+            <div class="property-meta-item">🚿 1 Bath</div>
+            <div class="property-meta-item">📐 48 m²</div>
+          </div>
+          <div class="property-footer">
+            <div class="property-price">KES 35,000 <span>/month</span></div>
+            <div class="property-rating"><span class="rating-star">⭐</span> 4.6 (88)</div>
+          </div>
+        </div>
+        <div style="padding:0 1.25rem 1.25rem;">
+          <a href="property_detail.html" class="btn btn-primary" style="width:100%;justify-content:center;">View Details</a>
+        </div>
+      </div>
+
+    </div>
+    <div style="text-align:center;margin-top:2.5rem;">
+      <a href="properties.html" class="btn btn-outline-dark btn-lg">View All Properties →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── MOVE SCORE ─── -->
+<section class="section" style="background:var(--white);">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
+      <div>
+        <div class="badge badge-primary" style="margin-bottom:1rem;">🏅 Exclusive Feature</div>
+        <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">TuHame Move Score™</h2>
+        <p style="color:var(--gray-500);margin-bottom:1.5rem;line-height:1.7;">Every property receives a comprehensive score that helps you quickly understand how good a move it really is — before you even visit.</p>
+        <div style="display:flex;flex-direction:column;gap:0.875rem;">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(37,99,235,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🛡</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Safety Score</strong><p style="font-size:0.82rem;color:var(--gray-400);">Neighbourhood security, lighting, crime rates</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(34,197,94,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🚌</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Transport Access</strong><p style="font-size:0.82rem;color:var(--gray-400);">Proximity to bus stops, matatus, expressways</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(245,158,11,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🏪</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Nearby Amenities</strong><p style="font-size:0.82rem;color:var(--gray-400);">Schools, hospitals, supermarkets, banks</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(239,68,68,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">💰</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Cost & Value</strong><p style="font-size:0.82rem;color:var(--gray-400);">Price vs. market average, utilities included</p></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="move-score-card">
+          <div class="move-score-title">🏅 TuHame Move Score™ — Kilimani Heights</div>
+          <div class="move-score-main">
+            <div class="move-score-circle"><span class="move-score-num">91</span></div>
+            <div class="move-score-bars">
+              <div class="score-bar-item">
+                <span class="score-bar-label">Safety</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="94%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">94%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Accessibility</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="88%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">88%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Cost Value</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="82%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">82%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Amenities</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="96%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">96%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Transport</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="90%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">90%</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:1rem;background:rgba(255,255,255,0.05);border-radius:10px;text-align:center;">
+            <div style="color:var(--accent);font-weight:800;font-size:1.1rem;">Excellent Move ✨</div>
+            <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:0.25rem;">Top 8% of properties in Nairobi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ─── -->
+<section class="cta-section">
+  <div class="container cta-content">
+    <h2 class="cta-title">Ready To Move?</h2>
+    <p class="cta-subtitle">Thousands of verified homes are waiting for you. Start your search today and move in as soon as next week.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="properties.html" class="btn btn-accent btn-lg">🏠 Find Your New Home</a>
+      <a href="register.html" class="btn btn-glass btn-lg">Create Free Account</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-logo">
+          <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
+          TuHame
+        </div>
+        <div class="footer-tagline">Find • Move • Settle</div>
+        <p class="footer-desc">Kenya's smartest housing platform. Discover, compare, and move into your perfect home with ease and confidence.</p>
+        <div class="footer-social">
+          <a href="#" title="Facebook">📘</a>
+          <a href="#" title="Twitter/X">🐦</a>
+          <a href="#" title="Instagram">📸</a>
+          <a href="#" title="LinkedIn">💼</a>
+          <a href="#" title="YouTube">▶️</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-heading">Quick Links</div>
+        <ul class="footer-links">
+          <li><a href="index.html">→ Home</a></li>
+          <li><a href="properties.html">→ Properties</a></li>
+          <li><a href="map.html">→ Map Search</a></li>
+          <li><a href="profile.html">→ My Dashboard</a></li>
+          <li><a href="#">→ Post a Property</a></li>
+          <li><a href="#">→ Move Cost Calculator</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Support</div>
+        <ul class="footer-links">
+          <li><a href="#">→ Help Center</a></li>
+          <li><a href="#">→ Safety Tips</a></li>
+          <li><a href="#">→ Report an Issue</a></li>
+          <li><a href="#">→ Privacy Policy</a></li>
+          <li><a href="#">→ Terms of Service</a></li>
+          <li><a href="#">→ Sitemap</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Contact Us</div>
+        <ul class="footer-links" style="margin-bottom:1.25rem;">
+          <li><a href="#">📍 Nairobi, Kenya</a></li>
+          <li><a href="tel:+254700000000">📞 +254 700 000 000</a></li>
+          <li><a href="mailto:hello@tuhame.co.ke">✉️ hello@tuhame.co.ke</a></li>
+        </ul>
+        <div class="footer-heading">Newsletter</div>
+        <p style="font-size:0.85rem;margin-bottom:0.5rem;">Get new listings & housing tips weekly.</p>
+        <div class="footer-newsletter-form">
+          <input type="email" class="footer-newsletter-input" placeholder="Your email" />
+          <button class="btn btn-primary btn-sm">Join</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 TuHame. All rights reserved. Powered by <strong style="color:var(--primary);">BlackCodeLabs</strong></p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
