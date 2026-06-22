@@ -1,42 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kilimani Heights Apartment – TuHame</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body>
+{% extends "home/base.html" %}
 
-<nav class="navbar scrolled">
-  <div class="nav-container">
-    <a href="index.html" class="nav-logo" style="color:var(--primary);">
-      <div class="nav-logo-icon">🏠</div>TuHame
-    </a>
-    <ul class="nav-menu">
-      <li><a href="index.html" class="nav-link">Home</a></li>
-      <li><a href="properties.html" class="nav-link active">Properties</a></li>
-      <li><a href="map.html" class="nav-link">Map Search</a></li>
-    </ul>
-    <div class="nav-actions">
-      <button class="dark-toggle">🌙</button>
-      <a href="login.html" class="nav-btn-login">Login</a>
-      <a href="register.html" class="nav-btn-register">Register</a>
-    </div>
-    <button class="hamburger"><span></span><span></span><span></span></button>
-  </div>
-</nav>
-<div class="mobile-menu">
-  <a href="index.html">🏠 Home</a>
-  <a href="properties.html">🏘 Properties</a>
-  <a href="map.html">🗺 Map Search</a>
-  <div class="mobile-actions">
-    <a href="login.html" class="btn btn-outline-dark btn-sm">Login</a>
-    <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+{% block title %}Available Properties on Sale{% endblock title %}
+
+{% block content %}
+
+{% comment %} <div style="padding-top:var(--nav-height);"></div> {% endcomment %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>🏘 About <b>{{ property.title }}</b></h1>
+    <p>Explore your next home</p>
   </div>
 </div>
-
-<div style="padding-top:var(--nav-height);"></div>
 
 <div class="container" style="padding-top:2rem;">
   <!-- Breadcrumb -->
@@ -72,7 +47,7 @@
       <div class="detail-header">
         <div>
           <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">
-            <span class="badge badge-primary">🏠 Apartment</span>
+            <span class="badge badge-primary">🏠 {{ property.property_type }}</span>
             <span class="badge badge-accent">✅ Available</span>
             <span class="badge" style="background:rgba(37,99,235,0.08);color:var(--primary);">Featured</span>
           </div>
@@ -83,7 +58,7 @@
           </div>
         </div>
         <div>
-          <div class="detail-price">KES 85,000<span>/month</span></div>
+          <div class="detail-price">KES {{ property.price }}<span>/month</span></div>
           <div style="display:flex;align-items:center;gap:0.35rem;justify-content:flex-end;margin-top:0.5rem;">
             <span style="color:var(--warning);">⭐⭐⭐⭐⭐</span>
             <span style="font-size:0.85rem;color:var(--gray-500);">4.8 (42 reviews)</span>
@@ -93,10 +68,10 @@
 
       <!-- Meta -->
       <div class="detail-meta">
-        <div class="detail-meta-item">🛏 <strong>3</strong> Bedrooms</div>
-        <div class="detail-meta-item">🚿 <strong>2</strong> Bathrooms</div>
-        <div class="detail-meta-item">📐 <strong>125 m²</strong></div>
-        <div class="detail-meta-item">🏢 Floor <strong>7 of 12</strong></div>
+        <div class="detail-meta-item">🛏 <strong>{{ property.bedrooms }}</strong> Bedrooms</div>
+        <div class="detail-meta-item">🚿 <strong>{{ property.bathrooms }}</strong> Bathrooms</div>
+        <div class="detail-meta-item">📐 <strong>{{ property.area_sqft }} m²</strong></div>
+        <div class="detail-meta-item">🏢 Floor <strong>{{ property.floor_number }} of {{ property.total_floors }}</strong></div>
         <div class="detail-meta-item">🚗 <strong>2</strong> Parking</div>
         <div class="detail-meta-item">📅 Available <strong>Now</strong></div>
       </div>
@@ -287,7 +262,7 @@
         <div class="contact-landlord">
           <img class="landlord-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80" alt="John Mwangi" />
           <div>
-            <div class="landlord-name">John Mwangi</div>
+            <div class="landlord-name">{{ property.owner }}</div>
             <div class="landlord-role">Property Owner</div>
             <div class="landlord-badge">✅ Verified Landlord</div>
           </div>
@@ -425,32 +400,4 @@
   </div>
 </div>
 
-<footer class="footer">
-  <div class="container">
-    <div class="footer-bottom">
-      <p>© 2025 TuHame. All rights reserved. Powered by <strong style="color:var(--primary);">BlackCodeLabs</strong></p>
-      <div class="footer-bottom-links">
-        <a href="index.html">Home</a>
-        <a href="properties.html">Properties</a>
-        <a href="map.html">Map</a>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<script src="assets/js/main.js"></script>
-<script>
-  function showToast(msg, icon) {
-    // Expose for inline onclick handlers before main.js re-defines
-    let c = document.querySelector('.toast-container');
-    if (!c) { c = document.createElement('div'); c.className = 'toast-container'; document.body.appendChild(c); }
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.innerHTML = `<span class="toast-icon">${icon}</span><span>${msg}</span>`;
-    c.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
-  }
-</script>
-</body>
-</html>
+{% endblock content %}

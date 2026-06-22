@@ -1,0 +1,171 @@
+{% extends "home/base.html" %}
+
+{% block title %}Properties Listing{% endblock title %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>🏘 Browse Properties</h1>
+    <p>Explore 12,500+ verified homes across Kenya</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top: 0;">
+  <div class="properties-layout" style="padding-top: 2.5rem; padding-bottom: 3rem;">
+
+    <!-- Sidebar Filters -->
+    <aside class="filter-sidebar">
+      <div class="filter-title">
+        Filters
+        <span class="filter-clear" onclick="document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'))">Clear All</span>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">📍 Location</div>
+        <input type="text" class="filter-input" placeholder="City, area or postcode…" />
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">🏠 Property Type</div>
+        <div class="filter-chips">
+          <span class="filter-chip active">All</span>
+          <span class="filter-chip">Apartment</span>
+          <span class="filter-chip">Villa</span>
+          <span class="filter-chip">Rental</span>
+          <span class="filter-chip">BnB</span>
+          <span class="filter-chip">Commercial</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">💰 Price Range (KES/month)</div>
+        <div class="price-range-wrap">
+          <input type="range" id="price-slider" min="5000" max="500000" value="200000" step="5000" />
+          <div style="text-align:right;font-size:0.82rem;color:var(--gray-400);margin-top:0.5rem;">Up to: <strong id="price-display" style="color:var(--primary);">KES 200,000</strong></div>
+        </div>
+        <div class="price-range-inputs">
+          <input type="number" placeholder="Min" />
+          <span style="color:var(--gray-300);">—</span>
+          <input type="number" placeholder="Max" />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">🛏 Bedrooms</div>
+        <div class="filter-chips">
+          <span class="filter-chip">Any</span>
+          <span class="filter-chip">Studio</span>
+          <span class="filter-chip">1</span>
+          <span class="filter-chip">2</span>
+          <span class="filter-chip">3</span>
+          <span class="filter-chip">4+</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">🚿 Bathrooms</div>
+        <div class="filter-chips">
+          <span class="filter-chip">Any</span>
+          <span class="filter-chip">1</span>
+          <span class="filter-chip">2</span>
+          <span class="filter-chip">3+</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">✅ Availability</div>
+        <div class="filter-chips">
+          <span class="filter-chip active">Available</span>
+          <span class="filter-chip">Coming Soon</span>
+          <span class="filter-chip">All</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">✨ Amenities</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--gray-600);cursor:pointer;"><input type="checkbox" style="accent-color:var(--primary);"> WiFi</label>
+          <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--gray-600);cursor:pointer;"><input type="checkbox" style="accent-color:var(--primary);"> Parking</label>
+          <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--gray-600);cursor:pointer;"><input type="checkbox" style="accent-color:var(--primary);"> Pool</label>
+          <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--gray-600);cursor:pointer;"><input type="checkbox" style="accent-color:var(--primary);"> Gym</label>
+          <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--gray-600);cursor:pointer;"><input type="checkbox" style="accent-color:var(--primary);"> Pet Friendly</label>
+          <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--gray-600);cursor:pointer;"><input type="checkbox" style="accent-color:var(--primary);"> Security</label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;">Apply Filters</button>
+    </aside>
+
+    <!-- Main Listing -->
+    <div>
+      <div class="properties-header">
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:0.25rem;">Properties in Nairobi</h3>
+          <div class="properties-count">Showing 1–12 of 4,230 results</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+          <select class="sort-select">
+            <option>Sort: Newest</option>
+            <option>Lowest Price</option>
+            <option>Highest Price</option>
+            <option>Nearest</option>
+            <option>Most Popular</option>
+          </select>
+          <div class="view-toggles">
+            <div class="view-toggle active" data-view="grid" title="Grid view">⊞</div>
+            <div class="view-toggle" data-view="list" title="List view">☰</div>
+          </div>
+          <a href="map.html" class="btn btn-outline-dark btn-sm">🗺 Map View</a>
+        </div>
+      </div>
+
+      <div class="properties-grid">
+
+        <!-- Property Cards (12 total) -->
+        <!-- 1 -->
+         {% for property in properties %}
+         <div class="property-card fade-up" data-name="Kilimani Heights" data-location="Kilimani, Nairobi">
+          <div class="property-img-wrap">
+            <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+            <div class="property-badge featured">Featured</div>
+            <div class="property-save" data-id="prop-1">🤍</div>
+            <div class="property-move-score">🏅 <span class="score-val">91</span></div>
+          </div>
+          <div class="property-body">
+            <div class="property-name">{{ property.title }}</div>
+            <div class="property-location">📍 {{ property.country }}, {{ property.city }}</div>
+            <div class="property-meta">
+              <div class="property-meta-item">🛏 {{ property.bedrooms }}</div>
+              <div class="property-meta-item">🚿 {{ property.bathrooms }}</div>
+              <div class="property-meta-item">📐 {{ property.area_sqft }} m²</div>
+            </div>
+            <div class="property-footer">
+              <div class="property-price">KES {{ property.price }} <span>/mo</span></div>
+              <div class="property-rating"><span class="rating-star">⭐</span>4.8</div>
+            </div>
+          </div>
+          <div style="padding:0 1.25rem 1.25rem;display:flex;gap:0.5rem;">
+            <a href="{% url "home:about_property" property.slug %}" class="btn btn-primary btn-sm" style="flex:1;justify-content:center;">View</a>
+            <button class="btn btn-sm property-save" data-id="prop-1" style="border:1.5px solid var(--gray-200);border-radius:var(--radius-full);color:var(--gray-500);">🤍</button>
+          </div>
+        </div>
+         {% endfor %}
+
+      </div><!-- /properties-grid -->
+
+      <!-- Pagination -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--gray-200);">
+        <button class="btn btn-sm" style="border:1.5px solid var(--gray-200);border-radius:var(--radius);">← Prev</button>
+        <button class="btn btn-sm" style="background:var(--primary);color:#fff;border-radius:var(--radius);">1</button>
+        <button class="btn btn-sm" style="border:1.5px solid var(--gray-200);border-radius:var(--radius);">2</button>
+        <button class="btn btn-sm" style="border:1.5px solid var(--gray-200);border-radius:var(--radius);">3</button>
+        <span style="color:var(--gray-400);padding:0 0.25rem;">…</span>
+        <button class="btn btn-sm" style="border:1.5px solid var(--gray-200);border-radius:var(--radius);">48</button>
+        <button class="btn btn-sm" style="border:1.5px solid var(--gray-200);border-radius:var(--radius);">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
