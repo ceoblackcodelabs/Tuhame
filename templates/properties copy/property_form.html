@@ -1,0 +1,448 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<div class="main-panel">
+    <div class="content-wrapper">
+
+    {% comment %} stats {% endcomment %}
+    <div class="row">
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                    <h3 class="mb-0">$12.34</h3>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+3.5%</p>
+                </div>
+                </div>
+                <div class="col-3">
+                <div class="icon icon-box-success ">
+                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                </div>
+                </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Potential growth</h6>
+            </div>
+        </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                    <h3 class="mb-0">$17.34</h3>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+11%</p>
+                </div>
+                </div>
+                <div class="col-3">
+                <div class="icon icon-box-success">
+                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                </div>
+                </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Revenue current</h6>
+            </div>
+        </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                    <h3 class="mb-0">$12.34</h3>
+                    <p class="text-danger ms-2 mb-0 font-weight-medium">-2.4%</p>
+                </div>
+                </div>
+                <div class="col-3">
+                <div class="icon icon-box-danger">
+                    <span class="mdi mdi-arrow-bottom-left icon-item"></span>
+                </div>
+                </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Daily Income</h6>
+            </div>
+        </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                    <h3 class="mb-0">$31.53</h3>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+3.5%</p>
+                </div>
+                </div>
+                <div class="col-3">
+                <div class="icon icon-box-success ">
+                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                </div>
+                </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Expense current</h6>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {% comment %} add properties {% endcomment %}
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Add New Property</h4>
+                    <p class="card-description">Fill in the details to add a new property to the system</p>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form class="forms-sample" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.title.id_for_label }}">Property Title <span class="text-danger">*</span></label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <small class="text-danger">{{ form.title.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.property_type.id_for_label }}">Property Type <span class="text-danger">*</span></label>
+                                    {{ form.property_type }}
+                                    {% if form.property_type.errors %}
+                                        <small class="text-danger">{{ form.property_type.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.status.id_for_label }}">Status <span class="text-danger">*</span></label>
+                                    {{ form.status }}
+                                    {% if form.status.errors %}
+                                        <small class="text-danger">{{ form.status.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ form.address.id_for_label }}">Address <span class="text-danger">*</span></label>
+                                    {{ form.address }}
+                                    {% if form.address.errors %}
+                                        <small class="text-danger">{{ form.address.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.city.id_for_label }}">City <span class="text-danger">*</span></label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                        <small class="text-danger">{{ form.city.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.state.id_for_label }}">State <span class="text-danger">*</span></label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                        <small class="text-danger">{{ form.state.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.zip_code.id_for_label }}">ZIP Code <span class="text-danger">*</span></label>
+                                    {{ form.zip_code }}
+                                    {% if form.zip_code.errors %}
+                                        <small class="text-danger">{{ form.zip_code.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.country.id_for_label }}">Country</label>
+                                    {{ form.country }}
+                                    {% if form.country.errors %}
+                                        <small class="text-danger">{{ form.country.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ form.description.id_for_label }}">Description <span class="text-danger">*</span></label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <small class="text-danger">{{ form.description.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.area_sqft.id_for_label }}">Area (sq ft) <span class="text-danger">*</span></label>
+                                    {{ form.area_sqft }}
+                                    {% if form.area_sqft.errors %}
+                                        <small class="text-danger">{{ form.area_sqft.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.bedrooms.id_for_label }}">Bedrooms</label>
+                                    {{ form.bedrooms }}
+                                    {% if form.bedrooms.errors %}
+                                        <small class="text-danger">{{ form.bedrooms.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.bathrooms.id_for_label }}">Bathrooms</label>
+                                    {{ form.bathrooms }}
+                                    {% if form.bathrooms.errors %}
+                                        <small class="text-danger">{{ form.bathrooms.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.year_built.id_for_label }}">Year Built</label>
+                                    {{ form.year_built }}
+                                    {% if form.year_built.errors %}
+                                        <small class="text-danger">{{ form.year_built.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.floor_number.id_for_label }}">Floor Number</label>
+                                    {{ form.floor_number }}
+                                    {% if form.floor_number.errors %}
+                                        <small class="text-danger">{{ form.floor_number.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.total_floors.id_for_label }}">Total Floors</label>
+                                    {{ form.total_floors }}
+                                    {% if form.total_floors.errors %}
+                                        <small class="text-danger">{{ form.total_floors.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.price.id_for_label }}">Price <span class="text-danger">*</span></label>
+                                    {{ form.price }}
+                                    {% if form.price.errors %}
+                                        <small class="text-danger">{{ form.price.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.security_deposit.id_for_label }}">Security Deposit</label>
+                                    {{ form.security_deposit }}
+                                    {% if form.security_deposit.errors %}
+                                        <small class="text-danger">{{ form.security_deposit.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.maintenance_fee.id_for_label }}">Maintenance Fee</label>
+                                    {{ form.maintenance_fee }}
+                                    {% if form.maintenance_fee.errors %}
+                                        <small class="text-danger">{{ form.maintenance_fee.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.available_from.id_for_label }}">Available From</label>
+                                    {{ form.available_from }}
+                                    {% if form.available_from.errors %}
+                                        <small class="text-danger">{{ form.available_from.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.minimum_lease_days.id_for_label }}">Minimum Lease Days</label>
+                                    {{ form.minimum_lease_days }}
+                                    {% if form.minimum_lease_days.errors %}
+                                        <small class="text-danger">{{ form.minimum_lease_days.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="{{ form.maximum_lease_days.id_for_label }}">Maximum Lease Days</label>
+                                    {{ form.maximum_lease_days }}
+                                    {% if form.maximum_lease_days.errors %}
+                                        <small class="text-danger">{{ form.maximum_lease_days.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.agent.id_for_label }}">Assigned Agent</label>
+                                    {{ form.agent }}
+                                    {% if form.agent.errors %}
+                                        <small class="text-danger">{{ form.agent.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.main_image.id_for_label }}">Main Image</label>
+                                    {{ form.main_image }}
+                                    {% if form.main_image.errors %}
+                                        <small class="text-danger">{{ form.main_image.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label>Amenities</label>
+                                    <div class="row">
+                                        {% for amenity in form.amenities.field.queryset %}
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input type="checkbox" name="amenities" value="{{ amenity.id }}"
+                                                           class="form-check-input" id="amenity_{{ amenity.id }}"
+                                                           {% if amenity.id in form.amenities.value %}checked{% endif %}>
+                                                    <label class="form-check-label" for="amenity_{{ amenity.id }}">
+                                                        {{ amenity.name }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if form.amenities.errors %}
+                                        <small class="text-danger">{{ form.amenities.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary me-2">Submit Property</button>
+                        <a href="{% url 'property_list' %}" class="btn btn-dark">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} add properties {% endcomment %}
+
+    <div class="row">
+        <div class="col-sm-4 grid-margin">
+        <div class="card">
+            <div class="card-body">
+            <h5>Revenue</h5>
+            <div class="row">
+                <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                <div class="d-flex d-sm-block d-md-flex align-items-center">
+                    <h2 class="mb-0">$32123</h2>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+3.5%</p>
+                </div>
+                <h6 class="text-muted font-weight-normal">11.38% Since last month</h6>
+                </div>
+                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                <i class="icon-lg mdi mdi-codepen text-primary ml-auto"></i>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+        <div class="col-sm-4 grid-margin">
+        <div class="card">
+            <div class="card-body">
+            <h5>Sales</h5>
+            <div class="row">
+                <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                <div class="d-flex d-sm-block d-md-flex align-items-center">
+                    <h2 class="mb-0">$45850</h2>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+8.3%</p>
+                </div>
+                <h6 class="text-muted font-weight-normal"> 9.61% Since last month</h6>
+                </div>
+                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                <i class="icon-lg mdi mdi-wallet-travel text-danger ml-auto"></i>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+        <div class="col-sm-4 grid-margin">
+        <div class="card">
+            <div class="card-body">
+            <h5>Purchase</h5>
+            <div class="row">
+                <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                <div class="d-flex d-sm-block d-md-flex align-items-center">
+                    <h2 class="mb-0">$2039</h2>
+                    <p class="text-danger ms-2 mb-0 font-weight-medium">-2.1% </p>
+                </div>
+                <h6 class="text-muted font-weight-normal">2.27% Since last month</h6>
+                </div>
+                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                <i class="icon-lg mdi mdi-monitor text-success ml-auto"></i>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+    <!-- content-wrapper ends -->
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+        <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center"> <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span> <i class="mdi mdi-heart text-danger"></i></span>
+    </div>
+    </footer>
+    <!-- partial -->
+</div>
+
+{% endblock content %}

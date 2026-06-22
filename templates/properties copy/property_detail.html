@@ -1,0 +1,655 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}{{ property.title }} - Property Details{% endblock title %}
+
+{% block content %}
+
+<div class="main-panel">
+    <div class="content-wrapper">
+
+    {% comment %} stats - Property Metadata {% endcomment %}
+    <div class="row">
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-9">
+                            <div class="d-flex align-items-center align-self-start">
+                                <h3 class="mb-0">{{ property.title|truncatechars:20 }}</h3>
+                                <p class="text-success ms-2 mb-0 font-weight-medium"></p>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="icon icon-box-success">
+                                <span class="mdi mdi-home icon-item"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="text-muted font-weight-normal">Property Title</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-9">
+                            <div class="d-flex align-items-center align-self-start">
+                                <h3 class="mb-0">{{ property.get_property_type_display }}</h3>
+                                <p class="text-success ms-2 mb-0 font-weight-medium"></p>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="icon icon-box-success">
+                                <span class="mdi mdi-domain icon-item"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="text-muted font-weight-normal">Property Type</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-9">
+                            <div class="d-flex align-items-center align-self-start">
+                                <h3 class="mb-0">${{ property.price|floatformat:2|intcomma }}</h3>
+                                <p class="text-success ms-2 mb-0 font-weight-medium"></p>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="icon icon-box-success">
+                                <span class="mdi mdi-currency-usd icon-item"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="text-muted font-weight-normal">Price</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-9">
+                            <div class="d-flex align-items-center align-self-start">
+                                <h3 class="mb-0">
+                                    {% if property.status == 'available' %}
+                                        <span class="badge badge-success">Available</span>
+                                    {% elif property.status == 'rented' %}
+                                        <span class="badge badge-warning">Rented</span>
+                                    {% elif property.status == 'sold' %}
+                                        <span class="badge badge-danger">Sold</span>
+                                    {% elif property.status == 'maintenance' %}
+                                        <span class="badge badge-info">Maintenance</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">{{ property.get_status_display }}</span>
+                                    {% endif %}
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="icon icon-box-success">
+                                <span class="mdi mdi-check-circle icon-item"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="text-muted font-weight-normal">Status</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end stats {% endcomment %}
+
+    {% comment %} Main Property Image {% endcomment %}
+    {% if property.main_image %}
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="{{ property.main_image.url }}" alt="{{ property.title }}" class="img-fluid rounded" style="max-height: 400px; width: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% comment %} end Main Property Image {% endcomment %}
+
+    {% comment %} Property Location & Details {% endcomment %}
+    <div class="row">
+        <div class="col-md-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-row justify-content-between">
+                        <h4 class="card-title mb-1">Location Information</h4>
+                        <a href="https://maps.google.com/?q={{ property.latitude }},{{ property.longitude }}" target="_blank" class="btn btn-sm btn-primary">
+                            <i class="mdi mdi-map-marker"></i> View on Map
+                        </a>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="preview-list">
+                                <div class="preview-item border-bottom">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-primary">
+                                            <i class="mdi mdi-map-marker"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">Address</h6>
+                                            <p class="text-muted mb-0">{{ property.address }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="preview-item border-bottom">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-success">
+                                            <i class="mdi mdi-city"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">City, State</h6>
+                                            <p class="text-muted mb-0">{{ property.city }}, {{ property.state }} {{ property.zip_code }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-info">
+                                            <i class="mdi mdi-globe"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">Country</h6>
+                                            <p class="text-muted mb-0">{{ property.country }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title mb-1">Property Details</h4>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="preview-list">
+                                <div class="preview-item border-bottom">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-danger">
+                                            <i class="mdi mdi-floor-plan"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">Area</h6>
+                                            <p class="text-muted mb-0">{{ property.area_sqft|floatformat:0|intcomma }} sq ft</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="preview-item border-bottom">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-warning">
+                                            <i class="mdi mdi-bed"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">Bedrooms</h6>
+                                            <p class="text-muted mb-0">{{ property.bedrooms }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="preview-item border-bottom">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-info">
+                                            <i class="mdi mdi-shower"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">Bathrooms</h6>
+                                            <p class="text-muted mb-0">{{ property.bathrooms }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="preview-item border-bottom">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-primary">
+                                            <i class="mdi mdi-stairs"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">Floor</h6>
+                                            <p class="text-muted mb-0">Floor {{ property.floor_number }} of {{ property.total_floors }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-success">
+                                            <i class="mdi mdi-calendar"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content d-sm-flex flex-grow">
+                                        <div class="flex-grow">
+                                            <h6 class="preview-subject">Year Built</h6>
+                                            <p class="text-muted mb-0">{{ property.year_built|default:"Not specified" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end Property Location & Details {% endcomment %}
+
+    {% comment %} Description & Amenities {% endcomment %}
+    <div class="row">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Description</h4>
+                    <div class="preview-list">
+                        <div class="preview-item">
+                            <div class="preview-item-content">
+                                <p class="text-muted">{{ property.description|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Amenities</h4>
+                    <div class="row">
+                        {% for amenity in property.amenities.all %}
+                        <div class="col-md-3 col-sm-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="mdi {{ amenity.icon|default:'mdi-check' }} text-primary me-2"></i>
+                                <span>{{ amenity.name }}</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted">No amenities listed.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end Description & Amenities {% endcomment %}
+
+    {% comment %} Gallery Images {% endcomment %}
+    {% if property.images.exists %}
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Property Gallery</h4>
+                    <div class="row">
+                        {% for image in property.images.all %}
+                        <div class="col-md-3 col-sm-4 mb-3">
+                            <a href="{{ image.image.url }}" target="_blank">
+                                <img src="{{ image.image.url }}" alt="{{ image.caption|default:property.title }}" class="img-fluid rounded" style="height: 150px; width: 100%; object-fit: cover;">
+                            </a>
+                            {% if image.caption %}
+                            <p class="text-muted small mt-1">{{ image.caption }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% comment %} end Gallery Images {% endcomment %}
+
+    {% comment %} Units Section (For Hotels, Schools, BNBs) {% endcomment %}
+    {% if property.units.exists %}
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Units / Rooms</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Unit Number</th>
+                                    <th>Floor</th>
+                                    <th>Bedrooms</th>
+                                    <th>Bathrooms</th>
+                                    <th>Area (sq ft)</th>
+                                    <th>Price Modifier</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unit in property.units.all %}
+                                <tr>
+                                    <td>{{ unit.unit_number }}</td>
+                                    <td>{{ unit.floor }}</td>
+                                    <td>{{ unit.bedrooms }}</td>
+                                    <td>{{ unit.bathrooms }}</td>
+                                    <td>{{ unit.area_sqft|default:"-"|floatformat:0|intcomma }}</td>
+                                    <td>${{ unit.price_modifier|floatformat:2|intcomma }}</td>
+                                    <td>
+                                        {% if unit.is_available %}
+                                            <span class="badge badge-success">Available</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Occupied</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% comment %} end Units Section {% endcomment %}
+
+    {% comment %} Financial Information {% endcomment %}
+    <div class="row">
+        <div class="col-md-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Financial Details</h4>
+                    <div class="preview-list">
+                        <div class="preview-item border-bottom">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-primary">
+                                    <i class="mdi mdi-currency-usd"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    <h6 class="preview-subject">Price</h6>
+                                    <p class="text-muted mb-0">${{ property.price|floatformat:2|intcomma }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-item border-bottom">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-warning">
+                                    <i class="mdi mdi-lock"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    <h6 class="preview-subject">Security Deposit</h6>
+                                    <p class="text-muted mb-0">${{ property.security_deposit|floatformat:2|intcomma }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-info">
+                                    <i class="mdi mdi-tools"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    <h6 class="preview-subject">Maintenance Fee</h6>
+                                    <p class="text-muted mb-0">${{ property.maintenance_fee|floatformat:2|intcomma }}/month</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Availability</h4>
+                    <div class="preview-list">
+                        <div class="preview-item border-bottom">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-success">
+                                    <i class="mdi mdi-calendar-check"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    <h6 class="preview-subject">Available From</h6>
+                                    <p class="text-muted mb-0">{{ property.available_from|date:"F d, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-item border-bottom">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-info">
+                                    <i class="mdi mdi-calendar-range"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    <h6 class="preview-subject">Minimum Lease</h6>
+                                    <p class="text-muted mb-0">{{ property.minimum_lease_days }} days</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-warning">
+                                    <i class="mdi mdi-calendar-clock"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    <h6 class="preview-subject">Maximum Lease</h6>
+                                    <p class="text-muted mb-0">{{ property.maximum_lease_days|default:"Flexible" }} days</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end Financial Information {% endcomment %}
+
+    {% comment %} Owner & Agent Information {% endcomment %}
+    <div class="row">
+        <div class="col-md-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Owner Information</h4>
+                    <div class="preview-list">
+                        <div class="preview-item">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-primary">
+                                    <i class="mdi mdi-account"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    <h6 class="preview-subject">{{ property.owner.get_full_name|default:property.owner.username }}</h6>
+                                    <p class="text-muted mb-0">Email: {{ property.owner.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Agent Information</h4>
+                    <div class="preview-list">
+                        <div class="preview-item">
+                            <div class="preview-thumbnail">
+                                <div class="preview-icon bg-success">
+                                    <i class="mdi mdi-account-tie"></i>
+                                </div>
+                            </div>
+                            <div class="preview-item-content d-sm-flex flex-grow">
+                                <div class="flex-grow">
+                                    {% if property.agent %}
+                                    <h6 class="preview-subject">{{ property.agent.get_full_name|default:property.agent.username }}</h6>
+                                    <p class="text-muted mb-0">Email: {{ property.agent.email }}</p>
+                                    {% else %}
+                                    <p class="text-muted mb-0">No agent assigned</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end Owner & Agent Information {% endcomment %}
+
+    {% comment %} Recent Bookings {% endcomment %}
+    {% if property.bookings.exists %}
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Recent Bookings</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Client</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                    <th>Guests</th>
+                                    <th>Total Price</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in property.bookings.all|slice:":5" %}
+                                <tr>
+                                    <td>{{ booking.id }}</td>
+                                    <td>{{ booking.client.name|default:"N/A" }}</td>
+                                    <td>{{ booking.check_in_date|date:"M d, Y" }}</td>
+                                    <td>{{ booking.check_out_date|date:"M d, Y" }}</td>
+                                    <td>{{ booking.guests_count }}</td>
+                                    <td>${{ booking.total_price|floatformat:2|intcomma }}</td>
+                                    <td>
+                                        {% if booking.status == 'confirmed' %}
+                                            <span class="badge badge-success">Confirmed</span>
+                                        {% elif booking.status == 'pending' %}
+                                            <span class="badge badge-warning">Pending</span>
+                                        {% elif booking.status == 'checked_in' %}
+                                            <span class="badge badge-info">Checked In</span>
+                                        {% elif booking.status == 'checked_out' %}
+                                            <span class="badge badge-secondary">Checked Out</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">{{ booking.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% comment %} end Recent Bookings {% endcomment %}
+
+    {% comment %} Action Buttons {% endcomment %}
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body text-center">
+                    <a href="{% url 'property_edit' property.pk %}" class="btn btn-primary">
+                        <i class="mdi mdi-pencil"></i> Edit Property
+                    </a>
+                    <a href="{% url 'property_list' %}" class="btn btn-secondary">
+                        <i class="mdi mdi-arrow-left"></i> Back to Properties
+                    </a>
+                    {% if property.status == 'available' %}
+                    <a href="#" class="btn btn-success">
+                        <i class="mdi mdi-calendar-plus"></i> Create Booking
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end Action Buttons {% endcomment %}
+
+    </div>
+    <!-- content-wrapper ends -->
+
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+        <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+            <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+        </div>
+    </footer>
+    <!-- partial -->
+</div>
+
+<style>
+    .preview-list .preview-item {
+        padding: 10px 0;
+    }
+
+    .preview-item .preview-thumbnail {
+        width: 40px;
+    }
+
+    .badge {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    .img-fluid {
+        max-width: 100%;
+        height: auto;
+    }
+
+    @media (max-width: 768px) {
+        .preview-item-content {
+            flex-direction: column;
+        }
+
+        .mr-auto.text-sm-right {
+            text-align: left !important;
+            margin-top: 10px;
+        }
+    }
+</style>
+
+{% endblock content %}

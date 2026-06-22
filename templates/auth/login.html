@@ -1,10 +1,12 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign In – TuHame</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="{% static "assets/css/style.css" %}" />
   <style>
     .auth-left {
       background-image: url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1000&auto=format&fit=crop&q=80');
@@ -91,12 +93,19 @@
 
       <div class="auth-divider"><span>or sign in with email</span></div>
 
-      <form id="login-form" style="margin-top:1.5rem;">
+      <form id="login-form" style="margin-top:1.5rem;" {% url "login" %}>
+        {% csrf_token %}
         <div class="form-group">
           <label class="form-label" for="email">Email address</label>
           <div class="form-input-icon">
             <span class="icon">✉️</span>
-            <input type="email" id="email" class="form-input" placeholder="you@email.com" required />
+            <input type="username" id="username" class="form-input"
+            value="{{ form.username.value|default:'' }}"
+            placeholder="Enter your username" required
+             />
+            {% if form.username.errors %}
+                <small class="text-danger">{{ form.username.errors.0 }}</small>
+            {% endif %}
           </div>
         </div>
 
@@ -104,7 +113,13 @@
           <label class="form-label" for="password">Password</label>
           <div class="form-input-icon" style="position:relative;">
             <span class="icon">🔒</span>
-            <input type="password" id="password" class="form-input" placeholder="Enter your password" required style="padding-right:3rem;" />
+            <input type="password" id="password" class="form-input"
+            placeholder="Enter your password"
+            required
+            style="padding-right:3rem;" />
+            {% if form.password.errors %}
+                <small class="text-danger">{{ form.password.errors.0 }}</small>
+            {% endif %}
             <span class="password-toggle" onclick="togglePwd(this)">👁</span>
           </div>
         </div>
@@ -140,7 +155,7 @@
   </div>
 </div>
 
-<script src="assets/js/main.js"></script>
+<script src="{% static "assets/js/main.js" %}"></script>
 <script>
   function togglePwd(el) {
     const input = el.previousElementSibling;
@@ -148,13 +163,7 @@
     else { input.type = 'password'; el.textContent = '👁'; }
   }
   function socialLogin(provider) {
-    let c = document.querySelector('.toast-container');
-    if (!c) { c = document.createElement('div'); c.className = 'toast-container'; document.body.appendChild(c); }
-    const t = document.createElement('div'); t.className = 'toast';
-    t.innerHTML = `<span class="toast-icon">🔐</span><span>Connecting with ${provider}…</span>`;
-    c.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); window.location.href = 'profile.html'; }, 1500);
+
   }
 </script>
 </body>

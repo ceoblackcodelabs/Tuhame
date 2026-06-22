@@ -1,0 +1,249 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}{{ title }}{% endblock title %}
+
+{% block content %}
+<div class="main-panel">
+    <div class="content-wrapper">
+        <div class="row">
+            <div class="col-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">{{ title }}</h4>
+                        <p class="card-description">Record payment transaction details below</p>
+
+                        {% if invoice %}
+                        <div class="alert alert-info">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Invoice: {{ invoice.invoice_number }}</strong><br>
+                                    Total Amount: ${{ invoice.total_amount|floatformat:2|intcomma }}
+                                </div>
+                                <div class="col-md-6 text-md-right">
+                                    <strong>Remaining Balance:</strong>
+                                    <span class="text-warning">${{ remaining_balance|floatformat:2|intcomma }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <form class="forms-sample" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.invoice.id_for_label }}">Invoice <span class="text-danger">*</span></label>
+                                        {{ form.invoice }}
+                                        {% if form.invoice.errors %}
+                                            <small class="text-danger">{{ form.invoice.errors.0 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.amount.id_for_label }}">Payment Amount <span class="text-danger">*</span></label>
+                                        {{ form.amount }}
+                                        {% if form.amount.errors %}
+                                            <small class="text-danger">{{ form.amount.errors.0 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.payment_method.id_for_label }}">Payment Method <span class="text-danger">*</span></label>
+                                        {{ form.payment_method }}
+                                        {% if form.payment_method.errors %}
+                                            <small class="text-danger">{{ form.payment_method.errors.0 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.payment_date.id_for_label }}">Payment Date <span class="text-danger">*</span></label>
+                                        {{ form.payment_date }}
+                                        {% if form.payment_date.errors %}
+                                            <small class="text-danger">{{ form.payment_date.errors.0 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.reference_number.id_for_label }}">Reference Number</label>
+                                        {{ form.reference_number }}
+                                        <small class="text-muted d-block">Transaction ID, Check Number, or Payment Reference</small>
+                                        {% if form.reference_number.errors %}
+                                            <small class="text-danger">{{ form.reference_number.errors.0 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.receipt_file.id_for_label }}">Receipt File</label>
+                                        {{ form.receipt_file }}
+                                        <small class="text-muted d-block">Upload payment receipt or proof (PDF, JPG, PNG)</small>
+                                        {% if form.receipt_file.errors %}
+                                            <small class="text-danger">{{ form.receipt_file.errors.0 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.notes.id_for_label }}">Additional Notes</label>
+                                {{ form.notes }}
+                                <small class="text-muted d-block">Any additional information about this payment</small>
+                                {% if form.notes.errors %}
+                                    <small class="text-danger">{{ form.notes.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+
+                            <!-- Payment Summary Section -->
+                            <div class="alert alert-info mt-3">
+                                <h5>Payment Summary</h5>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p><strong>Payment Amount:</strong> $<span id="amount_preview">0.00</span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Payment Method:</strong> <span id="method_preview">-</span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Payment Date:</strong> <span id="date_preview">-</span></p>
+                                    </div>
+                                </div>
+                                <div class="alert alert-warning mt-2 mb-0">
+                                    <i class="mdi mdi-information"></i>
+                                    Please verify payment details before submitting. This action cannot be undone.
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary me-2">{{ submit_text }}</button>
+                            {% if invoice %}
+                                <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-dark">Cancel</a>
+                            {% else %}
+                                <a href="{% url 'payment_list' %}" class="btn btn-dark">Cancel</a>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- content-wrapper ends -->
+
+    <footer class="footer">
+        <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 Real Estate Management System. All rights reserved.</span>
+            <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // Real-time preview of payment details
+    function updatePreview() {
+        // Amount preview
+        let amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+        let amountPreview = document.getElementById('amount_preview');
+        if (amountInput && amountInput.value) {
+            let amount = parseFloat(amountInput.value);
+            amountPreview.textContent = isNaN(amount) ? '0.00' : amount.toFixed(2);
+        } else {
+            amountPreview.textContent = '0.00';
+        }
+
+        // Payment method preview
+        let methodSelect = document.getElementById('{{ form.payment_method.id_for_label }}');
+        let methodPreview = document.getElementById('method_preview');
+        if (methodSelect && methodSelect.selectedIndex >= 0) {
+            methodPreview.textContent = methodSelect.options[methodSelect.selectedIndex].text;
+        } else {
+            methodPreview.textContent = '-';
+        }
+
+        // Payment date preview
+        let dateInput = document.getElementById('{{ form.payment_date.id_for_label }}');
+        let datePreview = document.getElementById('date_preview');
+        if (dateInput && dateInput.value) {
+            let date = new Date(dateInput.value);
+            datePreview.textContent = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } else {
+            datePreview.textContent = '-';
+        }
+    }
+
+    // Add event listeners
+    document.getElementById('{{ form.amount.id_for_label }}').addEventListener('input', updatePreview);
+    document.getElementById('{{ form.payment_method.id_for_label }}').addEventListener('change', updatePreview);
+    document.getElementById('{{ form.payment_date.id_for_label }}').addEventListener('change', updatePreview);
+
+    // Initial update
+    updatePreview();
+</script>
+
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+    }
+
+    .alert-info {
+        background-color: #e7f3ff;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .alert-warning {
+        background-color: #fff3e0;
+        border-left: 4px solid #ffc107;
+    }
+
+    label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-danger {
+        font-size: 12px;
+    }
+
+    .text-muted {
+        font-size: 12px;
+        margin-top: 0.25rem;
+    }
+
+    .btn-primary {
+        background-color: #0d6efd;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+    }
+</style>
+
+{% endblock content %}

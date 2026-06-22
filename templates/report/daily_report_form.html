@@ -1,0 +1,191 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="main-panel">
+    <div class="content-wrapper">
+
+        {% comment %} stats {% endcomment %}
+        <div class="row">
+            <div class="col-sm-4 grid-margin">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Revenue</h5>
+                        <div class="row">
+                            <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                            <div class="d-flex d-sm-block d-md-flex align-items-center">
+                                <h2 class="mb-0">$32123</h2>
+                                <p class="text-success ms-2 mb-0 font-weight-medium">+3.5%</p>
+                            </div>
+                            <h6 class="text-muted font-weight-normal">11.38% Since last month</h6>
+                            </div>
+                            <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                            <i class="icon-lg mdi mdi-codepen text-primary ml-auto"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4 grid-margin">
+                <div class="card">
+                    <div class="card-body">
+                    <h5>Sales</h5>
+                    <div class="row">
+                        <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                        <div class="d-flex d-sm-block d-md-flex align-items-center">
+                            <h2 class="mb-0">$45850</h2>
+                            <p class="text-success ms-2 mb-0 font-weight-medium">+8.3%</p>
+                        </div>
+                        <h6 class="text-muted font-weight-normal"> 9.61% Since last month</h6>
+                        </div>
+                        <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                        <i class="icon-lg mdi mdi-codepen text-primary ml-auto"></i>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4 grid-margin">
+                <div class="card">
+                    <div class="card-body">
+                    <h5>Purchase</h5>
+                    <div class="row">
+                        <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                        <div class="d-flex d-sm-block d-md-flex align-items-center">
+                            <h2 class="mb-0">$2039</h2>
+                            <p class="text-danger ms-2 mb-0 font-weight-medium">-2.1% </p>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">2.27% Since last month</h6>
+                        </div>
+                        <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                        <i class="icon-lg mdi mdi-monitor text-success ml-auto"></i>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end stats {% endcomment %}
+
+        {% comment %} table {% endcomment %}
+        <div class="row">
+            <div class="col-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">{{ title }}</h4>
+                        <p class="card-description">Generate a report for a specific day</p>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <form class="forms-sample" method="post">
+                            {% csrf_token %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.report_date.id_for_label }}">Select Date <span class="text-danger">*</span></label>
+                                        {{ form.report_date }}
+                                        <small class="text-muted d-block">Choose the date you want to generate report for</small>
+                                        {% if form.report_date.errors %}
+                                            <small class="text-danger">{{ form.report_date.errors.0 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Summary Section -->
+                            <div class="alert alert-info mt-3">
+                                <h5>Report Summary</h5>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <p><strong>Selected Date:</strong> <span id="date_preview">Not selected</span></p>
+                                        <p><strong>Report Type:</strong> Daily Report</p>
+                                    </div>
+                                </div>
+                                <div class="alert alert-warning mt-2 mb-0">
+                                    <i class="mdi mdi-information"></i>
+                                    This will generate a comprehensive daily report including property statistics,
+                                    client activity, financial summary, and transaction details for the selected date.
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary me-2">{{ submit_text }}</button>
+                            <a href="{% url 'report_list' %}" class="btn btn-dark">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} enda table {% endcomment %}
+
+    </div>
+</div>
+
+<script>
+    // Real-time preview of selected date
+    function updateDatePreview() {
+        let dateInput = document.getElementById('{{ form.report_date.id_for_label }}');
+        let datePreview = document.getElementById('date_preview');
+
+        if (dateInput && dateInput.value) {
+            let date = new Date(dateInput.value);
+            let formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            datePreview.textContent = formattedDate;
+        } else {
+            datePreview.textContent = 'Not selected';
+        }
+    }
+
+    // Add event listener
+    document.getElementById('{{ form.report_date.id_for_label }}').addEventListener('change', updateDatePreview);
+
+    // Initial update
+    updateDatePreview();
+</script>
+
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+    }
+
+    .alert-info {
+        background-color: #e7f3ff;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .alert-warning {
+        background-color: #fff3e0;
+        border-left: 4px solid #ffc107;
+    }
+
+    label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-danger {
+        font-size: 12px;
+    }
+
+    .text-muted {
+        font-size: 12px;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock content %}

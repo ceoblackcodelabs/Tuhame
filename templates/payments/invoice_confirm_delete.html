@@ -1,0 +1,257 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Delete Invoice - {{ invoice.invoice_number }}{% endblock title %}
+
+{% block content %}
+
+<div class="main-panel">
+    <div class="content-wrapper">
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="mdi mdi-file-document-remove display-1 text-danger"></i>
+                        </div>
+
+                        <h4 class="card-title text-danger mb-3">Confirm Delete Invoice</h4>
+
+                        <p class="mb-3">
+                            Are you sure you want to delete invoice <strong>"{{ invoice.invoice_number }}"</strong>?
+                        </p>
+
+                        <div class="alert alert-warning">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small><strong>Invoice Number:</strong></small>
+                                    <p><code>{{ invoice.invoice_number }}</code></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Status:</strong></small>
+                                    <p>
+                                        {% if invoice.status == 'paid' %}
+                                            <span class="badge badge-success">Paid</span>
+                                        {% elif invoice.status == 'pending' %}
+                                            <span class="badge badge-warning">Pending</span>
+                                        {% elif invoice.status == 'overdue' %}
+                                            <span class="badge badge-danger">Overdue</span>
+                                        {% elif invoice.status == 'partial' %}
+                                            <span class="badge badge-info">Partially Paid</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ invoice.get_status_display }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Client:</strong></small>
+                                    <p>{{ invoice.client.name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Property:</strong></small>
+                                    <p>{{ invoice.property.title|truncatechars:30 }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Total Amount:</strong></small>
+                                    <p class="text-danger font-weight-bold">${{ invoice.total_amount|floatformat:2|intcomma }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Issue Date:</strong></small>
+                                    <p>{{ invoice.issue_date|date:"F d, Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Due Date:</strong></small>
+                                    <p>{{ invoice.due_date|date:"F d, Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Category:</strong></small>
+                                    <p>{{ invoice.get_category_display }}</p>
+                                </div>
+                                <div class="col-md-12 mt-2">
+                                    <small><strong>Period:</strong></small>
+                                    <p>{{ invoice.period_start|date:"M d, Y" }} - {{ invoice.period_end|date:"M d, Y" }}</p>
+                                </div>
+                                {% if invoice.description %}
+                                <div class="col-12 mt-2">
+                                    <small><strong>Description:</strong></small>
+                                    <p class="mt-1">{{ invoice.description|truncatechars:100 }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Warning about payments -->
+                        {% if invoice.payments.exists %}
+                        <div class="alert alert-danger">
+                            <i class="mdi mdi-alert-octagon"></i>
+                            <strong>Warning: Payments Exist!</strong>
+                            <p class="mb-2 mt-2">
+                                This invoice has <strong>{{ invoice.payments.count }} payment(s)</strong> associated with it.
+                                Deleting this invoice will also delete all associated payment records.
+                            </p>
+                            <div class="mt-2">
+                                <small><strong>Payment History:</strong></small>
+                                <ul class="mb-0 mt-1">
+                                    {% for payment in invoice.payments.all|slice:":3" %}
+                                    <li>
+                                        <code>{{ payment.payment_id }}</code> -
+                                        ${{ payment.amount|floatformat:2|intcomma }}
+                                        ({{ payment.get_payment_method_display }}) -
+                                        {{ payment.payment_date|date:"M d, Y" }}
+                                    </li>
+                                    {% endfor %}
+                                    {% if invoice.payments.count > 3 %}
+                                    <li class="text-muted">... and {{ invoice.payments.count|add:"-3" }} more payment(s)</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Warning about late fees -->
+                        {% if invoice.late_fee %}
+                        <div class="alert alert-warning">
+                            <i class="mdi mdi-alert"></i>
+                            <strong>Late Fee Associated!</strong>
+                            <p class="mb-0 mt-2">
+                                This invoice has a late fee of <strong>${{ invoice.late_fee.amount|floatformat:2|intcomma }}</strong>
+                                ({{ invoice.late_fee.days_late }} days late).
+                                Deleting this invoice will also delete the associated late fee.
+                            </p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Financial Summary -->
+                        <div class="alert alert-info">
+                            <i class="mdi mdi-chart-line"></i>
+                            <strong>Financial Summary:</strong>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <small>Base Amount:</small>
+                                    <p class="mb-0">${{ invoice.amount|floatformat:2|intcomma }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <small>Tax Amount:</small>
+                                    <p class="mb-0">${{ invoice.tax_amount|floatformat:2|intcomma }}</p>
+                                </div>
+                                <div class="col-6 mt-1">
+                                    <small>Discount:</small>
+                                    <p class="mb-0 text-success">-${{ invoice.discount_amount|floatformat:2|intcomma }}</p>
+                                </div>
+                                <div class="col-6 mt-1">
+                                    <small>Total Paid:</small>
+                                    <p class="mb-0 text-info">
+                                        ${{ invoice.get_total_paid|floatformat:2|intcomma }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-danger">
+                            <i class="mdi mdi-alert"></i>
+                            <strong>Warning!</strong>
+                            <p class="mb-0 mt-2">This action cannot be undone. The invoice and all associated records will be permanently deleted.</p>
+                        </div>
+
+                        <form method="post" class="mt-4">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger me-2">
+                                <i class="mdi mdi-delete"></i> Yes, Delete Invoice
+                            </button>
+                            <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-secondary">
+                                <i class="mdi mdi-cancel"></i> Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- content-wrapper ends -->
+
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+        <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+            <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+        </div>
+    </footer>
+    <!-- partial -->
+</div>
+
+<style>
+    @media print {
+        .btn, .navbar, .footer, .card-header {
+            display: none;
+        }
+        .card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+        body {
+            background: white;
+            padding: 20px;
+        }
+    }
+
+    .alert {
+        text-align: left;
+        border-radius: 8px;
+    }
+
+    .alert ul {
+        padding-left: 20px;
+        margin-bottom: 0;
+    }
+
+    .alert ul li {
+        margin: 5px 0;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .btn {
+        padding: 8px 20px;
+        border-radius: 5px;
+    }
+
+    .display-1 {
+        font-size: 4rem;
+    }
+
+    .badge {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    code {
+        background-color: #f4f4f4;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+    .font-weight-bold {
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .col-md-6 {
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn.me-2 {
+            margin-right: 0 !important;
+        }
+    }
+</style>
+
+{% endblock content %}
