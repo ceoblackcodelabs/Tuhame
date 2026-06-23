@@ -1,6 +1,6 @@
 {% extends "home/base.html" %}
 
-{% block title %}{% endblock title %}
+{% block title %}TuHame - Find Your Next Home{% endblock title %}
 
 {% block content %}
 
@@ -45,25 +45,22 @@
     <p class="hero-subtitle">Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast.</p>
 
     <!-- Search Bar -->
-    <div class="hero-search">
+    <form method="get" action="{% url 'home:properties' %}" class="hero-search">
       <span class="hero-search-icon">🔍</span>
-      <input class="hero-search-input live-search" type="text" placeholder="Search by location, property name…" />
+      <input class="hero-search-input live-search" type="text" name="search" placeholder="Search by location, property name…" value="{{ search_query }}" />
       <div class="hero-search-divider"></div>
-      <select class="hero-search-select">
-        <option>All Types</option>
-        <option>Apartment</option>
-        <option>Villa</option>
-        <option>BnB</option>
-        <option>Rental</option>
-        <option>Commercial</option>
+      <select class="hero-search-select" name="property_type">
+        {% for type in property_types %}
+          <option value="{{ type.value }}" {% if selected_type == type.value %}selected{% endif %}>{{ type.label }}</option>
+        {% endfor %}
       </select>
       <div class="hero-search-divider"></div>
-      <a href="" class="btn btn-primary btn-sm">Search</a>
-    </div>
+      <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    </form>
 
     <div class="hero-buttons">
-      <a href="{% url "home:properties" %}" class="btn btn-primary btn-lg">🏘 Explore Properties</a>
-      <a href="{% url "home:property_map" %}" class="btn btn-outline btn-lg">🗺 View Map</a>
+      <a href="{% url 'home:properties' %}" class="btn btn-primary btn-lg">🏘 Explore Properties</a>
+      <a href="{% url 'home:property_map' %}" class="btn btn-outline btn-lg">🗺 View Map</a>
     </div>
   </div>
 
@@ -98,31 +95,15 @@
       <p class="section-subtitle">Find exactly the type of home you're looking for</p>
     </div>
     <div class="categories-grid">
-      <a href="properties.html?type=apartment" class="category-card fade-up">
-        <span class="category-icon">🏠</span>
-        <div class="category-name">Apartments</div>
-        <div class="category-count">4,230 listings</div>
-      </a>
-      <a href="properties.html?type=rental" class="category-card fade-up">
-        <span class="category-icon">🏡</span>
-        <div class="category-name">Rentals</div>
-        <div class="category-count">3,180 listings</div>
-      </a>
-      <a href="properties.html?type=villa" class="category-card fade-up">
-        <span class="category-icon">🏘</span>
-        <div class="category-name">Villas</div>
-        <div class="category-count">1,090 listings</div>
-      </a>
-      <a href="properties.html?type=bnb" class="category-card fade-up">
-        <span class="category-icon">🛏</span>
-        <div class="category-name">BnBs</div>
-        <div class="category-count">2,560 listings</div>
-      </a>
-      <a href="properties.html?type=commercial" class="category-card fade-up">
-        <span class="category-icon">🏢</span>
-        <div class="category-name">Commercial</div>
-        <div class="category-count">1,440 listings</div>
-      </a>
+      {% for category in categories %}
+        <a href="{% url 'home:properties' %}?property_type={{ category.type }}" class="category-card fade-up">
+          <span class="category-icon">{{ category.icon }}</span>
+          <div class="category-name">{{ category.label }}</div>
+          <div class="category-count">{{ category.count|default:"0" }} listings</div>
+        </a>
+      {% empty %}
+        <p style="grid-column:1/-1;text-align:center;color:var(--gray-400);">No categories available</p>
+      {% endfor %}
     </div>
   </div>
 </section>
@@ -176,39 +157,57 @@
       <h2 class="section-title">Featured Listings</h2>
       <p class="section-subtitle">Hand-picked properties with exceptional value and quality</p>
     </div>
-    <div class="properties-grid">
 
-      <!-- Card 1 -->
-       {% for property in properties %}
-       <div class="property-card fade-up" data-name="Kilimani Heights" data-location="Kilimani, Nairobi">
-        <div class="property-img-wrap">
-          <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
-          <div class="property-badge featured">Featured</div>
-          <div class="property-save" data-id="prop-1">🤍</div>
-          <div class="property-move-score">🏅 Move Score: <span class="score-val">91</span></div>
-        </div>
-        <div class="property-body">
-          <div class="property-name">{{ property.title }}</div>
-          <div class="property-location">📍 {{ property.country }}, {{ property.city }} - {{ property.state }}</div>
-          <div class="property-meta">
-            <div class="property-meta-item">🛏 {{ property.bedrooms }} Beds</div>
-            <div class="property-meta-item">🚿 {{ property.bathrooms }} Baths</div>
-            <div class="property-meta-item">📐 {{ property.area_sqft }} m²</div>
-          </div>
-          <div class="property-footer">
-            <div class="property-price">KES {{ property.price }} <span>/month</span></div>
-            <div class="property-rating"><span class="rating-star">⭐</span> 4.8 (42)</div>
-          </div>
-        </div>
-        <div style="padding:0 1.25rem 1.25rem;">
-          <a href="{% url "home:about_property" property.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;">View Details</a>
-        </div>
+    {% if search_query %}
+      <div style="margin-bottom:1.5rem;padding:1rem;background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);">
+        <p style="color:var(--gray-600);">
+          <strong>Search results for:</strong> "{{ search_query }}"
+          <a href="{% url 'home:home' %}" style="color:var(--primary);margin-left:1rem;">Clear search →</a>
+        </p>
       </div>
-       {% endfor %}
+    {% endif %}
 
+    <div class="properties-grid">
+      {% for property in properties %}
+        <div class="property-card fade-up">
+          <div class="property-img-wrap">
+            {% if property.main_image %}
+              <div style="width:100%;height:100%;background-image:url('{{ property.main_image.url }}');background-size:cover;background-position:center;"></div>
+            {% else %}
+              <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+            {% endif %}
+            <div class="property-badge featured">{{ property.get_property_type_display }}</div>
+            <div class="property-save" data-id="prop-{{ property.id }}">🤍</div>
+            <div class="property-move-score">🏅 Move Score: <span class="score-val">91</span></div>
+          </div>
+          <div class="property-body">
+            <div class="property-name">{{ property.title }}</div>
+            <div class="property-location">📍 {{ property.address|truncatechars:40 }}</div>
+            <div class="property-meta">
+              <div class="property-meta-item">🛏 {{ property.bedrooms }} Beds</div>
+              <div class="property-meta-item">🚿 {{ property.bathrooms }} Baths</div>
+              <div class="property-meta-item">📐 {{ property.area_sqft }} m²</div>
+            </div>
+            <div class="property-footer">
+              <div class="property-price">KES {{ property.price }} <span>/month</span></div>
+              <div class="property-rating"><span class="rating-star">⭐</span> 4.8 (42)</div>
+            </div>
+          </div>
+          <div style="padding:0 1.25rem 1.25rem;">
+            <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;">View Details</a>
+          </div>
+        </div>
+      {% empty %}
+        <div style="grid-column:1/-1;text-align:center;padding:4rem 2rem;background:var(--white);border-radius:var(--radius-lg);">
+          <div style="font-size:4rem;margin-bottom:1rem;">🔍</div>
+          <h3 style="color:var(--gray-500);margin-bottom:0.5rem;">No properties found</h3>
+          <p style="color:var(--gray-400);">Try adjusting your search criteria</p>
+          <a href="{% url 'home:home' %}" class="btn btn-primary" style="margin-top:1rem;">Clear Search</a>
+        </div>
+      {% endfor %}
     </div>
     <div style="text-align:center;margin-top:2.5rem;">
-      <a href="{% url "home:properties" %}" class="btn btn-outline-dark btn-lg">View All Properties →</a>
+      <a href="{% url 'home:properties' %}" class="btn btn-outline-dark btn-lg">View All Properties →</a>
     </div>
   </div>
 </section>
@@ -289,8 +288,8 @@
     <h2 class="cta-title">Ready To Move?</h2>
     <p class="cta-subtitle">Thousands of verified homes are waiting for you. Start your search today and move in as soon as next week.</p>
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
-      <a href="properties.html" class="btn btn-accent btn-lg">🏠 Find Your New Home</a>
-      <a href="register.html" class="btn btn-glass btn-lg">Create Free Account</a>
+      <a href="{% url 'home:properties' %}" class="btn btn-accent btn-lg">🏠 Find Your New Home</a>
+      <a href="" class="btn btn-glass btn-lg">Create Free Account</a>
     </div>
   </div>
 </section>

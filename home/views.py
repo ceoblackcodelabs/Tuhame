@@ -13,6 +13,87 @@ class HomeView(ListView):
     paginate_by = 3
     template_name = "home/index.html"
 
+    def get_queryset(self):
+        queryset = Property.objects.filter(
+            is_active=True,
+            status=PropertyStatus.AVAILABLE
+        ).order_by('-created_at')[:6]  # Show 6 featured properties
+
+        # Get search parameters
+        search_query = self.request.GET.get('search', '').strip()
+        property_type = self.request.GET.get('property_type', '')
+
+        # Apply search filter
+        if search_query:
+            queryset = Property.objects.filter(
+                Q(is_active=True, status=PropertyStatus.AVAILABLE) &
+                (
+                    Q(title__icontains=search_query) |
+                    Q(address__icontains=search_query) |
+                    Q(city__icontains=search_query) |
+                    Q(state__icontains=search_query) |
+                    Q(country__icontains=search_query) |
+                    Q(description__icontains=search_query)
+                )
+            ).order_by('-created_at')[:6]
+
+        # Apply property type filter
+        if property_type and property_type != 'All Types':
+            queryset = queryset.filter(property_type=property_type.lower())
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get search parameters
+        context['search_query'] = self.request.GET.get('search', '')
+        context['selected_type'] = self.request.GET.get('property_type', 'All Types')
+
+        # Get property types for dropdown
+        context['property_types'] = [
+            {'value': 'All Types', 'label': 'All Types'},
+            {'value': 'apartment', 'label': 'Apartment'},
+            {'value': 'villa', 'label': 'Villa'},
+            {'value': 'bnb', 'label': 'BnB'},
+            {'value': 'rental', 'label': 'Rental'},
+            {'value': 'commercial', 'label': 'Commercial'},
+            {'value': 'residential', 'label': 'Residential'},
+            {'value': 'land', 'label': 'Land'},
+            {'value': 'industrial', 'label': 'Industrial'},
+        ]
+
+        # Get category counts
+        categories = []
+        for property_type in PropertyType.choices:
+            count = Property.objects.filter(
+                is_active=True,
+                property_type=property_type[0]
+            ).count()
+            categories.append({
+                'type': property_type[0],
+                'label': property_type[1],
+                'count': count,
+                'icon': self.get_category_icon(property_type[0])
+            })
+        context['categories'] = categories
+
+        return context
+
+    def get_category_icon(self, property_type):
+        """Get icon for property type"""
+        icons = {
+            'apartment': '🏠',
+            'rental': '🏡',
+            'villa': '🏘',
+            'bnb': '🛏',
+            'commercial': '🏢',
+            'residential': '🏠',
+            'land': '🌳',
+            'industrial': '🏭',
+        }
+        return icons.get(property_type, '🏠')
+
 
 class PropertiesListView(ListView):
     model = Property
