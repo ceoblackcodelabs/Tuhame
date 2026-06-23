@@ -17,7 +17,7 @@
 <!-- ─── NAVBAR ─── -->
 <nav class="navbar transparent">
   <div class="nav-container">
-    <a href="index.html" class="nav-logo">
+    <a href="{% url "home:home" %}" class="nav-logo">
       <div class="nav-logo-icon">🏠</div>
       TuHame
     </a>
@@ -29,10 +29,11 @@
     <div class="nav-actions">
       <button class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
       {% if request.user.is_authenticated %}
+      <a href="{% url "my_profile" %}" class="nav-btn-register">Profile</a>
+      {% else %}
         <a href="login.html" class="nav-btn-login">Login</a>
         <a href="register.html" class="nav-btn-register">Register</a>
       {% endif %}
-      <a href="{% url "my_profile" %}" class="nav-btn-register">Profile</a>
     </div>
     <button class="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
