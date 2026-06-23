@@ -58,12 +58,12 @@
         <option>Commercial</option>
       </select>
       <div class="hero-search-divider"></div>
-      <a href="properties.html" class="btn btn-primary btn-sm">Search</a>
+      <a href="" class="btn btn-primary btn-sm">Search</a>
     </div>
 
     <div class="hero-buttons">
-      <a href="properties.html" class="btn btn-primary btn-lg">🏘 Explore Properties</a>
-      <a href="map.html" class="btn btn-outline btn-lg">🗺 View Map</a>
+      <a href="{% url "home:properties" %}" class="btn btn-primary btn-lg">🏘 Explore Properties</a>
+      <a href="{% url "home:property_map" %}" class="btn btn-outline btn-lg">🗺 View Map</a>
     </div>
   </div>
 

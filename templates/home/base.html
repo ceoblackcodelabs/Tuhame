@@ -77,10 +77,10 @@
       <div>
         <div class="footer-heading">Quick Links</div>
         <ul class="footer-links">
-          <li><a href="index.html">→ Home</a></li>
-          <li><a href="properties.html">→ Properties</a></li>
-          <li><a href="map.html">→ Map Search</a></li>
-          <li><a href="profile.html">→ My Dashboard</a></li>
+          <li><a href="{% url "home:home" %}">→ Home</a></li>
+          <li><a href="{% url "home:properties" %}">→ Properties</a></li>
+          <li><a href="{% url "home:property_map" %}">→ Map Search</a></li>
+          <li><a href="{% url "my_profile" %}">→ My Profile</a></li>
           <li><a href="#">→ Post a Property</a></li>
           <li><a href="#">→ Move Cost Calculator</a></li>
         </ul>
