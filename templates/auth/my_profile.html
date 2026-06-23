@@ -43,7 +43,7 @@
 
 <div class="page-hero">
   <div class="container">
-    <h1>🏘 My Profile <b>{{ property.title }}</b></h1>
+    <h1>🏘 My Profile <b>{% if profile.current_property %}{{ profile.current_property.title }}{% else %}No Property Assigned{% endif %}</b></h1>
     <p>My Current Home</p>
   </div>
 </div>
@@ -56,38 +56,42 @@
       <div class="profile-card">
         <div class="profile-cover"></div>
         <div class="profile-info">
-          <img class="profile-avatar"
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80"
-            alt="James Kariuki" />
-          <div class="profile-name">James Kariuki</div>
-          <div class="profile-email">james.kariuki@email.com</div>
-          <div>📞 +254 712 345 678</div>
+          {% if profile.profile_picture %}
+            <img class="profile-avatar" src="{{ profile.profile_picture.url }}" alt="{{ profile.get_full_name }}" />
+          {% else %}
+            <div class="profile-avatar" style="background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#fff;font-weight:700;border-radius:50%;">
+              {{ profile.get_full_name|slice:":1"|default:user.username|slice:":1"|upper }}
+            </div>
+          {% endif %}
+          <div class="profile-name">{{ profile.get_full_name|default:user.username }}</div>
+          <div class="profile-email">{{ user.email }}</div>
+          <div>📞 {{ profile.phone_number|default:"No phone set" }}</div>
           <div class="profile-verified">✅ Verified Tenant</div>
-          <button class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">✏️ Edit Profile</button>
+          <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">✏️ Edit Profile</a>
         </div>
       </div>
 
       <!-- Nav -->
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:0.75rem;">
-        <div class="profile-nav-item active" data-section="overview">
+        <div class="profile-nav-item active" data-section="overview" onclick="switchTab('overview')">
           <span class="icon">📊</span> Overview
         </div>
-        <div class="profile-nav-item" data-section="residence">
+        <div class="profile-nav-item" data-section="residence" onclick="switchTab('residence')">
           <span class="icon">🏠</span> My Residence
         </div>
-        <div class="profile-nav-item" data-section="qr">
+        <div class="profile-nav-item" data-section="qr" onclick="switchTab('qr')">
           <span class="icon">📱</span> Digital ID & QR
         </div>
-        <div class="profile-nav-item" data-section="rent">
+        <div class="profile-nav-item" data-section="rent" onclick="switchTab('rent')">
           <span class="icon">💳</span> Rent & Bills
         </div>
-        <div class="profile-nav-item" data-section="saved">
+        <div class="profile-nav-item" data-section="saved" onclick="switchTab('saved')">
           <span class="icon">❤️</span> Saved Properties
         </div>
-        <div class="profile-nav-item" data-section="planner">
+        <div class="profile-nav-item" data-section="planner" onclick="switchTab('planner')">
           <span class="icon">📦</span> Move Planner
         </div>
-        <div class="profile-nav-item" data-section="history">
+        <div class="profile-nav-item" data-section="history" onclick="switchTab('history')">
           <span class="icon">🕐</span> Moving History
         </div>
       </div>
@@ -98,21 +102,21 @@
 
       <!-- OVERVIEW -->
       <div id="overview" class="profile-section">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:0.25rem;">Welcome back, James 👋</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:0.25rem;">Welcome back, {{ profile.get_full_name|default:user.username }} 👋</h2>
         <p style="color:var(--gray-400);margin-bottom:1.5rem;font-size:0.9rem;">Here's a snapshot of your TuHame dashboard</p>
 
         <div class="stat-cards-grid">
           <div class="stat-card">
-            <div class="stat-card-value">KES 85k</div>
+            <div class="stat-card-value">KES {% if profile.current_property %}{{ profile.current_property.price }}{% else %}0{% endif %}</div>
             <div class="stat-card-label">Monthly Rent</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-value">7</div>
+            <div class="stat-card-value">{{ saved_properties_count|default:"0" }}</div>
             <div class="stat-card-label">Saved Properties</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-value">3</div>
-            <div class="stat-card-label">Homes Rented</div>
+            <div class="stat-card-value">{{ total_moves|default:"0" }}</div>
+            <div class="stat-card-label">Homes Lived In</div>
           </div>
         </div>
 
@@ -121,25 +125,37 @@
           <div class="dashboard-card-title">🏠 Current Residence</div>
           <div style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
             <div style="width:140px;height:100px;border-radius:var(--radius);overflow:hidden;flex-shrink:0;">
-              <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+              {% if profile.current_property and profile.current_property.main_image %}
+                <div style="width:100%;height:100%;background-image:url('{{ profile.current_property.main_image.url }}');background-size:cover;background-position:center;"></div>
+              {% else %}
+                <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+              {% endif %}
             </div>
             <div style="flex:1;">
-              <div style="font-weight:700;font-size:1rem;color:var(--gray-900);margin-bottom:0.5rem;">Kilimani Heights Apartment — Unit 7B</div>
-              <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.25rem;">📍 14 Kilimani Rd, Kilimani, Nairobi</div>
-              <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.75rem;">🏗 House No. KLM-007B</div>
-              <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-                <span class="tag">📅 Move-in: Jan 2024</span>
-                <span class="tag">📋 Lease: 12 months</span>
-                <span class="tag">⏳ Expires: Jan 2026</span>
-              </div>
+              {% if profile.current_property %}
+                <div style="font-weight:700;font-size:1rem;color:var(--gray-900);margin-bottom:0.5rem;">{{ profile.current_property.title }}</div>
+                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.25rem;">📍 {{ profile.current_property.address }}, {{ profile.current_property.city }}</div>
+                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.75rem;">🏗 House No. {{ profile.current_property.slug|upper }}</div>
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                  <span class="tag">📅 Move-in: {{ profile.moved_in_date|date:"M Y"|default:"N/A" }}</span>
+                  <span class="tag">📋 {% if profile.current_property.minimum_lease_days %}{{ profile.current_property.minimum_lease_days|divisibleby:30|yesno:"Monthly,Yearly" }}{% else %}Monthly{% endif %}</span>
+                </div>
+              {% else %}
+                <div style="font-weight:700;font-size:1rem;color:var(--gray-400);">No current property assigned</div>
+                <div style="font-size:0.875rem;color:var(--gray-400);">Browse properties to find your next home</div>
+              {% endif %}
             </div>
           </div>
           <hr class="divider" />
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Landlord</div>
-              <div style="font-weight:600;font-size:0.875rem;">John Mwangi</div>
-              <div style="font-size:0.8rem;color:var(--primary);">📞 +254 712 000 001</div>
+              {% if profile.current_property and profile.current_property.owner %}
+                <div style="font-weight:600;font-size:0.875rem;">{{ profile.current_property.owner.get_full_name|default:profile.current_property.owner.username }}</div>
+                <div style="font-size:0.8rem;color:var(--primary);">📞 {{ profile.current_property.owner.profile.phone_number|default:"Not set" }}</div>
+              {% else %}
+                <div style="font-weight:600;font-size:0.875rem;">N/A</div>
+              {% endif %}
             </div>
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Next Rent Due</div>
@@ -166,7 +182,7 @@
             <button class="btn btn-outline-dark btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);" onclick="switchTab('planner')">
               <span style="font-size:1.3rem;">📦</span>Planner
             </button>
-            <a href="properties.html" class="btn btn-primary btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);">
+            <a href="{% url 'home:properties' %}" class="btn btn-primary btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);">
               <span style="font-size:1.3rem;">🔍</span>Browse
             </a>
           </div>
@@ -179,36 +195,56 @@
         <div class="dashboard-card">
           <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.5rem;">
             <div style="width:100%;max-width:300px;height:180px;border-radius:var(--radius-lg);overflow:hidden;">
-              <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;"></div>
+              {% if profile.current_property and profile.current_property.main_image %}
+                <div style="width:100%;height:100%;background-image:url('{{ profile.current_property.main_image.url }}');background-size:cover;"></div>
+              {% else %}
+                <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;"></div>
+              {% endif %}
             </div>
             <div style="flex:1;">
-              <h3 style="font-size:1.15rem;margin-bottom:0.75rem;">Kilimani Heights — Unit 7B</h3>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.875rem;">
-                <div><span style="color:var(--gray-400);">House Number</span><br/><strong>KLM-007B</strong></div>
-                <div><span style="color:var(--gray-400);">Floor</span><br/><strong>7th Floor</strong></div>
-                <div><span style="color:var(--gray-400);">Move-in Date</span><br/><strong>15 Jan 2024</strong></div>
-                <div><span style="color:var(--gray-400);">Lease Ends</span><br/><strong>14 Jan 2026</strong></div>
-                <div><span style="color:var(--gray-400);">Bedrooms</span><br/><strong>3 Bedrooms</strong></div>
-                <div><span style="color:var(--gray-400);">Bathrooms</span><br/><strong>2 Bathrooms</strong></div>
-              </div>
+              {% if profile.current_property %}
+                <h3 style="font-size:1.15rem;margin-bottom:0.75rem;">{{ profile.current_property.title }}</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.875rem;">
+                  <div><span style="color:var(--gray-400);">House Number</span><br/><strong>{{ profile.current_property.slug|upper }}</strong></div>
+                  <div><span style="color:var(--gray-400);">Floor</span><br/><strong>Floor {{ profile.current_property.floor_number }} of {{ profile.current_property.total_floors }}</strong></div>
+                  <div><span style="color:var(--gray-400);">Move-in Date</span><br/><strong>{{ profile.moved_in_date|date:"d M Y"|default:"N/A" }}</strong></div>
+                  <div><span style="color:var(--gray-400);">Property Type</span><br/><strong>{{ profile.current_property.get_property_type_display }}</strong></div>
+                  <div><span style="color:var(--gray-400);">Bedrooms</span><br/><strong>{{ profile.current_property.bedrooms }} Bedrooms</strong></div>
+                  <div><span style="color:var(--gray-400);">Bathrooms</span><br/><strong>{{ profile.current_property.bathrooms }} Bathrooms</strong></div>
+                </div>
+              {% else %}
+                <div style="text-align:center;padding:2rem 0;color:var(--gray-400);">
+                  <div style="font-size:3rem;margin-bottom:1rem;">🏠</div>
+                  <p>You don't have a current property assigned.</p>
+                  <a href="{% url 'home:properties' %}" class="btn btn-primary">Browse Properties</a>
+                </div>
+              {% endif %}
             </div>
           </div>
-          <hr class="divider" />
-          <div>
-            <strong style="font-size:0.875rem;">📞 Landlord Contact</strong>
-            <div style="display:flex;align-items:center;gap:1rem;margin-top:0.75rem;flex-wrap:wrap;">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Landlord" />
-              <div>
-                <div style="font-weight:700;">John Mwangi</div>
-                <div style="font-size:0.82rem;color:var(--gray-400);">Property Owner</div>
-              </div>
-              <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
-                <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);">📞 Call</button>
-                <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);">💬 WhatsApp</button>
-                <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">✉️ Email</button>
+          {% if profile.current_property and profile.current_property.owner %}
+            <hr class="divider" />
+            <div>
+              <strong style="font-size:0.875rem;">📞 Landlord Contact</strong>
+              <div style="display:flex;align-items:center;gap:1rem;margin-top:0.75rem;flex-wrap:wrap;">
+                {% if profile.current_property.owner.profile.profile_picture %}
+                  <img src="{{ profile.current_property.owner.profile.profile_picture.url }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Landlord" />
+                {% else %}
+                  <div style="width:48px;height:48px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;">
+                    {{ profile.current_property.owner.get_full_name|slice:":1"|default:profile.current_property.owner.username|slice:":1"|upper }}
+                  </div>
+                {% endif %}
+                <div>
+                  <div style="font-weight:700;">{{ profile.current_property.owner.get_full_name|default:profile.current_property.owner.username }}</div>
+                  <div style="font-size:0.82rem;color:var(--gray-400);">Property Owner</div>
+                </div>
+                <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
+                  <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);" onclick="profileToast('Calling {{ profile.current_property.owner.profile.phone_number|default:'landlord' }}…','📞')">📞 Call</button>
+                  <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);" onclick="profileToast('Opening WhatsApp…','💬')">💬 WhatsApp</button>
+                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">✉️ Email</button>
+                </div>
               </div>
             </div>
-          </div>
+          {% endif %}
         </div>
       </div>
 
@@ -227,21 +263,21 @@
               </div>
               <div style="margin-top:1.25rem;text-align:center;">
                 <div style="font-size:0.82rem;opacity:0.7;margin-bottom:0.25rem;">Tenant ID</div>
-                <div style="font-family:monospace;font-size:0.9rem;letter-spacing:0.1em;">TH-2024-KLM-007B</div>
+                <div style="font-family:monospace;font-size:0.9rem;letter-spacing:0.1em;">{% if profile.current_property %}TH-2024-{{ profile.current_property.slug|upper }}{% else %}TH-NO-PROPERTY{% endif %}</div>
               </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.82rem;margin-bottom:1.5rem;">
               <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
                 <div style="color:var(--gray-400);margin-bottom:0.25rem;">Property</div>
-                <div style="font-weight:700;">Kilimani Heights 7B</div>
+                <div style="font-weight:700;">{% if profile.current_property %}{{ profile.current_property.title }}{% else %}No Property{% endif %}</div>
               </div>
               <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
                 <div style="color:var(--gray-400);margin-bottom:0.25rem;">House ID</div>
-                <div style="font-weight:700;font-family:monospace;">KLM-007B</div>
+                <div style="font-weight:700;font-family:monospace;">{% if profile.current_property %}{{ profile.current_property.slug|upper }}{% else %}N/A{% endif %}</div>
               </div>
               <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
                 <div style="color:var(--gray-400);margin-bottom:0.25rem;">Emergency Contact</div>
-                <div style="font-weight:700;">+254 700 999 888</div>
+                <div style="font-weight:700;">{{ profile.emergency_contact_phone|default:"Not set" }}</div>
               </div>
               <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
                 <div style="color:var(--gray-400);margin-bottom:0.25rem;">Valid Until</div>
@@ -263,7 +299,7 @@
         <!-- Summary -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;">
           <div class="dashboard-card" style="text-align:center;padding:1.25rem;">
-            <div style="font-size:1.5rem;font-weight:800;color:var(--primary);font-family:var(--font-display);">KES 85,000</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--primary);font-family:var(--font-display);">KES {% if profile.current_property %}{{ profile.current_property.price }}{% else %}0{% endif %}</div>
             <div style="font-size:0.78rem;color:var(--gray-400);">Current Rent</div>
           </div>
           <div class="dashboard-card" style="text-align:center;padding:1.25rem;">
@@ -271,7 +307,7 @@
             <div style="font-size:0.78rem;color:var(--gray-400);">Pending Bills</div>
           </div>
           <div class="dashboard-card" style="text-align:center;padding:1.25rem;">
-            <div style="font-size:1.5rem;font-weight:800;color:var(--accent);font-family:var(--font-display);">KES 93,500</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--accent);font-family:var(--font-display);">KES {% if profile.current_property %}{{ profile.current_property.price|add:8500 }}{% else %}0{% endif %}</div>
             <div style="font-size:0.78rem;color:var(--gray-400);">Total Due July 1</div>
           </div>
         </div>
@@ -292,7 +328,7 @@
             <tbody>
               <tr>
                 <td>🏠 Monthly Rent — June</td>
-                <td style="font-weight:700;">KES 85,000</td>
+                <td style="font-weight:700;">KES {% if profile.current_property %}{{ profile.current_property.price }}{% else %}0{% endif %}</td>
                 <td>June 1, 2025</td>
                 <td><span class="bill-status paid">✅ Paid</span></td>
                 <td><button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-600);">Receipt</button></td>
@@ -352,38 +388,38 @@
       <!-- SAVED PROPERTIES -->
       <div id="saved" class="profile-section" style="display:none;">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">❤️ Saved Properties</h2>
-        <div class="properties-grid" style="grid-template-columns:repeat(2,1fr);">
-          <div class="property-card">
-            <div class="property-img-wrap" style="height:180px;">
-              <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&auto=format&fit=crop&q=80');background-size:cover;"></div>
-              <div class="property-save saved" data-id="fav-1">❤️</div>
-            </div>
-            <div class="property-body">
-              <div class="property-name">Lavington Penthouse</div>
-              <div class="property-location">📍 Lavington, Nairobi</div>
-              <div class="property-footer">
-                <div class="property-price">KES 120,000 <span>/mo</span></div>
-                <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
+        {% if saved_properties %}
+          <div class="properties-grid" style="grid-template-columns:repeat(2,1fr);">
+            {% for property in saved_properties %}
+              <div class="property-card">
+                <div class="property-img-wrap" style="height:180px;">
+                  {% if property.main_image %}
+                    <div style="width:100%;height:100%;background-image:url('{{ property.main_image.url }}');background-size:cover;"></div>
+                  {% else %}
+                    <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&auto=format&fit=crop&q=80');background-size:cover;"></div>
+                  {% endif %}
+                  <div class="property-save saved" data-id="fav-{{ property.id }}">❤️</div>
+                </div>
+                <div class="property-body">
+                  <div class="property-name">{{ property.title }}</div>
+                  <div class="property-location">📍 {{ property.city }}, {{ property.state }}</div>
+                  <div class="property-footer">
+                    <div class="property-price">KES {{ property.price }} <span>/mo</span></div>
+                    <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
+                  </div>
+                </div>
+                <div style="padding:0 1rem 1rem;"><a href="{% url 'properties:detail' property.slug %}" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View</a></div>
               </div>
-            </div>
-            <div style="padding:0 1rem 1rem;"><a href="property_detail.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View</a></div>
+            {% endfor %}
           </div>
-          <div class="property-card">
-            <div class="property-img-wrap" style="height:180px;">
-              <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&auto=format&fit=crop&q=80');background-size:cover;"></div>
-              <div class="property-save saved" data-id="fav-2">❤️</div>
-            </div>
-            <div class="property-body">
-              <div class="property-name">Karen Garden Villa</div>
-              <div class="property-location">📍 Karen, Nairobi</div>
-              <div class="property-footer">
-                <div class="property-price">KES 180,000 <span>/mo</span></div>
-                <div class="property-rating"><span class="rating-star">⭐</span>4.9</div>
-              </div>
-            </div>
-            <div style="padding:0 1rem 1rem;"><a href="property_detail.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View</a></div>
+        {% else %}
+          <div class="dashboard-card" style="text-align:center;padding:3rem 2rem;">
+            <div style="font-size:3rem;margin-bottom:1rem;">❤️</div>
+            <h3 style="color:var(--gray-500);">No saved properties yet</h3>
+            <p style="color:var(--gray-400);">Browse properties and save your favorites!</p>
+            <a href="{% url 'home:properties' %}" class="btn btn-primary" style="margin-top:1rem;">Browse Properties</a>
           </div>
-        </div>
+        {% endif %}
       </div>
 
       <!-- MOVE PLANNER -->
@@ -432,39 +468,48 @@
         <div class="dashboard-card">
           <div class="dashboard-card-title">📍 Previous Homes</div>
           <div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:rgba(37,99,235,0.1);">🏠</div>
-              <div>
-                <div class="timeline-date">Jan 2024 — Present</div>
-                <div class="timeline-name">Kilimani Heights — Unit 7B</div>
-                <div class="timeline-loc">📍 14 Kilimani Rd, Nairobi · KES 85,000/mo</div>
-                <span class="bill-status paid" style="margin-top:0.4rem;display:inline-flex;">Current</span>
+            {% if move_history %}
+              {% for move in move_history %}
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:rgba(37,99,235,0.1);">🏠</div>
+                  <div>
+                    <div class="timeline-date">
+                      {% if move.moved_in_date %}
+                        {{ move.moved_in_date|date:"M Y" }}
+                      {% endif %}
+                      {% if move.moved_out_date %}
+                        — {{ move.moved_out_date|date:"M Y" }}
+                      {% else %}
+                        — Present
+                      {% endif %}
+                    </div>
+                    <div class="timeline-name">
+                      {% if move.to_property %}
+                        {{ move.to_property.title }}
+                      {% else %}
+                        Unknown Property
+                      {% endif %}
+                    </div>
+                    <div class="timeline-loc">
+                      {% if move.to_property %}
+                        📍 {{ move.to_property.address }}, {{ move.to_property.city }}
+                      {% endif %}
+                      {% if move.to_property.price %}
+                        · KES {{ move.to_property.price }}/mo
+                      {% endif %}
+                    </div>
+                    {% if not move.moved_out_date %}
+                      <span class="bill-status paid" style="margin-top:0.4rem;display:inline-flex;">Current</span>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div style="text-align:center;padding:2rem 0;color:var(--gray-400);">
+                <div style="font-size:3rem;margin-bottom:1rem;">🕐</div>
+                <p>No move history yet.</p>
               </div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:rgba(34,197,94,0.1);">🏡</div>
-              <div>
-                <div class="timeline-date">Mar 2022 — Dec 2023</div>
-                <div class="timeline-name">Westlands Studio Loft</div>
-                <div class="timeline-loc">📍 Westlands, Nairobi · KES 35,000/mo</div>
-              </div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:rgba(245,158,11,0.1);">🏘</div>
-              <div>
-                <div class="timeline-date">Jun 2020 — Feb 2022</div>
-                <div class="timeline-name">Rongai 2BR Rental</div>
-                <div class="timeline-loc">📍 Rongai, Kajiado · KES 18,000/mo</div>
-              </div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:rgba(124,58,237,0.1);">🏢</div>
-              <div>
-                <div class="timeline-date">Jan 2019 — May 2020</div>
-                <div class="timeline-name">South B Bedsitter</div>
-                <div class="timeline-loc">📍 South B, Nairobi · KES 12,000/mo</div>
-              </div>
-            </div>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -472,23 +517,10 @@
     </div><!-- /main content -->
   </div>
 </div>
-</div>
 
 {% endblock content %}
 
-<footer class="footer" style="margin-top:0;">
-  <div class="container">
-    <div class="footer-bottom">
-      <p>© 2025 TuHame. All rights reserved. Powered by <strong style="color:var(--primary);">BlackCodeLabs</strong></p>
-      <div class="footer-bottom-links">
-        <a href="index.html">Home</a>
-        <a href="properties.html">Properties</a>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<script src="assets/js/main.js"></script>
+{% block extra_js %}
 <script>
   // Toast helper
   function profileToast(msg, icon) {
@@ -506,6 +538,11 @@
     document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
     document.querySelectorAll('.profile-section').forEach(s => s.style.display = 'none');
     document.getElementById(id).style.display = 'block';
+
+    // Generate QR code when QR tab is clicked
+    if (id === 'qr') {
+      generateQR();
+    }
   }
 
   // Checklist
@@ -546,7 +583,74 @@
     profileToast('Task added!', '✅');
   }
 
+  // QR Code Generation
+  function generateQR() {
+    const canvas = document.getElementById('qr-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const size = 160;
+
+    // Clear canvas
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+
+    // Generate QR code data
+    const qrData = {% if profile.current_property %} 'TH-2024-{{ profile.current_property.slug|upper }}' {% else %} 'TH-NO-PROPERTY' {% endif %};
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fullData = `TuHame-ID: ${qrData}\nDate: ${timestamp}\nName: {{ profile.get_full_name|default:user.username }}\nProperty: {% if profile.current_property %}{{ profile.current_property.title }}{% else %}None{% endif %}`;
+
+    // Draw a simple QR-like pattern (placeholder)
+    const colors = ['#1E3A8A', '#2563EB', '#3B82F6', '#60A5FA'];
+    const cellSize = 8;
+    const offset = 20;
+
+    for (let i = 0; i < 16; i++) {
+      for (let j = 0; j < 16; j++) {
+        const x = offset + i * cellSize;
+        const y = offset + j * cellSize;
+        const hash = (i * j * 31 + i * 7 + j * 13) % 3;
+
+        if (hash > 0) {
+          ctx.fillStyle = colors[(i + j) % 4];
+          ctx.fillRect(x, y, cellSize - 1, cellSize - 1);
+        }
+      }
+    }
+
+    // Draw position markers
+    ctx.fillStyle = '#1E3A8A';
+    // Top-left
+    ctx.fillRect(offset - 2, offset - 2, 20, 20);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(offset + 2, offset + 2, 12, 12);
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillRect(offset + 6, offset + 6, 4, 4);
+
+    // Top-right
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillRect(size - offset - 18, offset - 2, 20, 20);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(size - offset - 14, offset + 2, 12, 12);
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillRect(size - offset - 10, offset + 6, 4, 4);
+
+    // Bottom-left
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillRect(offset - 2, size - offset - 18, 20, 20);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(offset + 2, size - offset - 14, 12, 12);
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillRect(offset + 6, size - offset - 10, 4, 4);
+  }
+
   renderChecklist();
+
+  // Generate QR code on load if qr tab is visible
+  document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('qr').style.display !== 'none') {
+      generateQR();
+    }
+  });
 </script>
-</body>
-</html>
+{% endblock extra_js %}

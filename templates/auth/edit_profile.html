@@ -1,0 +1,169 @@
+<!-- apps/profiles/templates/profiles/edit_profile.html -->
+{% extends "home/base.html" %}
+
+{% block title %}Edit Profile - TuHame{% endblock title %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>✏️ Edit Profile</h1>
+    <p>Update your personal information</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top:2rem;max-width:800px;">
+
+  <div class="dashboard-card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {{ form.non_field_errors }}
+
+      <!-- Personal Information -->
+      <h3 style="margin-bottom:1rem;font-size:1.1rem;">Personal Information</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div style="grid-column:1/-1;">
+          {{ form.full_name.label_tag }}
+          {{ form.full_name }}
+          {{ form.full_name.errors }}
+        </div>
+        <div style="grid-column:1/-1;">
+          {{ form.bio.label_tag }}
+          {{ form.bio }}
+          {{ form.bio.errors }}
+        </div>
+        <div>
+          {{ form.date_of_birth.label_tag }}
+          {{ form.date_of_birth }}
+          {{ form.date_of_birth.errors }}
+        </div>
+        <div>
+          {{ form.profile_picture.label_tag }}
+          {{ form.profile_picture }}
+          {{ form.profile_picture.errors }}
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Contact Information -->
+      <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">Contact Information</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          {{ form.phone_number.label_tag }}
+          {{ form.phone_number }}
+          {{ form.phone_number.errors }}
+        </div>
+        <div>
+          {{ form.alternative_phone.label_tag }}
+          {{ form.alternative_phone }}
+          {{ form.alternative_phone.errors }}
+        </div>
+        <div style="grid-column:1/-1;">
+          {{ form.address.label_tag }}
+          {{ form.address }}
+          {{ form.address.errors }}
+        </div>
+        <div>
+          {{ form.city.label_tag }}
+          {{ form.city }}
+          {{ form.city.errors }}
+        </div>
+        <div>
+          {{ form.state.label_tag }}
+          {{ form.state }}
+          {{ form.state.errors }}
+        </div>
+        <div>
+          {{ form.country.label_tag }}
+          {{ form.country }}
+          {{ form.country.errors }}
+        </div>
+        <div>
+          {{ form.zip_code.label_tag }}
+          {{ form.zip_code }}
+          {{ form.zip_code.errors }}
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Professional Information -->
+      <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">Professional Information</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          {{ form.occupation.label_tag }}
+          {{ form.occupation }}
+          {{ form.occupation.errors }}
+        </div>
+        <div>
+          {{ form.employer.label_tag }}
+          {{ form.employer }}
+          {{ form.employer.errors }}
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Emergency Contact -->
+      <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">Emergency Contact</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          {{ form.emergency_contact_name.label_tag }}
+          {{ form.emergency_contact_name }}
+          {{ form.emergency_contact_name.errors }}
+        </div>
+        <div>
+          {{ form.emergency_contact_phone.label_tag }}
+          {{ form.emergency_contact_phone }}
+          {{ form.emergency_contact_phone.errors }}
+        </div>
+        <div style="grid-column:1/-1;">
+          {{ form.emergency_contact_relationship.label_tag }}
+          {{ form.emergency_contact_relationship }}
+          {{ form.emergency_contact_relationship.errors }}
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Preferences -->
+      <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">Preferences</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          {{ form.preferred_contact_method.label_tag }}
+          {{ form.preferred_contact_method }}
+          {{ form.preferred_contact_method.errors }}
+        </div>
+        <div>
+          {{ form.preferred_language.label_tag }}
+          {{ form.preferred_language }}
+          {{ form.preferred_language.errors }}
+        </div>
+        <div>
+          {{ form.email_notifications.label_tag }}
+          {{ form.email_notifications }}
+          {{ form.email_notifications.errors }}
+        </div>
+        <div>
+          {{ form.sms_notifications.label_tag }}
+          {{ form.sms_notifications }}
+          {{ form.sms_notifications.errors }}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.75rem;margin-top:2rem;">
+        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">
+          💾 Save Changes
+        </button>
+        <a href="{% url 'my_profile' %}" class="btn btn-outline" style="flex:1;justify-content:center;">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+{% endblock content %}

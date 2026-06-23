@@ -1,10 +1,8 @@
 {% extends "home/base.html" %}
 
-{% block title %}Available Properties on Sale{% endblock title %}
+{% block title %}{{ property.title }} - Available Properties on Sale{% endblock title %}
 
 {% block content %}
-
-{% comment %} <div style="padding-top:var(--nav-height);"></div> {% endcomment %}
 
 <div class="page-hero">
   <div class="container">
@@ -16,27 +14,37 @@
 <div class="container" style="padding-top:2rem;">
   <!-- Breadcrumb -->
   <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-400);margin-bottom:1.5rem;">
-    <a href="index.html" style="color:var(--primary);">Home</a>
+    <a href="{% url 'home:home' %}" style="color:var(--primary);">Home</a>
     <span>›</span>
-    <a href="properties.html" style="color:var(--primary);">Properties</a>
+    <a href="{% url 'home:properties' %}" style="color:var(--primary);">Properties</a>
     <span>›</span>
-    <span>Kilimani Heights Apartment</span>
+    <span>{{ property.title }}</span>
   </div>
 
   <!-- Photo Gallery -->
   <div class="property-gallery">
     <div class="gallery-main">
-      <img class="gallery-img" src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&auto=format&fit=crop&q=80" alt="Main view" style="width:100%;height:100%;object-fit:cover;" />
+      {% if property.main_image %}
+        <img class="gallery-img" src="{{ property.main_image.url }}" alt="{{ property.title }}" style="width:100%;height:100%;object-fit:cover;" />
+      {% else %}
+        <img class="gallery-img" src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&auto=format&fit=crop&q=80" alt="Main view" style="width:100%;height:100%;object-fit:cover;" />
+      {% endif %}
     </div>
-    <div>
-      <img class="gallery-img" src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&auto=format&fit=crop&q=80" alt="Living room" style="width:100%;height:100%;object-fit:cover;" />
-    </div>
-    <div>
-      <img class="gallery-img" src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&auto=format&fit=crop&q=80" alt="Kitchen" style="width:100%;height:100%;object-fit:cover;" />
-    </div>
-    <div class="gallery-more">
-      <img class="gallery-img" src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&auto=format&fit=crop&q=80" alt="More photos" style="width:100%;height:100%;object-fit:cover;" />
-    </div>
+    {% for image in property.images.all|slice:":3" %}
+      <div>
+        <img class="gallery-img" src="{{ image.image.url }}" alt="{{ image.caption|default:property.title }}" style="width:100%;height:100%;object-fit:cover;" />
+      </div>
+    {% empty %}
+      <div>
+        <img class="gallery-img" src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&auto=format&fit=crop&q=80" alt="Living room" style="width:100%;height:100%;object-fit:cover;" />
+      </div>
+      <div>
+        <img class="gallery-img" src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&auto=format&fit=crop&q=80" alt="Kitchen" style="width:100%;height:100%;object-fit:cover;" />
+      </div>
+      <div class="gallery-more">
+        <img class="gallery-img" src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&auto=format&fit=crop&q=80" alt="More photos" style="width:100%;height:100%;object-fit:cover;" />
+      </div>
+    {% endfor %}
   </div>
 
   <!-- Detail Layout -->
@@ -47,13 +55,15 @@
       <div class="detail-header">
         <div>
           <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">
-            <span class="badge badge-primary">🏠 {{ property.property_type }}</span>
-            <span class="badge badge-accent">✅ Available</span>
-            <span class="badge" style="background:rgba(37,99,235,0.08);color:var(--primary);">Featured</span>
+            <span class="badge badge-primary">🏠 {{ property.get_property_type_display }}</span>
+            <span class="badge badge-accent">✅ {{ property.get_status_display }}</span>
+            {% if property.is_active %}
+              <span class="badge" style="background:rgba(37,99,235,0.08);color:var(--primary);">Active</span>
+            {% endif %}
           </div>
-          <h1 class="detail-title">Kilimani Heights Apartment</h1>
+          <h1 class="detail-title">{{ property.title }}</h1>
           <div style="display:flex;align-items:center;gap:0.5rem;color:var(--gray-500);margin-top:0.5rem;font-size:0.9rem;">
-            📍 14 Kilimani Road, Kilimani, Nairobi
+            📍 {{ property.address }}, {{ property.city }}, {{ property.state }}
             <span style="color:var(--primary);font-size:0.8rem;cursor:pointer;">View on map →</span>
           </div>
         </div>
@@ -72,34 +82,35 @@
         <div class="detail-meta-item">🚿 <strong>{{ property.bathrooms }}</strong> Bathrooms</div>
         <div class="detail-meta-item">📐 <strong>{{ property.area_sqft }} m²</strong></div>
         <div class="detail-meta-item">🏢 Floor <strong>{{ property.floor_number }} of {{ property.total_floors }}</strong></div>
-        <div class="detail-meta-item">🚗 <strong>2</strong> Parking</div>
+        <div class="detail-meta-item">🚗 <strong>{{ property.units.count }}</strong> Parking</div>
         <div class="detail-meta-item">📅 Available <strong>Now</strong></div>
       </div>
 
       <!-- Description -->
       <div class="detail-section-title">About This Property</div>
       <p style="color:var(--gray-600);line-height:1.8;margin-bottom:1rem;">
-        A bright, spacious 3-bedroom apartment on the 7th floor of Kilimani Heights, one of Nairobi's most sought-after residential buildings. Floor-to-ceiling windows offer panoramic views of the city and the Nairobi National Park in the distance.
-      </p>
-      <p style="color:var(--gray-600);line-height:1.8;">
-        The open-plan living and dining area flows onto a generous balcony. The modern kitchen features granite worktops and integrated appliances. The master suite has an en-suite bathroom with a walk-in shower and a dressing room. Two further bedrooms share a well-appointed family bathroom.
+        {{ property.description|linebreaks }}
       </p>
 
       <!-- Amenities -->
       <div class="detail-section-title">Amenities & Features</div>
       <div class="amenities-grid">
-        <div class="amenity-item available">📶 WiFi Included</div>
-        <div class="amenity-item available">🚗 Parking (x2)</div>
-        <div class="amenity-item available">🔒 24hr Security</div>
-        <div class="amenity-item available">💧 Borehole Water</div>
-        <div class="amenity-item available">⚡ Backup Power</div>
-        <div class="amenity-item available">🏊 Swimming Pool</div>
-        <div class="amenity-item available">💪 Gym Access</div>
-        <div class="amenity-item available">🌿 Garden</div>
-        <div class="amenity-item available">🛗 Lifts (x2)</div>
-        <div class="amenity-item unavailable">🐾 Pet Friendly</div>
-        <div class="amenity-item available">🍳 Fitted Kitchen</div>
-        <div class="amenity-item available">🧺 Laundry Room</div>
+        {% for amenity in property.amenities.all %}
+          <div class="amenity-item available">{{ amenity.icon|default:"✅" }} {{ amenity.name }}</div>
+        {% empty %}
+          <div class="amenity-item available">📶 WiFi Included</div>
+          <div class="amenity-item available">🚗 Parking Available</div>
+          <div class="amenity-item available">🔒 24hr Security</div>
+          <div class="amenity-item available">💧 Water Supply</div>
+          <div class="amenity-item available">⚡ Backup Power</div>
+          <div class="amenity-item available">🏊 Swimming Pool</div>
+          <div class="amenity-item available">💪 Gym Access</div>
+          <div class="amenity-item available">🌿 Garden</div>
+          <div class="amenity-item available">🛗 Elevator</div>
+          <div class="amenity-item unavailable">🐾 Pet Friendly</div>
+          <div class="amenity-item available">🍳 Fitted Kitchen</div>
+          <div class="amenity-item available">🧺 Laundry Room</div>
+        {% endfor %}
       </div>
 
       <!-- Nearby -->
@@ -108,28 +119,28 @@
         <div class="nearby-item">
           <div class="nearby-icon" style="background:#EFF6FF;">🏫</div>
           <div>
-            <div class="nearby-name">Kilimani Primary School</div>
+            <div class="nearby-name">{{ property.city }} Primary School</div>
             <div class="nearby-dist">📏 0.4 km away</div>
           </div>
         </div>
         <div class="nearby-item">
           <div class="nearby-icon" style="background:#FEF3C7;">🏥</div>
           <div>
-            <div class="nearby-name">Nairobi West Hospital</div>
+            <div class="nearby-name">{{ property.city }} Hospital</div>
             <div class="nearby-dist">📏 1.2 km away</div>
           </div>
         </div>
         <div class="nearby-item">
           <div class="nearby-icon" style="background:#F0FDF4;">🛒</div>
           <div>
-            <div class="nearby-name">Carrefour Supermarket</div>
+            <div class="nearby-name">Supermarket</div>
             <div class="nearby-dist">📏 0.8 km away</div>
           </div>
         </div>
         <div class="nearby-item">
           <div class="nearby-icon" style="background:#FDF4FF;">🚌</div>
           <div>
-            <div class="nearby-name">Kilimani Bus Stop</div>
+            <div class="nearby-name">{{ property.city }} Bus Stop</div>
             <div class="nearby-dist">📏 0.2 km away</div>
           </div>
         </div>
@@ -143,21 +154,21 @@
         <div class="nearby-item">
           <div class="nearby-icon" style="background:#EFF6FF;">🏦</div>
           <div>
-            <div class="nearby-name">Equity Bank Kilimani</div>
+            <div class="nearby-name">Bank {{ property.city }}</div>
             <div class="nearby-dist">📏 0.5 km away</div>
           </div>
         </div>
         <div class="nearby-item">
           <div class="nearby-icon" style="background:#F0FDF4;">⛽</div>
           <div>
-            <div class="nearby-name">Total Energies Station</div>
+            <div class="nearby-name">Fuel Station</div>
             <div class="nearby-dist">📏 0.7 km away</div>
           </div>
         </div>
         <div class="nearby-item">
           <div class="nearby-icon" style="background:#FEF3C7;">🍽</div>
           <div>
-            <div class="nearby-name">Java House Kilimani</div>
+            <div class="nearby-name">Java House {{ property.city }}</div>
             <div class="nearby-dist">📏 0.3 km away</div>
           </div>
         </div>
@@ -166,7 +177,7 @@
       <!-- Move Score Full -->
       <div class="detail-section-title">TuHame Move Score™</div>
       <div class="move-score-card">
-        <div class="move-score-title">🏅 Overall Move Score — Kilimani Heights</div>
+        <div class="move-score-title">🏅 Overall Move Score — {{ property.title }}</div>
         <div class="move-score-main">
           <div class="move-score-circle"><span class="move-score-num">91</span></div>
           <div class="move-score-bars">
@@ -198,35 +209,30 @@
           </div>
         </div>
         <div style="padding:0.875rem;background:rgba(255,255,255,0.06);border-radius:10px;text-align:center;">
-          <div style="color:var(--accent);font-weight:800;">✨ Excellent Move — Top 8% in Nairobi</div>
+          <div style="color:var(--accent);font-weight:800;">✨ Excellent Move — Top 8% in {{ property.city }}</div>
         </div>
       </div>
 
       <!-- Reviews -->
       <div class="detail-section-title">Tenant Reviews</div>
       <div style="display:flex;flex-direction:column;gap:1.25rem;">
-        <div style="background:var(--gray-50);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--gray-200);">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
-            <div style="width:42px;height:42px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">AK</div>
-            <div>
-              <div style="font-weight:700;font-size:0.9rem;color:var(--gray-900);">Amina K.</div>
-              <div style="font-size:0.78rem;color:var(--gray-400);">Tenant · March 2025</div>
+        {% for booking in property.bookings.all|slice:":2" %}
+          <div style="background:var(--gray-50);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--gray-200);">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+              <div style="width:42px;height:42px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">{{ booking.client|default:"T"|slice:":2"|upper }}</div>
+              <div>
+                <div style="font-weight:700;font-size:0.9rem;color:var(--gray-900);">{{ booking.client|default:"Tenant" }}</div>
+                <div style="font-size:0.78rem;color:var(--gray-400);">Tenant · {{ booking.created_at|date:"F Y" }}</div>
+              </div>
+              <div style="margin-left:auto;color:var(--warning);">⭐⭐⭐⭐⭐</div>
             </div>
-            <div style="margin-left:auto;color:var(--warning);">⭐⭐⭐⭐⭐</div>
+            <p style="font-size:0.875rem;color:var(--gray-600);line-height:1.7;">{{ booking.special_requests|default:"Great property! Would definitely recommend." }}</p>
           </div>
-          <p style="font-size:0.875rem;color:var(--gray-600);line-height:1.7;">Absolutely love this apartment. The views are stunning and the management is very responsive. The pool and gym are great perks. Moving in was smooth thanks to TuHame's digital process.</p>
-        </div>
-        <div style="background:var(--gray-50);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--gray-200);">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
-            <div style="width:42px;height:42px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">MO</div>
-            <div>
-              <div style="font-weight:700;font-size:0.9rem;color:var(--gray-900);">Michael O.</div>
-              <div style="font-size:0.78rem;color:var(--gray-400);">Tenant · January 2025</div>
-            </div>
-            <div style="margin-left:auto;color:var(--warning);">⭐⭐⭐⭐⭐</div>
+        {% empty %}
+          <div style="background:var(--gray-50);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--gray-200);text-align:center;color:var(--gray-500);">
+            No reviews yet. Be the first to review this property!
           </div>
-          <p style="font-size:0.875rem;color:var(--gray-600);line-height:1.7;">Great location — walking distance to everything. Building security is excellent. Only minor issue is traffic on Kilimani Road during rush hour, but that's expected in Nairobi.</p>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- Map Preview -->
@@ -234,11 +240,17 @@
       <div style="height:280px;background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--gray-200);position:relative;overflow:hidden;">
         <div style="text-align:center;">
           <div style="font-size:2.5rem;margin-bottom:0.5rem;">🗺</div>
-          <p style="color:var(--gray-500);font-size:0.9rem;">Map preview — <a href="map.html" style="color:var(--primary);font-weight:600;">Open full map →</a></p>
+          <p style="color:var(--gray-500);font-size:0.9rem;">
+            {% if property.latitude and property.longitude %}
+              📍 {{ property.latitude }}, {{ property.longitude }}
+            {% else %}
+              Map preview — <a href="map.html" style="color:var(--primary);font-weight:600;">Open full map →</a>
+            {% endif %}
+          </p>
         </div>
         <!-- Decorative markers -->
-        <div class="map-marker-demo" style="position:absolute;top:40%;left:45%;">📍 Kilimani Heights</div>
-        <div class="map-marker-demo" style="position:absolute;top:60%;left:60%;background:var(--accent);font-size:0.75rem;">🛒 Carrefour</div>
+        <div class="map-marker-demo" style="position:absolute;top:40%;left:45%;">📍 {{ property.title }}</div>
+        <div class="map-marker-demo" style="position:absolute;top:60%;left:60%;background:var(--accent);font-size:0.75rem;">🛒 Nearby</div>
         <div class="map-marker-demo" style="position:absolute;top:25%;left:30%;background:var(--warning);color:var(--gray-900);font-size:0.75rem;">🏫 School</div>
       </div>
 
@@ -249,46 +261,111 @@
       <!-- Pricing Card -->
       <div class="contact-card" style="margin-bottom:1.25rem;">
         <div style="text-align:center;padding-bottom:1.25rem;border-bottom:1px solid var(--gray-100);margin-bottom:1.25rem;">
-          <div style="font-size:2rem;font-weight:800;color:var(--primary);font-family:var(--font-display);">KES 85,000</div>
+          <div style="font-size:2rem;font-weight:800;color:var(--primary);font-family:var(--font-display);">KES {{ property.price }}</div>
           <div style="color:var(--gray-400);font-size:0.85rem;">per month</div>
           <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
-            <span class="tag">💧 Water incl.</span>
-            <span class="tag">🔒 Security incl.</span>
-            <span class="tag">🚗 Parking incl.</span>
+            {% if property.security_deposit > 0 %}
+              <span class="tag">💰 Deposit: KES {{ property.security_deposit }}</span>
+            {% endif %}
+            {% if property.maintenance_fee > 0 %}
+              <span class="tag">🔧 Maintenance: KES {{ property.maintenance_fee }}</span>
+            {% endif %}
+            <span class="tag">📅 Min. {{ property.minimum_lease_days }} days</span>
           </div>
         </div>
 
         <!-- Landlord -->
         <div class="contact-landlord">
-          <img class="landlord-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80" alt="John Mwangi" />
+          {% if property.owner.profile_pic %}
+            <img class="landlord-avatar" src="{{ property.owner.profile_pic.url }}" alt="{{ property.owner.get_full_name }}" />
+          {% else %}
+            <div style="width:50px;height:50px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.2rem;flex-shrink:0;">
+              {{ property.owner.get_full_name|slice:":1"|default:"O" }}
+            </div>
+          {% endif %}
           <div>
-            <div class="landlord-name">{{ property.owner }}</div>
-            <div class="landlord-role">Property Owner</div>
+            <div class="landlord-name">{{ property.owner.get_full_name|default:property.owner.username }}</div>
+            <div class="landlord-role">
+              {% if property.owner == property.agent %}
+                Owner & Agent
+              {% elif property.agent %}
+                Agent: {{ property.agent.get_full_name|default:property.agent.username }}
+              {% else %}
+                Property Owner
+              {% endif %}
+            </div>
             <div class="landlord-badge">✅ Verified Landlord</div>
           </div>
         </div>
 
         <!-- Contact Buttons -->
         <div class="contact-btns">
-          <button class="contact-btn contact-btn-call" onclick="showToast('Calling +254 712 000 001…','📞')">📞 Call Landlord</button>
+          <button class="contact-btn contact-btn-call" onclick="showToast('Calling {{ property.owner.profile.phone|default:'+254 712 000 001' }}…','📞')">📞 Call Landlord</button>
           <button class="contact-btn contact-btn-whatsapp" onclick="showToast('Opening WhatsApp…','💬')">💬 WhatsApp</button>
-          <button class="contact-btn contact-btn-email" onclick="showToast('Opening email…','✉️')">✉️ Send Email</button>
+          <button class="contact-btn contact-btn-email" onclick="showToast('Opening email to {{ property.owner.email }}…','✉️')">✉️ Send Email</button>
         </div>
 
         <!-- Schedule Viewing -->
         <div class="detail-section-title" style="margin-top:0;">Schedule a Viewing</div>
-        <div class="viewing-form">
-          <input type="text" placeholder="Your full name" />
-          <input type="tel" placeholder="Phone number" />
-          <input type="date" />
-          <select>
-            <option>Morning (8am–12pm)</option>
-            <option>Afternoon (12pm–5pm)</option>
-            <option>Evening (5pm–7pm)</option>
-          </select>
-          <textarea rows="2" placeholder="Any specific questions for the landlord?"></textarea>
-          <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="showToast('Viewing request sent! 🎉','✅')">Request Viewing</button>
-        </div>
+        <form method="post" class="viewing-form">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div style="color:var(--danger);margin-bottom:0.75rem;">
+              {{ form.non_field_errors }}
+            </div>
+          {% endif %}
+
+          <!-- Full Name -->
+          <div style="margin-bottom:0.75rem;">
+            {{ form.full_name }}
+            {% if form.full_name.errors %}
+              <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem;">{{ form.full_name.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Phone -->
+          <div style="margin-bottom:0.75rem;">
+            {{ form.phone_number }}
+            {% if form.phone_number.errors %}
+              <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem;">{{ form.phone_number.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Email -->
+          <div style="margin-bottom:0.75rem;">
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem;">{{ form.email.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Preferred Date -->
+          <div style="margin-bottom:0.75rem;">
+            {{ form.preferred_date }}
+            {% if form.preferred_date.errors %}
+              <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem;">{{ form.preferred_date.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Preferred Time -->
+          <div style="margin-bottom:0.75rem;">
+            {{ form.preferred_time }}
+            {% if form.preferred_time.errors %}
+              <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem;">{{ form.preferred_time.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Special Requests -->
+          <div style="margin-bottom:0.75rem;">
+            {{ form.special_requests }}
+            {% if form.special_requests.errors %}
+              <div style="color:var(--danger);font-size:0.8rem;margin-top:0.25rem;">{{ form.special_requests.errors }}</div>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Request Viewing</button>
+        </form>
       </div>
 
       <!-- Move Calculator -->
@@ -298,7 +375,7 @@
           <div class="filter-group-title" style="margin-bottom:0.5rem;">Distance (km)</div>
           <input type="number" id="move-distance" class="filter-input" placeholder="e.g. 15" style="margin-bottom:0.75rem;" />
           <div class="filter-group-title" style="margin-bottom:0.5rem;">Number of Rooms</div>
-          <input type="number" id="move-rooms" class="filter-input" placeholder="e.g. 3" value="3" />
+          <input type="number" id="move-rooms" class="filter-input" placeholder="e.g. 3" value="{{ property.bedrooms }}" />
           <div style="margin-top:1rem;padding:0.875rem;background:var(--gray-50);border-radius:var(--radius);text-align:center;">
             <div id="move-cost-result" style="font-weight:700;color:var(--primary);font-size:1rem;">Enter details above</div>
           </div>
@@ -310,7 +387,7 @@
         <div class="dashboard-card-title">💰 Mortgage Calculator</div>
         <div id="mortgage-calc">
           <div class="filter-group-title" style="margin-bottom:0.5rem;">Loan Amount (KES)</div>
-          <input type="number" id="loan-amount" class="filter-input" placeholder="e.g. 8000000" style="margin-bottom:0.75rem;" />
+          <input type="number" id="loan-amount" class="filter-input" placeholder="e.g. {{ property.price|add:'0'|floatformat:'0' }}" style="margin-bottom:0.75rem;" />
           <div class="filter-group-title" style="margin-bottom:0.5rem;">Interest Rate (%)</div>
           <input type="number" id="interest-rate" class="filter-input" placeholder="e.g. 13" step="0.1" style="margin-bottom:0.75rem;" />
           <div class="filter-group-title" style="margin-bottom:0.5rem;">Loan Term (Years)</div>
@@ -330,71 +407,39 @@
     <p style="color:var(--gray-400);margin-bottom:2rem;">You might also like these properties nearby</p>
     <div class="properties-grid" style="grid-template-columns:repeat(3,1fr);">
 
+      {% for similar in similar_properties %}
       <div class="property-card">
         <div class="property-img-wrap">
-          <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+          {% if similar.main_image %}
+            <img src="{{ similar.main_image.url }}" alt="{{ similar.title }}" style="width:100%;height:100%;object-fit:cover;" />
+          {% else %}
+            <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+          {% endif %}
           <div class="property-badge featured">Featured</div>
-          <div class="property-save" data-id="sim-1">🤍</div>
+          <div class="property-save" data-id="sim-{{ forloop.counter }}">🤍</div>
         </div>
         <div class="property-body">
-          <div class="property-name">Lavington Court Penthouse</div>
-          <div class="property-location">📍 Lavington, Nairobi</div>
+          <div class="property-name">{{ similar.title }}</div>
+          <div class="property-location">📍 {{ similar.city }}, {{ similar.state }}</div>
           <div class="property-meta">
-            <div class="property-meta-item">🛏 3</div>
-            <div class="property-meta-item">🚿 2</div>
-            <div class="property-meta-item">📐 190 m²</div>
+            <div class="property-meta-item">🛏 {{ similar.bedrooms }}</div>
+            <div class="property-meta-item">🚿 {{ similar.bathrooms }}</div>
+            <div class="property-meta-item">📐 {{ similar.area_sqft }} m²</div>
           </div>
           <div class="property-footer">
-            <div class="property-price">KES 120,000 <span>/mo</span></div>
+            <div class="property-price">KES {{ similar.price }} <span>/mo</span></div>
             <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
           </div>
         </div>
-        <div style="padding:0 1.25rem 1.25rem;"><a href="property_detail.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View Details</a></div>
+        <div style="padding:0 1.25rem 1.25rem;">
+          <a href="{% url 'home:about_property' similar.slug %}" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View Details</a>
+        </div>
       </div>
-
-      <div class="property-card">
-        <div class="property-img-wrap">
-          <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
-          <div class="property-badge" style="background:var(--info);">BnB</div>
-          <div class="property-save" data-id="sim-2">🤍</div>
-        </div>
-        <div class="property-body">
-          <div class="property-name">Upperhill Serviced Apt</div>
-          <div class="property-location">📍 Upperhill, Nairobi</div>
-          <div class="property-meta">
-            <div class="property-meta-item">🛏 2</div>
-            <div class="property-meta-item">🚿 2</div>
-            <div class="property-meta-item">📐 110 m²</div>
-          </div>
-          <div class="property-footer">
-            <div class="property-price">KES 75,000 <span>/mo</span></div>
-            <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
-          </div>
-        </div>
-        <div style="padding:0 1.25rem 1.25rem;"><a href="property_detail.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View Details</a></div>
+      {% empty %}
+      <div style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem;">
+        No similar properties found
       </div>
-
-      <div class="property-card">
-        <div class="property-img-wrap">
-          <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
-          <div class="property-badge new">New</div>
-          <div class="property-save" data-id="sim-3">🤍</div>
-        </div>
-        <div class="property-body">
-          <div class="property-name">Westlands Modern 2BR</div>
-          <div class="property-location">📍 Westlands, Nairobi</div>
-          <div class="property-meta">
-            <div class="property-meta-item">🛏 2</div>
-            <div class="property-meta-item">🚿 1</div>
-            <div class="property-meta-item">📐 80 m²</div>
-          </div>
-          <div class="property-footer">
-            <div class="property-price">KES 55,000 <span>/mo</span></div>
-            <div class="property-rating"><span class="rating-star">⭐</span>4.5</div>
-          </div>
-        </div>
-        <div style="padding:0 1.25rem 1.25rem;"><a href="property_detail.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View Details</a></div>
-      </div>
+      {% endfor %}
 
     </div>
   </div>

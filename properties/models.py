@@ -160,3 +160,5 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"Booking for {self.client.name} - {self.property.title}"
+
+
