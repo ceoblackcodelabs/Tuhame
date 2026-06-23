@@ -1,72 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Dashboard – TuHame</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
-  <style>
-    .qr-canvas-wrap {
-      width: 180px; height: 180px;
-      margin: 1.25rem auto;
-      border: 2px solid var(--gray-200);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      background: #fff;
-    }
-    canvas { display: block; }
+{% extends "home/base.html" %}
 
-    .progress-bar-wrap { background: var(--gray-100); border-radius: var(--radius-full); height: 8px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; border-radius: var(--radius-full); background: var(--primary); transition: width 1s ease; }
-    .progress-bar-fill.green { background: var(--accent); }
-    .progress-bar-fill.orange { background: var(--warning); }
+{% block title %}My Profile{% endblock title %}
 
-    .timeline-item { display: flex; gap: 1rem; padding-bottom: 1.5rem; position: relative; }
-    .timeline-item::before {
-      content: ''; position: absolute;
-      left: 18px; top: 36px; bottom: 0; width: 2px;
-      background: var(--gray-200);
-    }
-    .timeline-item:last-child::before { display: none; }
-    .timeline-dot {
-      width: 38px; height: 38px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; flex-shrink: 0;
-    }
-    .timeline-date { font-size: 0.78rem; color: var(--gray-400); margin-bottom: 0.25rem; }
-    .timeline-name { font-weight: 700; font-size: 0.9rem; color: var(--gray-900); }
-    .timeline-loc { font-size: 0.82rem; color: var(--gray-500); }
-  </style>
-</head>
-<body>
+{% block inject_css %}
 
-<nav class="navbar scrolled">
-  <div class="nav-container">
-    <a href="index.html" class="nav-logo" style="color:var(--primary);">
-      <div class="nav-logo-icon">🏠</div>TuHame
-    </a>
-    <ul class="nav-menu">
-      <li><a href="index.html" class="nav-link">Home</a></li>
-      <li><a href="properties.html" class="nav-link">Properties</a></li>
-      <li><a href="map.html" class="nav-link">Map Search</a></li>
-    </ul>
-    <div class="nav-actions">
-      <button class="dark-toggle">🌙</button>
-      <a href="login.html" class="nav-btn-login">Logout</a>
-    </div>
-    <button class="hamburger"><span></span><span></span><span></span></button>
-  </div>
-</nav>
-<div class="mobile-menu">
-  <a href="index.html">🏠 Home</a>
-  <a href="properties.html">🏘 Properties</a>
-  <a href="map.html">🗺 Map Search</a>
-  <div class="mobile-actions">
-    <a href="login.html" class="btn btn-outline-dark btn-sm">Logout</a>
+<style>
+  .qr-canvas-wrap {
+    width: 180px; height: 180px;
+    margin: 1.25rem auto;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #fff;
+  }
+  canvas { display: block; }
+
+  .progress-bar-wrap { background: var(--gray-100); border-radius: var(--radius-full); height: 8px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: var(--radius-full); background: var(--primary); transition: width 1s ease; }
+  .progress-bar-fill.green { background: var(--accent); }
+  .progress-bar-fill.orange { background: var(--warning); }
+
+  .timeline-item { display: flex; gap: 1rem; padding-bottom: 1.5rem; position: relative; }
+  .timeline-item::before {
+    content: ''; position: absolute;
+    left: 18px; top: 36px; bottom: 0; width: 2px;
+    background: var(--gray-200);
+  }
+  .timeline-item:last-child::before { display: none; }
+  .timeline-dot {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .timeline-date { font-size: 0.78rem; color: var(--gray-400); margin-bottom: 0.25rem; }
+  .timeline-name { font-weight: 700; font-size: 0.9rem; color: var(--gray-900); }
+  .timeline-loc { font-size: 0.82rem; color: var(--gray-500); }
+</style>
+
+{% endblock inject_css %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>🏘 My Profile <b>{{ property.title }}</b></h1>
+    <p>My Current Home</p>
   </div>
 </div>
-
-<div style="padding-top:var(--nav-height);background:var(--light-bg);min-height:100vh;">
 <div class="container">
   <div class="profile-layout">
 
@@ -493,6 +473,8 @@
   </div>
 </div>
 </div>
+
+{% endblock content %}
 
 <footer class="footer" style="margin-top:0;">
   <div class="container">

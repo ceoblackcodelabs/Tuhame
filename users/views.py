@@ -73,3 +73,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         # Add dashboard statistics here
         return context
+
+class ProfileView(TemplateView):
+    template_name = "auth/profile.html"
