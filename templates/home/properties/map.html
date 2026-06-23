@@ -351,23 +351,22 @@
       <div class="nav-logo-icon">🏠</div>TuHame
     </a>
     <ul class="nav-menu">
-      <li><a href="index.html" class="nav-link">Home</a></li>
-      <li><a href="properties.html" class="nav-link">Properties</a></li>
-      <li><a href="map.html" class="nav-link active">Map Search</a></li>
+      <li><a href="{% url "home:home" %}" class="nav-link">Home</a></li>
+      <li><a href="{% url "home:properties" %}" class="nav-link">Properties</a></li>
     </ul>
     <div class="nav-actions">
       <button class="dark-toggle">🌙</button>
-      <a href="login.html" class="nav-btn-login">Login</a>
-      <a href="register.html" class="nav-btn-register">Register</a>
+      <a href="" class="nav-btn-login">Login</a>
+      <a href="" class="nav-btn-register">Register</a>
     </div>
     <button class="hamburger"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
 <div class="mobile-menu">
-  <a href="index.html">🏠 Home</a>
-  <a href="properties.html">🏘 Properties</a>
-  <a href="map.html">🗺 Map Search</a>
+  <a href="">🏠 Home</a>
+  <a href="">🏘 Properties</a>
+  <a href="">🗺 Map Search</a>
   <div class="mobile-actions">
     <a href="login.html" class="btn btn-outline-dark btn-sm">Login</a>
     <a href="register.html" class="btn btn-primary btn-sm">Register</a>
