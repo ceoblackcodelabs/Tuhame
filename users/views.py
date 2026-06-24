@@ -9,6 +9,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import RedirectView
 from .forms import ProfileForm
+from django.db import models
 
 
 class LoginView(FormView):
@@ -100,6 +101,35 @@ class MyProfileView(LoginRequiredMixin, DetailView):
             user=self.request.user,
             status__in=['pending', 'confirmed']
         ).order_by('preferred_date')[:5]
+
+        # Get bills for user's current property
+        profile = self.request.user.profile
+        if profile.current_property:
+            # Get all bills for the current property
+            context['bills'] = profile.current_property.bills.filter(
+                is_active=True
+            ).order_by('-due_date', '-created_at')
+
+            # Get bill statistics
+            bills = context['bills']
+            context['total_bills'] = bills.count()
+            context['paid_bills'] = bills.filter(status='paid').count()
+            context['pending_bills'] = bills.filter(status='pending').count()
+            context['overdue_bills'] = bills.filter(status='overdue').count()
+            context['total_amount_due'] = bills.filter(
+                status__in=['pending', 'overdue']
+            ).aggregate(total=models.Sum('amount'))['total'] or 0
+
+            # Get utility usage for current property
+            context['utility_usage'] = profile.current_property.utility_usage.all().order_by('-reading_date')[:3]
+        else:
+            context['bills'] = []
+            context['total_bills'] = 0
+            context['paid_bills'] = 0
+            context['pending_bills'] = 0
+            context['overdue_bills'] = 0
+            context['total_amount_due'] = 0
+            context['utility_usage'] = []
 
         return context
 
