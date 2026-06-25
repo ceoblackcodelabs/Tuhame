@@ -178,6 +178,25 @@
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{% url "client_list" %}">All Clients</a></li>
                 <li class="nav-item"> <a class="nav-link" href="{% url "client_add" %}">Add Client</a></li>
+                <li class="nav-item"> <a class="nav-link" href="">Add Bill</a></li>
+              </ul>
+            </div>
+          </li>
+          {% comment %} end Clients {% endcomment %}
+
+          {% comment %} Bills {% endcomment %}
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic3s" aria-expanded="false" aria-controls="ui-basic">
+              <span class="menu-icon">
+                <i class="mdi mdi-laptop"></i>
+              </span>
+              <span class="menu-title">Client Bills</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-basic3s">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url "bill_list" %}">List Bills</a></li>
+                <li class="nav-item"> <a class="nav-link" href="">Add Bill</a></li>
               </ul>
             </div>
           </li>

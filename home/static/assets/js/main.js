@@ -380,34 +380,7 @@ galleryImgs.forEach(img => {
   });
 });
 
-// ─── Auth Form ───
-const loginForm = document.querySelector('#login-form');
-if (loginForm) {
-  loginForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    showToast('Signing you in…', '🔐');
-    setTimeout(() => {
-      window.location.href = 'profile.html';
-    }, 1500);
-  });
-}
 
-const registerForm = document.querySelector('#register-form');
-if (registerForm) {
-  registerForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const pw = document.querySelector('#reg-password')?.value;
-    const pw2 = document.querySelector('#reg-confirm-password')?.value;
-    if (pw !== pw2) {
-      showToast('Passwords do not match', '❌');
-      return;
-    }
-    showToast('Creating your account…', '🎉');
-    setTimeout(() => {
-      window.location.href = 'profile.html';
-    }, 1500);
-  });
-}
 
 // ─── Number Counter Animation ───
 function animateCounter(el) {

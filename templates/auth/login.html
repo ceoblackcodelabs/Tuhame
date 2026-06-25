@@ -24,6 +24,12 @@
       position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
       cursor: pointer; color: var(--gray-400); font-size: 1rem;
     }
+    .text-danger {
+      color: #dc3545;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -34,7 +40,7 @@
   <div class="auth-left">
     <div class="auth-left-overlay">
       <div style="margin-bottom:auto;padding-top:2rem;">
-        <a href="index.html" style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;">
+        <a href="{% url 'home:home' %}" style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;text-decoration:none;">
           <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
           TuHame
         </a>
@@ -76,16 +82,32 @@
       <h1 class="auth-title">Welcome back</h1>
       <p class="auth-subtitle">Sign in to your TuHame account</p>
 
+      <!-- Display Messages -->
+      {% if messages %}
+        <div style="margin-bottom:1rem;">
+          {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}"
+                 style="padding:0.75rem 1rem;border-radius:var(--radius);margin-bottom:0.5rem;
+                        {% if message.tags == 'success' %}background:#d4edda;color:#155724;border:1px solid #c3e6cb;
+                        {% elif message.tags == 'error' %}background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;
+                        {% elif message.tags == 'warning' %}background:#fff3cd;color:#856404;border:1px solid #ffeeba;
+                        {% else %}background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb;{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <!-- Social Login -->
       <div class="social-btns" style="margin-bottom:1.5rem;">
-        <button class="social-btn" onclick="socialLogin('Google')">
+        <button type="button" class="social-btn" onclick="socialLogin('Google')" style="width:100%;">
           <span style="font-size:1.1rem;">🌐</span> Continue with Google
         </button>
-        <div style="display:flex;gap:0.75rem;">
-          <button class="social-btn" style="flex:1;" onclick="socialLogin('Facebook')">
+        <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+          <button type="button" class="social-btn" style="flex:1;" onclick="socialLogin('Facebook')">
             <span style="font-size:1.1rem;">📘</span> Facebook
           </button>
-          <button class="social-btn" style="flex:1;" onclick="socialLogin('Apple')">
+          <button type="button" class="social-btn" style="flex:1;" onclick="socialLogin('Apple')">
             <span style="font-size:1.1rem;">🍎</span> Apple
           </button>
         </div>
@@ -93,42 +115,53 @@
 
       <div class="auth-divider"><span>or sign in with email</span></div>
 
-      <form id="login-form" style="margin-top:1.5rem;" {% url "login" %}>
+      <form id="login-form" method="post" action="{% url 'login' %}" style="margin-top:1.5rem;">
         {% csrf_token %}
+
+        <!-- Username Field -->
         <div class="form-group">
-          <label class="form-label" for="email">Email address</label>
+          <label class="form-label" for="id_username">Username</label>
           <div class="form-input-icon">
-            <span class="icon">✉️</span>
-            <input type="username" id="username" class="form-input"
-            value="{{ form.username.value|default:'' }}"
-            placeholder="Enter your username" required
-             />
-            {% if form.username.errors %}
-                <small class="text-danger">{{ form.username.errors.0 }}</small>
-            {% endif %}
+            <span class="icon">👤</span>
+            <input type="text" id="id_username" name="username" class="form-input"
+                   value="{{ form.username.value|default:'' }}"
+                   placeholder="Enter your username" required />
           </div>
+          {% if form.username.errors %}
+            <small class="text-danger">{{ form.username.errors.0 }}</small>
+          {% endif %}
         </div>
 
+        <!-- Password Field -->
         <div class="form-group">
-          <label class="form-label" for="password">Password</label>
+          <label class="form-label" for="id_password">Password</label>
           <div class="form-input-icon" style="position:relative;">
             <span class="icon">🔒</span>
-            <input type="password" id="password" class="form-input"
-            placeholder="Enter your password"
-            required
-            style="padding-right:3rem;" />
-            {% if form.password.errors %}
-                <small class="text-danger">{{ form.password.errors.0 }}</small>
-            {% endif %}
+            <input type="password" id="id_password" name="password" class="form-input"
+                   placeholder="Enter your password" required
+                   style="padding-right:3rem;" />
             <span class="password-toggle" onclick="togglePwd(this)">👁</span>
           </div>
+          {% if form.password.errors %}
+            <small class="text-danger">{{ form.password.errors.0 }}</small>
+          {% endif %}
         </div>
 
+        <!-- Non-field errors -->
+        {% if form.non_field_errors %}
+          <div style="margin-bottom:1rem;">
+            {% for error in form.non_field_errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- Remember Me & Forgot Password -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
           <label class="form-checkbox">
-            <input type="checkbox" /> Remember me
+            <input type="checkbox" name="remember_me" /> Remember me
           </label>
-          <a href="#" class="form-forgot">Forgot password?</a>
+          <a href="" class="form-forgot">Forgot password?</a>
         </div>
 
         <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
@@ -137,7 +170,7 @@
       </form>
 
       <div class="auth-link">
-        Don't have an account? <a href="register.html">Create one free →</a>
+        Don't have an account? <a href="{% url "register" %}">Create one free →</a>
       </div>
 
       <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--gray-200);text-align:center;">
@@ -149,7 +182,9 @@
 
       <!-- Dark mode toggle -->
       <div style="text-align:center;margin-top:1rem;">
-        <button class="dark-toggle" style="background:var(--gray-100);border-radius:var(--radius-full);padding:0.4rem 1rem;font-size:0.85rem;color:var(--gray-600);">🌙 Toggle Dark Mode</button>
+        <button type="button" class="dark-toggle" style="background:var(--gray-100);border-radius:var(--radius-full);padding:0.4rem 1rem;font-size:0.85rem;color:var(--gray-600);border:none;cursor:pointer;" onclick="toggleDarkMode()">
+          🌙 Toggle Dark Mode
+        </button>
       </div>
     </div>
   </div>
@@ -159,12 +194,44 @@
 <script>
   function togglePwd(el) {
     const input = el.previousElementSibling;
-    if (input.type === 'password') { input.type = 'text'; el.textContent = '🙈'; }
-    else { input.type = 'password'; el.textContent = '👁'; }
+    if (input.type === 'password') {
+      input.type = 'text';
+      el.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      el.textContent = '👁';
+    }
   }
-  function socialLogin(provider) {
 
+  function socialLogin(provider) {
+    // Handle social login
+    alert('Social login with ' + provider + ' coming soon!');
   }
+
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const btn = document.querySelector('.dark-toggle');
+    if (document.body.classList.contains('dark-mode')) {
+      btn.textContent = '☀️ Toggle Light Mode';
+    } else {
+      btn.textContent = '🌙 Toggle Dark Mode';
+    }
+  }
+
+  // Auto-dismiss messages after 5 seconds
+  document.addEventListener('DOMContentLoaded', function() {
+    const messages = document.querySelectorAll('.alert');
+    messages.forEach(function(msg) {
+      setTimeout(function() {
+        msg.style.transition = 'opacity 0.5s ease';
+        msg.style.opacity = '0';
+        setTimeout(function() {
+          msg.remove();
+        }, 500);
+      }, 5000);
+    });
+  });
 </script>
+
 </body>
 </html>

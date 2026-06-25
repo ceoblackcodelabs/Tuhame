@@ -1,6 +1,11 @@
 # apps/clients/forms.py
 from django import forms
-from .models import Client, ClientDocument, Watchlist
+from .models import Client, ClientDocument, Watchlist, Bill, BillCategory
+from django.utils import timezone
+from users.models import Profile
+from home.models import Property
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 class ClientForm(forms.ModelForm):
@@ -174,3 +179,142 @@ class WatchlistForm(forms.ModelForm):
                 'placeholder': 'Add notes about why this property is in watchlist'
             }),
         }
+
+# bill form
+class BillForm(forms.ModelForm):
+    class Meta:
+        model = Bill
+        fields = [
+            'property',
+            'user',
+            'category',
+            'bill_type',
+            'description',
+            'amount',
+            'due_date',
+            'status',
+            'reference_number',
+            'notes',
+            'receipt',
+            'is_recurring',
+            'recurrence_interval',
+        ]
+        widgets = {
+            'due_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter bill description'}),
+            'reference_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Invoice or reference number'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Additional notes...'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'property': forms.Select(attrs={'class': 'form-select'}),
+            'user': forms.Select(attrs={'class': 'form-select'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'bill_type': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'receipt': forms.FileInput(attrs={'class': 'form-control'}),
+            'is_recurring': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'recurrence_interval': forms.Select(attrs={'class': 'form-select'}),
+        }
+        labels = {
+            'bill_type': 'Bill Type',
+            'reference_number': 'Reference/Invoice Number',
+            'is_recurring': 'Recurring Bill',
+            'recurrence_interval': 'Recurrence Interval',
+        }
+        help_texts = {
+            'reference_number': 'Enter the invoice or reference number from the bill',
+            'notes': 'Add any additional information about this bill',
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        # For staff users - show all properties and users
+        if self.user and self.user.is_staff:
+            # Staff can see all properties and users
+            self.fields['property'].queryset = Property.objects.filter(is_active=True)
+            self.fields['user'].queryset = User.objects.filter(is_active=True)
+        else:
+            # Regular users - only see their own properties
+            # Get properties owned by this user
+            user_properties = Property.objects.filter(owner=self.user, is_active=True)
+            self.fields['property'].queryset = user_properties
+
+            # Get users (clients) who have bookings or profiles linked to these properties
+            # Option 1: Users who have booked these properties
+            user_ids_from_bookings = self.user.owned_properties.values_list(
+                'bookings__user__id', flat=True
+            ).distinct()
+
+            # Option 2: Users who have profiles with current_property in these properties
+            user_ids_from_profiles = Profile.objects.filter(
+                current_property__in=user_properties
+            ).values_list('user__id', flat=True).distinct()
+
+            # Combine and get unique user IDs
+            user_ids = set(list(user_ids_from_bookings) + list(user_ids_from_profiles))
+
+            # Also include the property owner (self.user)
+            user_ids.add(self.user.id)
+
+            # Filter users
+            self.fields['user'].queryset = User.objects.filter(
+                id__in=user_ids,
+                is_active=True
+            )
+
+        # If editing an existing bill, include the current user even if they don't match filters
+        if self.instance and self.instance.pk:
+            if self.instance.user and self.instance.user not in self.fields['user'].queryset:
+                self.fields['user'].queryset = self.fields['user'].queryset | User.objects.filter(id=self.instance.user.id)
+
+            if self.instance.property and self.instance.property not in self.fields['property'].queryset:
+                self.fields['property'].queryset = self.fields['property'].queryset | Property.objects.filter(id=self.instance.property.id)
+
+        # Set initial user if creating bill
+        if self.user and not self.instance.pk:
+            self.fields['user'].initial = self.user
+
+        # Add CSS classes
+        for field in self.fields.values():
+            if hasattr(field.widget, 'attrs'):
+                if 'class' not in field.widget.attrs:
+                    field.widget.attrs['class'] = 'form-control'
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Validate recurring bill
+        is_recurring = cleaned_data.get('is_recurring')
+        recurrence_interval = cleaned_data.get('recurrence_interval')
+
+        if is_recurring and not recurrence_interval:
+            raise forms.ValidationError(
+                'Please select a recurrence interval for recurring bills.'
+            )
+
+        # Validate due date is not in the past (unless editing)
+        due_date = cleaned_data.get('due_date')
+        if due_date and not self.instance.pk:
+            if due_date < timezone.now().date():
+                self.add_error('due_date', 'Due date cannot be in the past.')
+
+        # Validate that the user belongs to the selected property
+        property = cleaned_data.get('property')
+        user = cleaned_data.get('user')
+
+        if property and user:
+            # Check if user is the owner
+            if property.owner == user:
+                pass  # Owner is valid
+            else:
+                # Check if user has a booking for this property
+                has_booking = property.bookings.filter(user=user).exists()
+                # Check if user has a profile with this property
+                has_profile = Profile.objects.filter(user=user, current_property=property).exists()
+
+                if not has_booking and not has_profile:
+                    if not self.user.is_staff:
+                        self.add_error('user', f'This user is not associated with the selected property.')
+
+        return cleaned_data

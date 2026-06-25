@@ -31,8 +31,8 @@
       {% if request.user.is_authenticated %}
       <a href="{% url "my_profile" %}" class="nav-btn-register">Profile</a>
       {% else %}
-        <a href="login.html" class="nav-btn-login">Login</a>
-        <a href="register.html" class="nav-btn-register">Register</a>
+        <a href="{% url "login" %}" class="nav-btn-login">Login</a>
+        <a href="{% url "register" %}" class="nav-btn-register">Register</a>
       {% endif %}
     </div>
     <button class="hamburger" aria-label="Menu">
@@ -48,8 +48,8 @@
   <a href="{% url "home:property_map" %}">🗺 Map Search</a>
   <a href="profile.html">👤 Profile</a>
   <div class="mobile-actions">
-    <a href="login.html" class="btn btn-outline-dark btn-sm">Login</a>
-    <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+    <a href="{% url "login" %}" class="btn btn-outline-dark btn-sm">Login</a>
+    <a href="{% url "register" %}" class="btn btn-primary btn-sm">Register</a>
   </div>
 </div>
 

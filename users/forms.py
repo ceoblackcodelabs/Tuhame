@@ -2,6 +2,9 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from .models import Profile
+from django.contrib.auth.password_validation import validate_password
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -88,3 +91,188 @@ class ProfileForm(forms.ModelForm):
             if not phone.startswith('+') and not phone[0].isdigit():
                 raise forms.ValidationError("Please enter a valid phone number.")
         return phone
+
+class UserRegistrationForm(forms.ModelForm):
+    """Form for user registration"""
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Create a strong password',
+            'id': 'reg-password',
+            'required': True,
+            'style': 'padding-right:3rem;'
+        }),
+        validators=[validate_password],
+        help_text='Password must be at least 8 characters long and contain letters and numbers.'
+    )
+
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Repeat your password',
+            'id': 'reg-confirm-password',
+            'required': True,
+            'style': 'padding-right:3rem;'
+        }),
+        label='Confirm Password'
+    )
+
+    phone_number = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': '+254 700 000 000',
+            'id': 'id_phone'
+        }),
+        validators=[
+            RegexValidator(
+                regex=r'^\+?[0-9\s\-()]{8,20}$',
+                message='Enter a valid phone number (e.g., +254 712 345 678)'
+            )
+        ]
+    )
+
+    city = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'e.g. Nairobi',
+            'id': 'id_city'
+        })
+    )
+
+    looking_for = forms.ChoiceField(
+        choices=[
+            ('', 'Select property type…'),
+            ('apartment', 'Apartment'),
+            ('villa', 'Villa / House'),
+            ('studio', 'Studio / Bedsitter'),
+            ('bnb', 'BnB / Short Stay'),
+            ('commercial', 'Commercial Space'),
+            ('land', 'Land / Plot'),
+        ],
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-input',
+            'style': 'padding-left:1rem;'
+        })
+    )
+
+    agree_terms = forms.BooleanField(
+        required=True,
+        widget=forms.CheckboxInput(attrs={
+            'style': 'accent-color:var(--primary);width:15px;height:15px;'
+        }),
+        label='I agree to the Terms of Service and Privacy Policy'
+    )
+
+    receive_alerts = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'style': 'accent-color:var(--primary);width:15px;height:15px;'
+        }),
+        label='Send me new listing alerts and housing tips (optional)'
+    )
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'username', 'phone_number']
+        widgets = {
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'James',
+                'required': True
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Kariuki',
+                'required': True
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'you@email.com',
+                'required': True
+            }),
+            'username': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'jameskariuki',
+                'id': 'id_username',
+                'required': True
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make username optional since we'll generate it if not provided
+        self.fields['username'].required = False
+        self.fields['username'].help_text = 'Optional. If left blank, will be auto-generated.'
+
+        # Add icon wrappers for styling
+        for field in self.fields:
+            if field not in ['agree_terms', 'receive_alerts', 'looking_for']:
+                self.fields[field].widget.attrs['class'] = 'form-input'
+
+    def clean_username(self):
+        """Validate username or generate one if empty"""
+        username = self.cleaned_data.get('username', '').strip()
+
+        if not username:
+            # Generate username from email
+            email = self.cleaned_data.get('email', '')
+            if email:
+                username = email.split('@')[0]
+                # Make sure it's unique
+                base_username = username
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+            else:
+                raise forms.ValidationError('Username or email is required to generate a username.')
+
+        elif User.objects.filter(username=username).exists():
+            raise forms.ValidationError('This username is already taken.')
+
+        return username
+
+    def clean_email(self):
+        """Validate email is unique"""
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email is already registered.')
+        return email
+
+    def clean(self):
+        """Validate password match"""
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if password and confirm_password and password != confirm_password:
+            raise forms.ValidationError('Passwords do not match.')
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        """Create user and profile"""
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+
+        # Ensure username is set
+        if not user.username:
+            user.username = self.cleaned_data.get('username') or user.email.split('@')[0]
+
+        if commit:
+            user.save()
+            # Create profile
+            Profile.objects.create(
+                user=user,
+                full_name=f"{user.first_name} {user.last_name}".strip(),
+                phone_number=self.cleaned_data.get('phone_number', ''),
+                city=self.cleaned_data.get('city', ''),
+                preferred_contact_method='email' if self.cleaned_data.get('receive_alerts') else 'email'
+            )
+        return user

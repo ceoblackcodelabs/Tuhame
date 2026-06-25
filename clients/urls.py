@@ -17,4 +17,11 @@ urlpatterns = [
     # Watchlist
     path('<int:client_pk>/watchlist/add/', views.WatchlistCreateView.as_view(), name='watchlist_add'),
     path('watchlist/<int:pk>/delete/', views.WatchlistDeleteView.as_view(), name='watchlist_delete'),
+
+    # Bill CRUD
+    path('admin/bills/', views.BillListView.as_view(), name='bill_list'),
+    path('admin/bills/create/', views.BillCreateView.as_view(), name='bill_create'),
+    path('admin/bills/<int:pk>/update/', views.BillUpdateView.as_view(), name='bill_update'),
+    path('admin/bills/<int:pk>/delete/', views.BillDeleteView.as_view(), name='bill_delete'),
+    path('admin/bills/<int:pk>/mark-paid/', views.BillMarkPaidView.as_view(), name='bill_mark_paid'),
 ]

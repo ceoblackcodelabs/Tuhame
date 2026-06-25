@@ -1,5 +1,5 @@
 # apps/dashboard/views.py
-from django.views.generic import FormView, TemplateView, DetailView, UpdateView, View
+from django.views.generic import FormView, TemplateView, DetailView, UpdateView, View, CreateView
 from .models import Profile
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import RedirectView
-from .forms import ProfileForm
+from .forms import ProfileForm, UserRegistrationForm
 from django.db import models
 
 
@@ -18,7 +18,7 @@ class LoginView(FormView):
     """
     template_name = 'auth/login.html'
     form_class = AuthenticationForm
-    success_url = reverse_lazy('dashboard')
+    success_url = reverse_lazy('home:home')
 
     def dispatch(self, request, *args, **kwargs):
         """Redirect authenticated users to dashboard"""
@@ -51,6 +51,45 @@ class LoginView(FormView):
         context['title'] = 'Login - Real Estate Management System'
         return context
 
+class RegisterView(CreateView):
+    """
+    User Registration View
+    """
+    template_name = 'auth/register.html'
+    form_class = UserRegistrationForm
+    success_url = reverse_lazy('dashboard')
+
+    def dispatch(self, request, *args, **kwargs):
+        """Redirect authenticated users to dashboard"""
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        """Save user and log them in"""
+        response = super().form_valid(form)
+
+        # Log the user in after registration
+        user = self.object
+        login(self.request, user)
+
+        messages.success(
+            self.request,
+            f'Welcome to TuHame, {user.get_full_name() or user.username}! 🎉 Your account has been created successfully.'
+        )
+
+        return response
+
+    def form_invalid(self, form):
+        """Handle invalid form submission"""
+        messages.error(self.request, 'Please correct the errors below.')
+        return super().form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        """Add extra context to template"""
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create Account - TuHame'
+        return context
 
 class LogoutView(RedirectView):
     """

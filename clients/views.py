@@ -4,11 +4,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Q
-from .models import Client, ClientDocument, Watchlist, ClientType
-from .forms import ClientForm, ClientDocumentForm, WatchlistForm
+from django.db.models import Q, Sum
+from .models import Client, ClientDocument, Watchlist, ClientType, Bill, BillCategory
+from .forms import ClientForm, ClientDocumentForm, WatchlistForm, BillForm
 from properties.models import Property
 from django.db import models
+from django.http import JsonResponse
 
 
 class ClientListView(LoginRequiredMixin, ListView):
@@ -296,3 +297,197 @@ class ClientDocumentDownloadView(LoginRequiredMixin, View):
             return response
         else:
             raise Http404("File not found")
+
+# bills
+class BillListView(LoginRequiredMixin, ListView):
+    """List all bills with filtering"""
+    model = Bill
+    template_name = 'bill/bill_list.html'
+    context_object_name = 'bills'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = Bill.objects.filter(is_active=True).select_related('property', 'category', 'user')
+
+        # Filter by search
+        search = self.request.GET.get('search', '')
+        if search:
+            queryset = queryset.filter(
+                Q(description__icontains=search) |
+                Q(reference_number__icontains=search) |
+                Q(property__title__icontains=search)
+            )
+
+        # For non-staff users, only show bills for their properties
+        if not self.request.user.is_staff:
+            user_properties = Property.objects.filter(owner=self.request.user)
+            queryset = queryset.filter(property__in=user_properties)
+
+        # Filter by property
+        property_id = self.request.GET.get('property', '')
+        if property_id:
+            queryset = queryset.filter(property_id=property_id)
+
+        # Filter by bill type
+        bill_type = self.request.GET.get('bill_type', '')
+        if bill_type:
+            queryset = queryset.filter(bill_type=bill_type)
+
+        # Filter by status
+        status = self.request.GET.get('status', '')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        # Filter by date range
+        date_from = self.request.GET.get('date_from', '')
+        if date_from:
+            queryset = queryset.filter(due_date__gte=date_from)
+
+        date_to = self.request.GET.get('date_to', '')
+        if date_to:
+            queryset = queryset.filter(due_date__lte=date_to)
+
+        # Filter by amount range
+        min_amount = self.request.GET.get('min_amount', '')
+        if min_amount:
+            queryset = queryset.filter(amount__gte=min_amount)
+
+        max_amount = self.request.GET.get('max_amount', '')
+        if max_amount:
+            queryset = queryset.filter(amount__lte=max_amount)
+
+        # Sort
+        sort_by = self.request.GET.get('sort', '-due_date')
+        if sort_by:
+            queryset = queryset.order_by(sort_by)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get all bills for stats
+        bills = self.get_queryset()
+
+        # Statistics
+        context['total_bills'] = bills.count()
+        context['paid_bills'] = bills.filter(status='paid').count()
+        context['pending_bills'] = bills.filter(status='pending').count()
+        context['overdue_bills'] = bills.filter(status='overdue').count()
+        context['total_amount'] = bills.aggregate(Sum('amount'))['amount__sum'] or 0
+        context['total_paid'] = bills.filter(status='paid').aggregate(Sum('amount'))['amount__sum'] or 0
+        context['total_due'] = bills.filter(status__in=['pending', 'overdue']).aggregate(Sum('amount'))['amount__sum'] or 0
+
+        # For filters dropdown
+        context['properties'] = Property.objects.filter(is_active=True)
+        context['bill_types'] = Bill.BILL_TYPES
+        context['status_choices'] = Bill.BILL_STATUS
+        context['categories'] = BillCategory.objects.filter(is_active=True)
+
+        # Current filter values
+        context['current_search'] = self.request.GET.get('search', '')
+        context['current_property'] = self.request.GET.get('property', '')
+        context['current_bill_type'] = self.request.GET.get('bill_type', '')
+        context['current_status'] = self.request.GET.get('status', '')
+        context['current_date_from'] = self.request.GET.get('date_from', '')
+        context['current_date_to'] = self.request.GET.get('date_to', '')
+        context['current_min_amount'] = self.request.GET.get('min_amount', '')
+        context['current_max_amount'] = self.request.GET.get('max_amount', '')
+        context['current_sort'] = self.request.GET.get('sort', '-due_date')
+
+        return context
+
+
+class BillCreateView(LoginRequiredMixin, CreateView):
+    """Create a new bill"""
+    model = Bill
+    form_class = BillForm
+    template_name = 'bill/bill_form.html'
+    success_url = reverse_lazy('bill_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, f'Bill "{form.instance.description}" has been created successfully!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Add New Bill'
+        context['submit_text'] = 'Create Bill'
+        context['is_edit'] = False
+        return context
+
+
+class BillUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Update an existing bill"""
+    model = Bill
+    form_class = BillForm
+    template_name = 'bill/bill_form.html'
+    success_url = reverse_lazy('bill_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def test_func(self):
+        bill = self.get_object()
+        return self.request.user.is_staff or self.request.user == bill.property.owner
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Bill "{form.instance.description}" has been updated successfully!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Edit Bill'
+        context['submit_text'] = 'Update Bill'
+        context['is_edit'] = True
+        return context
+
+
+class BillDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Delete a bill"""
+    model = Bill
+    success_url = reverse_lazy('bill_list')
+
+    def test_func(self):
+        bill = self.get_object()
+        return self.request.user.is_staff or self.request.user == bill.property.owner
+
+    def delete(self, request, *args, **kwargs):
+        bill = self.get_object()
+        messages.success(request, f'Bill "{bill.description}" has been deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        # Redirect GET requests to list view
+        return redirect('bill_list')
+
+
+class BillMarkPaidView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Mark a bill as paid"""
+    model = Bill
+    fields = []
+    template_name = 'bill/bill_mark_paid.html'
+    success_url = reverse_lazy('bill_list')
+
+    def test_func(self):
+        bill = self.get_object()
+        return self.request.user.is_staff or self.request.user == bill.property.owner
+
+    def form_valid(self, form):
+        bill = self.get_object()
+        bill.mark_as_paid()
+        messages.success(self.request, f'Bill "{bill.description}" has been marked as paid!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Mark Bill as Paid'
+        return context
