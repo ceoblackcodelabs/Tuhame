@@ -34,7 +34,7 @@
             <div class="map-filter-chip" onclick="filterChip(this,'apartment')">🏠 Apartment</div>
             <div class="map-filter-chip" onclick="filterChip(this,'villa')">🏘 Villa</div>
             <div class="map-filter-chip" onclick="filterChip(this,'bnb')">🛏 BnB</div>
-            <div class="map-filter-chip" onclick="filterChip(this,'rental')">🏡 Rental</div>
+            <div class="map-filter-chip" onclick="filterChip(this,'residential')">🏡 Residential</div>
             <div class="map-filter-chip" onclick="filterChip(this,'commercial')">🏢 Commercial</div>
           </div>
 
@@ -44,11 +44,11 @@
               <span class="map-range-val" id="map-price-val">Up to KES 200k</span>
             </div>
             <input type="range" min="5000" max="500000" value="200000" step="5000"
-              oninput="document.getElementById('map-price-val').textContent='Up to KES '+Math.round(this.value/1000)+'k'" />
+              oninput="document.getElementById('map-price-val').textContent='Up to KES '+Math.round(this.value/1000)+'k'; applyFilters()" />
           </div>
 
           <div class="map-results-bar">
-            <span style="font-size:0.8rem;color:var(--gray-400);" id="results-count">Showing 6 properties</span>
+            <span style="font-size:0.8rem;color:var(--gray-400);" id="results-count">Showing {{ properties_count }} properties</span>
             <div style="display:flex;gap:0.4rem;align-items:center;">
               <select id="sort-select" onchange="sortListings()">
                 <option value="nearest">Nearest</option>
@@ -65,11 +65,11 @@
       </div>
 
       <div class="map-sidebar-footer">
-        <a href="{% url "home:home" %}" target="_blank" rel="noopener">TuHame</a> &copy; 2026
+        <a href="{% url 'home:home' %}" target="_blank" rel="noopener">TuHame</a> &copy; 2026
       </div>
     </aside>
 
-    <!-- Mobile overlay (closes sidebar when tapped) -->
+    <!-- Mobile overlay -->
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
 
     <!-- Map -->
@@ -78,7 +78,7 @@
         <span></span><span></span><span></span>
       </button>
       <div id="leaflet-map"></div>
-      <div class="map-info-banner" id="map-info-banner">📍 Nairobi, Kenya — 6 properties found</div>
+      <div class="map-info-banner" id="map-info-banner">📍 Kenya — {{ properties_count }} properties found</div>
       <button class="locate-btn" onclick="locateMe()" title="Find my location">📍</button>
     </div>
 
@@ -87,12 +87,15 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
-  // Fallback in case the primary CDN is blocked/unreachable
-  if (typeof L === 'undefined') {
-    document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
-  }
+// Fallback in case the primary CDN is blocked
+if (typeof L === 'undefined') {
+  document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
+}
 </script>
 <script>
+// ── Property Data from Django ──
+const propertiesData = {{ properties|safe }};
+
 // ── Sidebar toggle (mobile) ──
 const sidebarEl = document.getElementById('map-sidebar');
 const overlayEl = document.getElementById('sidebar-overlay');
@@ -105,22 +108,20 @@ function toggleSidebar(force) {
   menuBtn.classList.toggle('open', open);
 }
 
-// ── Property Data ──
-const properties = [
-  { id: 1, name: 'Kilimani Heights Apt', type: 'apartment', location: 'Kilimani, Nairobi', lat: -1.2903, lng: 36.7817, price: 85000, beds: 3, baths: 2, rating: 4.8, dist: '0.3 km', img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80' },
-  { id: 2, name: 'Karen Garden Villa', type: 'villa', location: 'Karen, Nairobi', lat: -1.3217, lng: 36.7100, price: 180000, beds: 4, baths: 3, rating: 4.9, dist: '3.1 km', img: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&auto=format&fit=crop&q=80' },
-  { id: 3, name: 'Westlands Studio Loft', type: 'bnb', location: 'Westlands, Nairobi', lat: -1.2667, lng: 36.8000, price: 35000, beds: 1, baths: 1, rating: 4.6, dist: '1.8 km', img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&auto=format&fit=crop&q=80' },
-  { id: 4, name: 'Lavington Penthouse', type: 'apartment', location: 'Lavington, Nairobi', lat: -1.2837, lng: 36.7720, price: 120000, beds: 3, baths: 2, rating: 4.7, dist: '2.4 km', img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&auto=format&fit=crop&q=80' },
-  { id: 5, name: 'Runda Estate Home', type: 'villa', location: 'Runda, Nairobi', lat: -1.2250, lng: 36.8050, price: 350000, beds: 5, baths: 4, rating: 5.0, dist: '8.2 km', img: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&auto=format&fit=crop&q=80' },
-  { id: 6, name: 'Upperhill Serviced Apt', type: 'apartment', location: 'Upperhill, Nairobi', lat: -1.2980, lng: 36.8100, price: 75000, beds: 2, baths: 2, rating: 4.7, dist: '2.0 km', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&auto=format&fit=crop&q=80' }
-];
+// ── Init Leaflet with OSM fix ──
+const map = L.map('leaflet-map', {
+  center: [-1.2921, 36.8219],
+  zoom: 13,
+  zoomControl: false
+});
 
-// ── Init Leaflet ──
-const map = L.map('leaflet-map', { center: [-1.2921, 36.8219], zoom: 13, zoomControl: false });
-
+// Fixed: Use HTTPS and proper attribution with referrer policy
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-  maxZoom: 19
+  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  maxZoom: 19,
+  // Add referrer policy to avoid 403 error
+  crossOrigin: true,
+  referrerPolicy: 'no-referrer'
 }).addTo(map);
 
 L.control.zoom({ position: 'topright' }).addTo(map);
@@ -138,7 +139,12 @@ function pinClass(type) {
 function createMarkerIcon(p, active = false) {
   const cls = `tuhame-pin ${pinClass(p.type)} ${active ? 'pin-active' : ''}`;
   const label = `${p.type === 'villa' ? '🏘' : p.type === 'bnb' ? '🛏' : p.type === 'commercial' ? '🏢' : '🏠'} KES ${Math.round(p.price/1000)}k`;
-  return L.divIcon({ className: '', html: `<div class="${cls}">${label}</div>`, iconAnchor: [50, 32], popupAnchor: [0, -36] });
+  return L.divIcon({
+    className: '',
+    html: `<div class="${cls}">${label}</div>`,
+    iconAnchor: [50, 32],
+    popupAnchor: [0, -36]
+  });
 }
 
 function popupHTML(p) {
@@ -153,14 +159,15 @@ function popupHTML(p) {
         <span>🚿 ${p.baths} bath</span>
         <span>⭐ ${p.rating}</span>
       </div>
-      <a href="property_detail.html" class="popup-btn">View Details →</a>
+      <a href="/property/listing/${p.slug}/" class="popup-btn">View Details →</a>
     </div>
   `;
 }
 
 let activeMarkerId = null;
 
-properties.forEach(p => {
+// Add markers for each property
+propertiesData.forEach(p => {
   const marker = L.marker([p.lat, p.lng], { icon: createMarkerIcon(p) }).addTo(map);
   marker.bindPopup(popupHTML(p), { maxWidth: 240, minWidth: 220 });
   marker.on('click', () => selectProperty(p.id, false));
@@ -169,10 +176,10 @@ properties.forEach(p => {
 
 function selectProperty(id, panMap = true) {
   if (activeMarkerId && markers[activeMarkerId]) {
-    const prev = properties.find(p => p.id === activeMarkerId);
+    const prev = propertiesData.find(p => p.id === activeMarkerId);
     markers[activeMarkerId].setIcon(createMarkerIcon(prev, false));
   }
-  const p = properties.find(pr => pr.id === id);
+  const p = propertiesData.find(pr => pr.id === id);
   if (!p) return;
 
   activeMarkerId = id;
@@ -182,19 +189,33 @@ function selectProperty(id, panMap = true) {
 
   document.querySelectorAll('.map-listing-card').forEach(c => c.classList.remove('active'));
   const card = document.querySelector(`.map-listing-card[data-id="${id}"]`);
-  if (card) { card.classList.add('active'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  if (card) {
+    card.classList.add('active');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 
   document.getElementById('map-info-banner').textContent = `📍 ${p.name} — KES ${p.price.toLocaleString()}/mo`;
 
-  // Auto-close sidebar on mobile after selecting
   if (window.innerWidth <= 768) toggleSidebar(false);
 }
 
 // ── Render Sidebar Listings ──
 let currentFilter = 'all';
+let currentProperties = [...propertiesData];
 
 function renderListings(list) {
   const container = document.getElementById('map-listings');
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:2rem;color:var(--gray-400);">
+        <div style="font-size:2rem;margin-bottom:0.5rem;">🔍</div>
+        <p>No properties found matching your criteria</p>
+      </div>
+    `;
+    document.getElementById('results-count').textContent = 'Showing 0 properties';
+    return;
+  }
+
   container.innerHTML = list.map(p => `
     <div class="map-listing-card" data-id="${p.id}" onclick="selectProperty(${p.id})">
       <img class="map-listing-img" src="${p.img}" alt="${p.name}" />
@@ -213,27 +234,46 @@ function renderListings(list) {
 }
 
 function getFilteredList() {
-  return properties.filter(p => currentFilter === 'all' || p.type === currentFilter);
+  let list = propertiesData.filter(p => currentFilter === 'all' || p.type === currentFilter);
+
+  // Apply price filter from range slider
+  const priceSlider = document.querySelector('input[type="range"]');
+  if (priceSlider) {
+    const maxPrice = parseInt(priceSlider.value);
+    list = list.filter(p => p.price <= maxPrice);
+  }
+
+  currentProperties = list;
+  return list;
+}
+
+function applyFilters() {
+  renderListings(getFilteredList());
+  // Update map markers visibility
+  const visibleIds = new Set(currentProperties.map(p => p.id));
+  propertiesData.forEach(p => {
+    if (visibleIds.has(p.id)) {
+      if (!map.hasLayer(markers[p.id])) markers[p.id].addTo(map);
+    } else {
+      if (map.hasLayer(markers[p.id])) map.removeLayer(markers[p.id]);
+    }
+  });
 }
 
 function filterChip(el, type) {
   document.querySelectorAll('.map-filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   currentFilter = type;
-  renderListings(getFilteredList());
-
-  properties.forEach(p => {
-    if (type === 'all' || p.type === type) { if (!map.hasLayer(markers[p.id])) markers[p.id].addTo(map); }
-    else { if (map.hasLayer(markers[p.id])) map.removeLayer(markers[p.id]); }
-  });
+  applyFilters();
 }
 
 function sortListings() {
   const val = document.getElementById('sort-select').value;
-  const list = [...getFilteredList()];
+  const list = [...currentProperties];
   if (val === 'price-low') list.sort((a,b) => a.price - b.price);
   else if (val === 'price-high') list.sort((a,b) => b.price - a.price);
   else if (val === 'rating') list.sort((a,b) => b.rating - a.rating);
+  // 'nearest' would require user location
   renderListings(list);
 }
 
@@ -259,13 +299,19 @@ function locateMe() {
     map.setView([lat, lng], 15, { animate: true });
     L.circle([lat, lng], { radius: 80, color: '#2563EB', fillColor: '#2563EB', fillOpacity: 0.2 }).addTo(map);
     L.marker([lat, lng], {
-      icon: L.divIcon({ className: '', html: '<div style="width:16px;height:16px;background:#2563EB;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 4px rgba(37,99,235,0.3);"></div>', iconAnchor: [8, 8] })
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:16px;height:16px;background:#2563EB;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 4px rgba(37,99,235,0.3);"></div>',
+        iconAnchor: [8, 8]
+      })
     }).addTo(map).bindPopup('📍 You are here').openPopup();
     showMapToast('Location found!', '✅');
   }, () => showMapToast('Could not get location', '❌'));
 }
 
-document.getElementById('map-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchLocation(); });
+document.getElementById('map-search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchLocation();
+});
 
 // ── Toast ──
 function showMapToast(msg, icon) {
@@ -278,12 +324,22 @@ function showMapToast(msg, icon) {
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 2800);
 }
 
-// Init
-renderListings(properties);
-setTimeout(() => selectProperty(1, false), 600);
+// ── Init ──
+renderListings(propertiesData);
+setTimeout(() => {
+  if (propertiesData.length > 0) {
+    selectProperty(propertiesData[0].id, false);
+  }
+}, 600);
 
 // Fix Leaflet sizing on sidebar toggle / resize
 window.addEventListener('resize', () => map.invalidateSize());
+
+// Also invalidate size when sidebar opens/closes (mobile)
+document.addEventListener('DOMContentLoaded', () => {
+  const observer = new MutationObserver(() => map.invalidateSize());
+  observer.observe(sidebarEl, { attributes: true, attributeFilter: ['class'] });
+});
 </script>
 </body>
 </html>

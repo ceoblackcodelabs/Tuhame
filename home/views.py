@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, ListView, DetailView
+from django.views.generic import TemplateView, ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from properties.models import Property, PropertyStatus, PropertyImage, PropertyType, Amenity
 from django.db import models
 from .forms import ViewingScheduleForm
 from django.contrib import messages
+import json
+from django.http import JsonResponse
 from django.db.models import Q, Avg, Count
 
 class HomeView(ListView):
@@ -282,10 +284,139 @@ class PropertiesDetailView(DetailView):
             context['form'] = form
             return self.render_to_response(context)
 
+class PropertyMapSearchListView(View):
+    """
+    View for the map search page with dynamic properties
+    """
+    template_name = 'map/map_search.html'
 
-class PropertyMapSearchListView(ListView):
-    model = Property
-    context_object_name = "properties"
-    paginate_by = 3
-    template_name = "home/properties/map.html"
+    def get(self, request, *args, **kwargs):
+        # Get filter parameters
+        property_type = request.GET.get('type', '')
+        search_query = request.GET.get('search', '')
+        min_price = request.GET.get('min_price', '')
+        max_price = request.GET.get('max_price', '')
 
+        # Get all active properties
+        properties = Property.objects.filter(
+            is_active=True,
+            status=PropertyStatus.AVAILABLE
+        )
+
+        # Apply filters
+        if property_type and property_type != 'all':
+            properties = properties.filter(property_type=property_type)
+
+        if search_query:
+            properties = properties.filter(
+                Q(title__icontains=search_query) |
+                Q(city__icontains=search_query) |
+                Q(state__icontains=search_query) |
+                Q(address__icontains=search_query)
+            )
+
+        if min_price:
+            properties = properties.filter(price__gte=min_price)
+
+        if max_price:
+            properties = properties.filter(price__lte=max_price)
+
+        # Prepare data for the map
+        properties_data = []
+        for prop in properties:
+            # Get the first image or use a placeholder
+            main_image = prop.main_image.url if prop.main_image else None
+
+            properties_data.append({
+                'id': prop.id,
+                'name': prop.title,
+                'type': prop.property_type,
+                'location': f"{prop.city}, {prop.state}",
+                'lat': float(prop.latitude) if prop.latitude else None,
+                'lng': float(prop.longitude) if prop.longitude else None,
+                'price': float(prop.price),
+                'beds': prop.bedrooms,
+                'baths': float(prop.bathrooms),
+                'rating': 4.5,  # You can add a rating field or calculate from reviews
+                'dist': '0.5 km',  # You can calculate distance from user location
+                'img': main_image or 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80',
+                'slug': prop.slug,
+                'address': prop.address,
+            })
+
+        # Filter out properties without coordinates
+        properties_data = [p for p in properties_data if p['lat'] and p['lng']]
+
+        context = {
+            'properties': json.dumps(properties_data),
+            'properties_count': len(properties_data),
+        }
+
+        return render(request, self.template_name, context)
+
+
+class PropertyMapDataView(View):
+    """
+    AJAX endpoint for getting property data for the map
+    """
+    def get(self, request, *args, **kwargs):
+        # Get filter parameters
+        property_type = request.GET.get('type', '')
+        search_query = request.GET.get('search', '')
+        min_price = request.GET.get('min_price', '')
+        max_price = request.GET.get('max_price', '')
+
+        # Get all active properties
+        properties = Property.objects.filter(
+            is_active=True,
+            status=PropertyStatus.AVAILABLE
+        )
+
+        # Apply filters
+        if property_type and property_type != 'all':
+            properties = properties.filter(property_type=property_type)
+
+        if search_query:
+            properties = properties.filter(
+                Q(title__icontains=search_query) |
+                Q(city__icontains=search_query) |
+                Q(state__icontains=search_query) |
+                Q(address__icontains=search_query)
+            )
+
+        if min_price:
+            properties = properties.filter(price__gte=min_price)
+
+        if max_price:
+            properties = properties.filter(price__lte=max_price)
+
+        # Prepare data for the map
+        properties_data = []
+        for prop in properties:
+            # Get the first image or use a placeholder
+            main_image = prop.main_image.url if prop.main_image else None
+
+            properties_data.append({
+                'id': prop.id,
+                'name': prop.title,
+                'type': prop.property_type,
+                'location': f"{prop.city}, {prop.state}",
+                'lat': float(prop.latitude) if prop.latitude else None,
+                'lng': float(prop.longitude) if prop.longitude else None,
+                'price': float(prop.price),
+                'beds': prop.bedrooms,
+                'baths': float(prop.bathrooms),
+                'rating': 4.5,
+                'dist': '0.5 km',
+                'img': main_image or 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80',
+                'slug': prop.slug,
+                'address': prop.address,
+            })
+
+        # Filter out properties without coordinates
+        properties_data = [p for p in properties_data if p['lat'] and p['lng']]
+
+        return JsonResponse({
+            'properties': properties_data,
+            'count': len(properties_data)
+        })
