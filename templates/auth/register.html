@@ -5,8 +5,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create Account – TuHame</title>
-  <link rel="stylesheet" href="{% static "assets/css/style.css" %}" />
+  <title>Create Account and Join Tuhame Today</title>
+  <link rel="stylesheet" href="{% static 'assets/css/style.css' %}" />
   <style>
     .auth-left {
       background-image: url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1000&auto=format&fit=crop&q=80');
@@ -20,6 +20,48 @@
     .strength-bar { display: flex; gap: 3px; margin-top: 0.5rem; }
     .strength-seg { flex: 1; height: 3px; border-radius: 2px; background: var(--gray-200); transition: background 0.3s; }
     .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; }
+    .text-danger {
+      color: #dc3545;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: block;
+    }
+    .text-muted {
+      color: #6c757d;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: block;
+    }
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 0.5rem;
+    }
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .alert-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .form-error {
+      color: #dc3545;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+    }
   </style>
 </head>
 <body>
@@ -30,7 +72,7 @@
   <div class="auth-left">
     <div class="auth-left-overlay">
       <div style="margin-bottom:auto;padding-top:2rem;">
-        <a href="index.html" style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;">
+        <a href="{% url 'home:home' %}" style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;text-decoration:none;">
           <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
           TuHame
         </a>
@@ -102,80 +144,132 @@
       <h1 class="auth-title">Create your account</h1>
       <p class="auth-subtitle">Free forever. No credit card required.</p>
 
+      <!-- Display Messages -->
+      {% if messages %}
+        <div style="margin-bottom:1rem;">
+          {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <!-- Social -->
       <div class="social-btns" style="margin-bottom:1.25rem;">
-        <button class="social-btn" onclick="socialReg('Google')">
+        <button type="button" class="social-btn" onclick="socialReg('Google')" style="width:100%;">
           <span style="font-size:1.1rem;">🌐</span> Sign up with Google
         </button>
-        <div style="display:flex;gap:0.75rem;">
-          <button class="social-btn" style="flex:1;" onclick="socialReg('Facebook')"><span>📘</span> Facebook</button>
-          <button class="social-btn" style="flex:1;" onclick="socialReg('Apple')"><span>🍎</span> Apple</button>
+        <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+          <button type="button" class="social-btn" style="flex:1;" onclick="socialReg('Facebook')"><span>📘</span> Facebook</button>
+          <button type="button" class="social-btn" style="flex:1;" onclick="socialReg('Apple')"><span>🍎</span> Apple</button>
         </div>
       </div>
 
       <div class="auth-divider"><span>or register with email</span></div>
 
-      <form id="register-form" style="margin-top:1.25rem;">
+      <form id="register-form" method="post" action="{% url 'register' %}" style="margin-top:1.25rem;">
+        {% csrf_token %}
 
+        <!-- Non-field errors -->
+        {% if form.non_field_errors %}
+          <div style="margin-bottom:1rem;">
+            {% for error in form.non_field_errors %}
+              <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- First Name & Last Name -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
           <div class="form-group">
-            <label class="form-label">First Name</label>
+            <label class="form-label" for="{{ form.first_name.id_for_label }}">First Name</label>
             <div class="form-input-icon">
               <span class="icon">👤</span>
-              <input type="text" class="form-input" placeholder="James" required />
+              {{ form.first_name }}
             </div>
+            {% if form.first_name.errors %}
+              <div class="text-danger">{{ form.first_name.errors.0 }}</div>
+            {% endif %}
           </div>
           <div class="form-group">
-            <label class="form-label">Last Name</label>
+            <label class="form-label" for="{{ form.last_name.id_for_label }}">Last Name</label>
             <div class="form-input-icon">
               <span class="icon">👤</span>
-              <input type="text" class="form-input" placeholder="Kariuki" required />
+              {{ form.last_name }}
             </div>
+            {% if form.last_name.errors %}
+              <div class="text-danger">{{ form.last_name.errors.0 }}</div>
+            {% endif %}
           </div>
         </div>
 
+        <!-- Username -->
         <div class="form-group">
-          <label class="form-label">Email Address</label>
+          <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+          <div class="form-input-icon">
+            <span class="icon">@</span>
+            {{ form.username }}
+          </div>
+          {% if form.username.help_text %}
+            <div class="text-muted">{{ form.username.help_text }}</div>
+          {% endif %}
+          {% if form.username.errors %}
+            <div class="text-danger">{{ form.username.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="{{ form.email.id_for_label }}">Email Address</label>
           <div class="form-input-icon">
             <span class="icon">✉️</span>
-            <input type="email" class="form-input" placeholder="you@email.com" required />
+            {{ form.email }}
           </div>
+          {% if form.email.errors %}
+            <div class="text-danger">{{ form.email.errors.0 }}</div>
+          {% endif %}
         </div>
 
+        <!-- Phone Number -->
         <div class="form-group">
-          <label class="form-label">Phone Number</label>
+          <label class="form-label" for="{{ form.phone_number.id_for_label }}">Phone Number</label>
           <div class="form-input-icon">
             <span class="icon">📞</span>
-            <input type="tel" class="form-input" placeholder="+254 700 000 000" required />
+            {{ form.phone_number }}
           </div>
+          {% if form.phone_number.errors %}
+            <div class="text-danger">{{ form.phone_number.errors.0 }}</div>
+          {% endif %}
         </div>
 
+        <!-- City -->
         <div class="form-group">
-          <label class="form-label">Location / City</label>
+          <label class="form-label" for="{{ form.city.id_for_label }}">Location / City</label>
           <div class="form-input-icon">
             <span class="icon">📍</span>
-            <input type="text" class="form-input" placeholder="e.g. Nairobi" />
+            {{ form.city }}
           </div>
+          {% if form.city.errors %}
+            <div class="text-danger">{{ form.city.errors.0 }}</div>
+          {% endif %}
         </div>
 
+        <!-- Looking For -->
         <div class="form-group">
-          <label class="form-label">I'm looking for</label>
-          <select class="form-input" style="padding-left:1rem;">
-            <option value="">Select property type…</option>
-            <option>Apartment</option>
-            <option>Villa / House</option>
-            <option>Studio / Bedsitter</option>
-            <option>BnB / Short Stay</option>
-            <option>Commercial Space</option>
-            <option>Land / Plot</option>
-          </select>
+          <label class="form-label" for="{{ form.looking_for.id_for_label }}">I'm looking for</label>
+          {{ form.looking_for }}
+          {% if form.looking_for.errors %}
+            <div class="text-danger">{{ form.looking_for.errors.0 }}</div>
+          {% endif %}
         </div>
 
+        <!-- Password -->
         <div class="form-group">
-          <label class="form-label">Password</label>
+          <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
           <div class="form-input-icon" style="position:relative;">
             <span class="icon">🔒</span>
-            <input type="password" id="reg-password" class="form-input" placeholder="Create a strong password" required oninput="checkStrength(this.value)" style="padding-right:3rem;" />
+            {{ form.password }}
             <span class="password-toggle" onclick="toggleRegPwd(this)">👁</span>
           </div>
           <div class="strength-bar" id="strength-bar">
@@ -185,28 +279,47 @@
             <div class="strength-seg" id="s4"></div>
           </div>
           <div id="strength-label" style="font-size:0.75rem;color:var(--gray-400);margin-top:0.25rem;"></div>
+          {% if form.password.errors %}
+            <div class="text-danger">{{ form.password.errors.0 }}</div>
+          {% endif %}
+          {% if form.password.help_text %}
+            <div class="text-muted">{{ form.password.help_text }}</div>
+          {% endif %}
         </div>
 
+        <!-- Confirm Password -->
         <div class="form-group">
-          <label class="form-label">Confirm Password</label>
+          <label class="form-label" for="{{ form.confirm_password.id_for_label }}">Confirm Password</label>
           <div class="form-input-icon" style="position:relative;">
             <span class="icon">🔒</span>
-            <input type="password" id="reg-confirm-password" class="form-input" placeholder="Repeat your password" required style="padding-right:3rem;" />
+            {{ form.confirm_password }}
             <span class="password-toggle" onclick="toggleRegPwd(this)">👁</span>
           </div>
+          {% if form.confirm_password.errors %}
+            <div class="text-danger">{{ form.confirm_password.errors.0 }}</div>
+          {% endif %}
         </div>
 
+        <!-- Terms -->
         <div style="margin-bottom:1.25rem;">
-          <label class="form-checkbox">
-            <input type="checkbox" required style="accent-color:var(--primary);width:15px;height:15px;" />
-            I agree to the <a href="#" style="color:var(--primary);">Terms of Service</a> and <a href="#" style="color:var(--primary);">Privacy Policy</a>
+          <label class="form-checkbox" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+            {{ form.agree_terms }}
+            <span>I agree to the <a href="#" style="color:var(--primary);">Terms of Service</a> and <a href="#" style="color:var(--primary);">Privacy Policy</a></span>
           </label>
+          {% if form.agree_terms.errors %}
+            <div class="text-danger">{{ form.agree_terms.errors.0 }}</div>
+          {% endif %}
         </div>
+
+        <!-- Alerts -->
         <div style="margin-bottom:1.5rem;">
-          <label class="form-checkbox">
-            <input type="checkbox" style="accent-color:var(--primary);width:15px;height:15px;" />
-            Send me new listing alerts and housing tips (optional)
+          <label class="form-checkbox" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+            {{ form.receive_alerts }}
+            <span>{{ form.receive_alerts.label }}</span>
           </label>
+          {% if form.receive_alerts.errors %}
+            <div class="text-danger">{{ form.receive_alerts.errors.0 }}</div>
+          {% endif %}
         </div>
 
         <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
@@ -215,7 +328,7 @@
       </form>
 
       <div class="auth-link">
-        Already have an account? <a href="login.html">Sign in →</a>
+        Already have an account? <a href="{% url 'login' %}">Sign in →</a>
       </div>
 
       <div style="margin-top:1.5rem;text-align:center;">
@@ -225,18 +338,25 @@
       </div>
 
       <div style="text-align:center;margin-top:1rem;">
-        <button class="dark-toggle" style="background:var(--gray-100);border-radius:var(--radius-full);padding:0.4rem 1rem;font-size:0.85rem;color:var(--gray-600);">🌙 Toggle Dark Mode</button>
+        <button type="button" class="dark-toggle" style="background:var(--gray-100);border-radius:var(--radius-full);padding:0.4rem 1rem;font-size:0.85rem;color:var(--gray-600);border:none;cursor:pointer;" onclick="toggleDarkMode()">
+          🌙 Toggle Dark Mode
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<script src="assets/js/main.js"></script>
+<script src="{% static 'assets/js/main.js' %}"></script>
 <script>
   function toggleRegPwd(el) {
     const input = el.previousElementSibling;
-    if (input.type === 'password') { input.type = 'text'; el.textContent = '🙈'; }
-    else { input.type = 'password'; el.textContent = '👁'; }
+    if (input.type === 'password') {
+      input.type = 'text';
+      el.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      el.textContent = '👁';
+    }
   }
 
   function checkStrength(val) {
@@ -259,14 +379,43 @@
   }
 
   function socialReg(provider) {
-    let c = document.querySelector('.toast-container');
-    if (!c) { c = document.createElement('div'); c.className = 'toast-container'; document.body.appendChild(c); }
-    const t = document.createElement('div'); t.className = 'toast';
-    t.innerHTML = `<span class="toast-icon">🎉</span><span>Connecting with ${provider}…</span>`;
-    c.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); window.location.href = 'profile.html'; }, 1500);
+    // Social registration placeholder
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<span class="toast-icon">🎉</span><span>Connecting with ${provider}…</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 400);
+    }, 1500);
   }
+
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const btn = document.querySelector('.dark-toggle');
+    if (document.body.classList.contains('dark-mode')) {
+      btn.textContent = '☀️ Toggle Light Mode';
+    } else {
+      btn.textContent = '🌙 Toggle Dark Mode';
+    }
+  }
+
+  // Password strength checker
+  document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('id_password');
+    if (passwordInput) {
+      passwordInput.addEventListener('input', function() {
+        checkStrength(this.value);
+      });
+    }
+  });
 </script>
 </body>
 </html>

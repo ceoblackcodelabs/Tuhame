@@ -231,28 +231,32 @@ class BillForm(forms.ModelForm):
 
         # For staff users - show all properties and users
         if self.user and self.user.is_staff:
-            # Staff can see all properties and users
             self.fields['property'].queryset = Property.objects.filter(is_active=True)
             self.fields['user'].queryset = User.objects.filter(is_active=True)
         else:
             # Regular users - only see their own properties
-            # Get properties owned by this user
             user_properties = Property.objects.filter(owner=self.user, is_active=True)
             self.fields['property'].queryset = user_properties
 
-            # Get users (clients) who have bookings or profiles linked to these properties
-            # Option 1: Users who have booked these properties
-            user_ids_from_bookings = self.user.owned_properties.values_list(
-                'bookings__user__id', flat=True
-            ).distinct()
+            # Get users (clients) who are associated with these properties
 
-            # Option 2: Users who have profiles with current_property in these properties
+            # Option 1: Users who have profiles with current_property in these properties
             user_ids_from_profiles = Profile.objects.filter(
                 current_property__in=user_properties
             ).values_list('user__id', flat=True).distinct()
 
+            # Option 2: Users who have client profiles (from Client model)
+            # that have bookings for these properties
+            from .models import Client
+            user_ids_from_clients = Client.objects.filter(
+                watchlist__property__in=user_properties
+            ).values_list('user__id', flat=True).distinct()
+
+            # Option 3: Users who have bookings (if you have a Booking model)
+            # Since we don't have Booking in the models shown, we'll skip this
+
             # Combine and get unique user IDs
-            user_ids = set(list(user_ids_from_bookings) + list(user_ids_from_profiles))
+            user_ids = set(list(user_ids_from_profiles) + list(user_ids_from_clients))
 
             # Also include the property owner (self.user)
             user_ids.add(self.user.id)
@@ -300,21 +304,25 @@ class BillForm(forms.ModelForm):
                 self.add_error('due_date', 'Due date cannot be in the past.')
 
         # Validate that the user belongs to the selected property
-        property = cleaned_data.get('property')
-        user = cleaned_data.get('user')
+        property_obj = cleaned_data.get('property')
+        user_obj = cleaned_data.get('user')
 
-        if property and user:
+        if property_obj and user_obj and not self.user.is_staff:
             # Check if user is the owner
-            if property.owner == user:
+            if property_obj.owner == user_obj:
                 pass  # Owner is valid
             else:
-                # Check if user has a booking for this property
-                has_booking = property.bookings.filter(user=user).exists()
                 # Check if user has a profile with this property
-                has_profile = Profile.objects.filter(user=user, current_property=property).exists()
+                has_profile = Profile.objects.filter(user=user_obj, current_property=property_obj).exists()
 
-                if not has_booking and not has_profile:
-                    if not self.user.is_staff:
-                        self.add_error('user', f'This user is not associated with the selected property.')
+                # Check if user has a client profile associated with this property
+                from .models import Client
+                has_client = Client.objects.filter(
+                    user=user_obj,
+                    watchlist__property=property_obj
+                ).exists()
+
+                if not has_profile and not has_client:
+                    self.add_error('user', f'This user is not associated with the selected property.')
 
         return cleaned_data

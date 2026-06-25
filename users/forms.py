@@ -120,7 +120,7 @@ class UserRegistrationForm(forms.ModelForm):
 
     phone_number = forms.CharField(
         max_length=20,
-        required=True,
+        required=False,  # Make optional since Profile has blank=True
         widget=forms.TextInput(attrs={
             'class': 'form-input',
             'placeholder': '+254 700 000 000',
@@ -166,7 +166,10 @@ class UserRegistrationForm(forms.ModelForm):
         widget=forms.CheckboxInput(attrs={
             'style': 'accent-color:var(--primary);width:15px;height:15px;'
         }),
-        label='I agree to the Terms of Service and Privacy Policy'
+        label='I agree to the Terms of Service and Privacy Policy',
+        error_messages={
+            'required': 'You must agree to the Terms of Service and Privacy Policy.'
+        }
     )
 
     receive_alerts = forms.BooleanField(
@@ -210,11 +213,6 @@ class UserRegistrationForm(forms.ModelForm):
         self.fields['username'].required = False
         self.fields['username'].help_text = 'Optional. If left blank, will be auto-generated.'
 
-        # Add icon wrappers for styling
-        for field in self.fields:
-            if field not in ['agree_terms', 'receive_alerts', 'looking_for']:
-                self.fields[field].widget.attrs['class'] = 'form-input'
-
     def clean_username(self):
         """Validate username or generate one if empty"""
         username = self.cleaned_data.get('username', '').strip()
@@ -257,7 +255,7 @@ class UserRegistrationForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
-        """Create user and profile"""
+        """Create user - profile will be created by signals"""
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
 
@@ -267,12 +265,22 @@ class UserRegistrationForm(forms.ModelForm):
 
         if commit:
             user.save()
-            # Create profile
-            Profile.objects.create(
-                user=user,
-                full_name=f"{user.first_name} {user.last_name}".strip(),
-                phone_number=self.cleaned_data.get('phone_number', ''),
-                city=self.cleaned_data.get('city', ''),
-                preferred_contact_method='email' if self.cleaned_data.get('receive_alerts') else 'email'
-            )
+            # Profile is automatically created by the signal
+            # We just need to update the profile with the additional data
+            try:
+                profile = user.profile
+                profile.full_name = f"{user.first_name} {user.last_name}".strip()
+                profile.phone_number = self.cleaned_data.get('phone_number', '')
+                profile.city = self.cleaned_data.get('city', '')
+                profile.save()
+            except Profile.DoesNotExist:
+                # If signal didn't create it (shouldn't happen), create it now
+                Profile.objects.create(
+                    user=user,
+                    full_name=f"{user.first_name} {user.last_name}".strip(),
+                    phone_number=self.cleaned_data.get('phone_number', ''),
+                    city=self.cleaned_data.get('city', '')
+                )
+
         return user
+
