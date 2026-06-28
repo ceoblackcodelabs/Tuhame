@@ -252,46 +252,60 @@
 
       <!-- QR -->
       <div id="qr" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">📱 Digital House Identity</h2>
-        <div class="dashboard-card" style="max-width:480px;">
-          <div class="qr-section">
-            <div style="background:linear-gradient(135deg,var(--secondary) 0%,#1E3A8A 100%);border-radius:var(--radius-xl);padding:2rem;color:#fff;margin-bottom:1.5rem;">
-              <div style="text-align:center;margin-bottom:1rem;">
-                <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;">2Hame Digital ID</div>
-                <div style="font-size:0.78rem;opacity:0.65;">Scan to verify residence</div>
+          <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">📱 Digital House Identity</h2>
+          <div class="dashboard-card" style="max-width:480px;">
+              <div class="qr-section">
+                  <div style="background:linear-gradient(135deg,var(--secondary) 0%,#1E3A8A 100%);border-radius:var(--radius-xl);padding:2rem;color:#fff;margin-bottom:1.5rem;">
+                      <div style="text-align:center;margin-bottom:1rem;">
+                          <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;">TuHame Digital ID</div>
+                          <div style="font-size:0.78rem;opacity:0.65;">Scan to verify residence</div>
+                      </div>
+                      <div style="background:#fff;border-radius:var(--radius);padding:0.75rem;width:fit-content;margin:0 auto;">
+                          {% if qr_code_data %}
+                              <img src="{{ qr_code_data }}" alt="QR Code" width="160" height="160" style="display:block;max-width:100%;height:auto;image-rendering:pixelated;" />
+                          {% else %}
+                              <div style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;">
+                                  <span style="color:#999;">No QR</span>
+                              </div>
+                          {% endif %}
+                      </div>
+                      <div style="margin-top:1.25rem;text-align:center;">
+                          <div style="font-size:0.82rem;opacity:0.7;margin-bottom:0.25rem;">Tenant ID</div>
+                          <div style="font-family:monospace;font-size:0.9rem;letter-spacing:0.1em;">TH-{{ user.id|stringformat:"06d" }}</div>
+                      </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.82rem;margin-bottom:1.5rem;">
+                      <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
+                          <div style="color:var(--gray-400);margin-bottom:0.25rem;">Property</div>
+                          <div style="font-weight:700;">{% if profile.current_property %}{{ profile.current_property.title }}{% else %}No Property{% endif %}</div>
+                      </div>
+                      <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
+                          <div style="color:var(--gray-400);margin-bottom:0.25rem;">House ID</div>
+                          <div style="font-weight:700;font-family:monospace;">{% if profile.current_property %}{{ profile.current_property.slug|upper }}{% else %}N/A{% endif %}</div>
+                      </div>
+                      <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
+                          <div style="color:var(--gray-400);margin-bottom:0.25rem;">Emergency Contact</div>
+                          <div style="font-weight:700;">{{ profile.emergency_contact_phone|default:"Not set" }}</div>
+                      </div>
+                      <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
+                          <div style="color:var(--gray-400);margin-bottom:0.25rem;">Status</div>
+                          <div style="font-weight:700;color:var(--accent);">
+                              {% if qr_code_data %}
+                                  ✅ Active
+                              {% else %}
+                                  ⏳ Not Generated
+                              {% endif %}
+                          </div>
+                      </div>
+                  </div>
+                  <div class="qr-btns" style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+                      {% if qr_code_data %}
+                          <button class="btn btn-primary" onclick="downloadQR()">⬇️ Download QR</button>
+                          <button class="btn btn-outline-dark" onclick="shareQR()">📤 Share</button>
+                      {% endif %}
+                  </div>
               </div>
-              <div style="background:#fff;border-radius:var(--radius);padding:0.75rem;width:fit-content;margin:0 auto;">
-                <canvas id="qr-canvas" width="160" height="160"></canvas>
-              </div>
-              <div style="margin-top:1.25rem;text-align:center;">
-                <div style="font-size:0.82rem;opacity:0.7;margin-bottom:0.25rem;">Tenant ID</div>
-                <div style="font-family:monospace;font-size:0.9rem;letter-spacing:0.1em;">{% if profile.current_property %}TH-2024-{{ profile.current_property.slug|upper }}{% else %}TH-NO-PROPERTY{% endif %}</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.82rem;margin-bottom:1.5rem;">
-              <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
-                <div style="color:var(--gray-400);margin-bottom:0.25rem;">Property</div>
-                <div style="font-weight:700;">{% if profile.current_property %}{{ profile.current_property.title }}{% else %}No Property{% endif %}</div>
-              </div>
-              <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
-                <div style="color:var(--gray-400);margin-bottom:0.25rem;">House ID</div>
-                <div style="font-weight:700;font-family:monospace;">{% if profile.current_property %}{{ profile.current_property.slug|upper }}{% else %}N/A{% endif %}</div>
-              </div>
-              <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
-                <div style="color:var(--gray-400);margin-bottom:0.25rem;">Emergency Contact</div>
-                <div style="font-weight:700;">{{ profile.emergency_contact_phone|default:"Not set" }}</div>
-              </div>
-              <div style="background:var(--gray-50);border-radius:var(--radius);padding:0.875rem;">
-                <div style="color:var(--gray-400);margin-bottom:0.25rem;">Valid Until</div>
-                <div style="font-weight:700;color:var(--accent);">Jan 2026</div>
-              </div>
-            </div>
-            <div class="qr-btns">
-              <button class="btn btn-primary" onclick="profileToast('QR Code downloaded!','⬇️')">⬇️ Download QR</button>
-              <button class="btn btn-outline-dark" onclick="profileToast('Share link copied!','📤')">📤 Share</button>
-            </div>
           </div>
-        </div>
       </div>
 
       <!-- RENT & BILLS -->
@@ -642,11 +656,6 @@
     document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
     document.querySelectorAll('.profile-section').forEach(s => s.style.display = 'none');
     document.getElementById(id).style.display = 'block';
-
-    // Generate QR code when QR tab is clicked
-    if (id === 'qr') {
-      generateQR();
-    }
   }
 
   // Checklist
@@ -687,74 +696,46 @@
     profileToast('Task added!', '✅');
   }
 
-  // QR Code Generation
-  function generateQR() {
-    const canvas = document.getElementById('qr-canvas');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const size = 160;
-
-    // Clear canvas
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-
-    // Generate QR code data
-    const qrData = {% if profile.current_property %} 'TH-2024-{{ profile.current_property.slug|upper }}' {% else %} 'TH-NO-PROPERTY' {% endif %};
-    const timestamp = new Date().toISOString().split('T')[0];
-    const fullData = `2Hame-ID: ${qrData}\nDate: ${timestamp}\nName: {{ profile.get_full_name|default:user.username }}\nProperty: {% if profile.current_property %}{{ profile.current_property.title }}{% else %}None{% endif %}`;
-
-    // Draw a simple QR-like pattern (placeholder)
-    const colors = ['#1E3A8A', '#2563EB', '#3B82F6', '#60A5FA'];
-    const cellSize = 8;
-    const offset = 20;
-
-    for (let i = 0; i < 16; i++) {
-      for (let j = 0; j < 16; j++) {
-        const x = offset + i * cellSize;
-        const y = offset + j * cellSize;
-        const hash = (i * j * 31 + i * 7 + j * 13) % 3;
-
-        if (hash > 0) {
-          ctx.fillStyle = colors[(i + j) % 4];
-          ctx.fillRect(x, y, cellSize - 1, cellSize - 1);
-        }
-      }
+  // QR Code functions
+  function downloadQR() {
+    const img = document.querySelector('#qr img');
+    if (!img) {
+      profileToast('No QR code to download', '❌');
+      return;
     }
 
-    // Draw position markers
-    ctx.fillStyle = '#1E3A8A';
-    // Top-left
-    ctx.fillRect(offset - 2, offset - 2, 20, 20);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(offset + 2, offset + 2, 12, 12);
-    ctx.fillStyle = '#1E3A8A';
-    ctx.fillRect(offset + 6, offset + 6, 4, 4);
+    const link = document.createElement('a');
+    link.download = `qr_${document.querySelector('.profile-name')?.textContent || 'user'}.png`;
+    link.href = img.src;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    profileToast('QR Code downloaded!', '⬇️');
+  }
 
-    // Top-right
-    ctx.fillStyle = '#1E3A8A';
-    ctx.fillRect(size - offset - 18, offset - 2, 20, 20);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(size - offset - 14, offset + 2, 12, 12);
-    ctx.fillStyle = '#1E3A8A';
-    ctx.fillRect(size - offset - 10, offset + 6, 4, 4);
+  function shareQR() {
+    const img = document.querySelector('#qr img');
+    if (!img) {
+      profileToast('No QR code to share', '❌');
+      return;
+    }
 
-    // Bottom-left
-    ctx.fillStyle = '#1E3A8A';
-    ctx.fillRect(offset - 2, size - offset - 18, 20, 20);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(offset + 2, size - offset - 14, 12, 12);
-    ctx.fillStyle = '#1E3A8A';
-    ctx.fillRect(offset + 6, size - offset - 10, 4, 4);
+    if (navigator.share) {
+      fetch(img.src)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], 'qr_code.png', { type: 'image/png' });
+          navigator.share({
+            title: 'My TuHame Digital ID',
+            text: 'Scan this QR code to view my profile',
+            files: [file]
+          }).catch(() => {});
+        });
+    } else {
+      profileToast('Copy the image to share', '📤');
+    }
   }
 
   renderChecklist();
-
-  // Generate QR code on load if qr tab is visible
-  document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('qr').style.display !== 'none') {
-      generateQR();
-    }
-  });
 </script>
 {% endblock extra_js %}

@@ -58,7 +58,7 @@ class ProfileAdmin(admin.ModelAdmin):
             'fields': ('preferred_contact_method', 'preferred_language', 'email_notifications', 'sms_notifications')
         }),
         ('Metadata', {
-            'fields': ('is_active', 'created_at', 'updated_at'),
+            'fields': ('is_active', 'created_at', 'updated_at', 'qr_code_image'),
             'classes': ('collapse',)
         }),
     )

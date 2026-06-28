@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from properties.models import Property
+import uuid
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -80,6 +82,21 @@ class Profile(models.Model):
     email_notifications = models.BooleanField(default=True)
     sms_notifications = models.BooleanField(default=True)
 
+    # QR Code
+    qr_code_image = models.ImageField(
+        upload_to='profiles/qr_codes/',
+        blank=True,
+        null=True,
+        help_text="QR code for the user's profile"
+    )
+    qr_code_token = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        help_text="Unique token for QR code"
+    )
+    qr_code_generated_at = models.DateTimeField(blank=True, null=True)
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -90,6 +107,7 @@ class Profile(models.Model):
         indexes = [
             models.Index(fields=['user', 'is_active']),
             models.Index(fields=['city', 'country']),
+            models.Index(fields=['qr_code_token']),
         ]
 
     def __str__(self):
@@ -113,14 +131,15 @@ class Profile(models.Model):
         """Move user to a new property"""
         from django.utils import timezone
 
-        # If user already has a property, you might want to log the move
         if self.current_property:
-            # Could create a MoveHistory record here
             pass
 
         self.current_property = property
         self.moved_in_date = moved_in_date or timezone.now().date()
         self.save()
+
+        # Generate QR code when moved to a property
+        self.generate_qr_code()
 
     def leave_current_property(self):
         """Remove user from current property"""
@@ -128,6 +147,59 @@ class Profile(models.Model):
         self.moved_in_date = None
         self.save()
 
+    def generate_qr_code(self):
+        """Generate QR code for the user's profile"""
+        try:
+            import qrcode
+            from io import BytesIO
+            from django.core.files.base import ContentFile
+            from django.urls import reverse
+
+            # Create QR code data
+            qr_data = {
+                'user_id': self.user.id,
+                'username': self.user.username,
+                'token': str(self.qr_code_token),
+                'profile_id': self.id,
+            }
+
+            # Build the URL for the profile
+            # Using the QR token URL
+            qr_url = f"/profile/qr/{self.qr_code_token}/"
+
+            # Generate QR code
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+
+            # Create image
+            img = qr.make_image(fill_color="black", back_color="white")
+
+            # Save to BytesIO
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+
+            # Save to model
+            filename = f"qr_{self.user.username}_{self.id}.png"
+            self.qr_code_image.save(filename, ContentFile(buffer.getvalue()), save=False)
+            self.qr_code_generated_at = timezone.now()
+            self.save()
+
+            return True
+        except Exception as e:
+            print(f"Error generating QR code: {e}")
+            return False
+
+    def regenerate_qr_code(self):
+        """Regenerate QR code"""
+        # Generate a new token
+        self.qr_code_token = uuid.uuid4()
+        return self.generate_qr_code()
 
 class MoveHistory(models.Model):
     """Track user moves between properties"""

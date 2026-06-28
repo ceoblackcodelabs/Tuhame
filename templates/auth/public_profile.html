@@ -1,0 +1,131 @@
+{% extends "home/base.html" %}
+
+{% block title %}{{ user.get_full_name|default:user.username }} - Public Profile{% endblock title %}
+
+{% block content %}
+<div class="page-hero" style="background: linear-gradient(135deg, var(--secondary) 0%, #1E3A8A 100%); color: white;">
+  <div class="container" style="text-align: center; padding: 2rem 0;">
+    <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">👤 {{ user.get_full_name|default:user.username }}</h1>
+    <p style="opacity: 0.8; font-size: 1.1rem;">Verified Tenant · 2Hame Member</p>
+  </div>
+</div>
+
+<div class="container" style="max-width: 800px; margin: -2rem auto 2rem;">
+  <div class="dashboard-card" style="padding: 2rem;">
+    <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; justify-content: center;">
+
+      <!-- Profile Picture -->
+      <div style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 4px solid var(--primary); flex-shrink: 0;">
+        {% if profile.profile_picture %}
+          <img src="{{ profile.profile_picture.url }}" alt="{{ user.get_full_name }}" style="width:100%; height:100%; object-fit: cover;" />
+        {% else %}
+          <div style="width:100%; height:100%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: 700;">
+            {{ user.get_full_name|slice:":1"|default:user.username|slice:":1"|upper }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Info -->
+      <div style="flex: 1; min-width: 200px;">
+        <h2 style="font-family: var(--font-display); margin-bottom: 0.5rem;">{{ user.get_full_name|default:user.username }}</h2>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>✅</span>
+            <span style="color: var(--gray-600);">Verified Tenant</span>
+          </div>
+
+          {% if current_property %}
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span>🏠</span>
+              <span style="color: var(--gray-600);">
+                Lives at <strong>{{ current_property.title }}</strong>
+                <span style="font-size: 0.85rem; color: var(--gray-400);">
+                  · {{ current_property.address }}, {{ current_property.city }}
+                </span>
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span>📅</span>
+              <span style="color: var(--gray-600);">
+                Since {{ profile.moved_in_date|date:"F Y"|default:"Recently" }}
+              </span>
+            </div>
+          {% else %}
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span>🏠</span>
+              <span style="color: var(--gray-400);">No current residence listed</span>
+            </div>
+          {% endif %}
+
+          <div style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
+            <span style="background: var(--gray-100); padding: 0.3rem 0.8rem; border-radius: var(--radius-full); font-size: 0.8rem;">
+              📋 Member since {{ user.date_joined|date:"F Y" }}
+            </span>
+            {% if profile.total_moves %}
+              <span style="background: var(--gray-100); padding: 0.3rem 0.8rem; border-radius: var(--radius-full); font-size: 0.8rem;">
+                🏘️ {{ profile.total_moves }} moves
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Contact (Only if user allows) -->
+        {% if profile.show_contact_info %}
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
+            <div style="font-size: 0.85rem; color: var(--gray-500);">📞 Contact</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;">
+              {% if profile.phone_number %}
+                <span style="font-size: 0.9rem;">📱 {{ profile.phone_number }}</span>
+              {% endif %}
+              {% if profile.email_public %}
+                <span style="font-size: 0.9rem;">✉️ {{ user.email }}</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Verification Badge -->
+    <div style="margin-top: 1.5rem; text-align: center; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--gray-500); font-size: 0.8rem;">
+        <span>🔒</span>
+        <span>Verified by 2Hame · Profile ID: TH-{{ user.id|stringformat:"06d" }}</span>
+        <span style="display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Section -->
+  <div class="dashboard-card" style="margin-top: 1.5rem;">
+    <div style="text-align: center;">
+      <h3 style="font-family: var(--font-display); margin-bottom: 0.5rem;">📱 Scan to View This Profile</h3>
+      <p style="color: var(--gray-400); font-size: 0.9rem; margin-bottom: 1rem;">
+        Anyone can scan this QR code to see this public profile
+      </p>
+
+      <!-- Display the QR code -->
+      <div style="display: inline-block; background: white; padding: 1rem; border-radius: var(--radius-lg); border: 2px solid var(--gray-200);">
+        <img src="{{ qr_code|default:'' }}" alt="QR Code for {{ user.username }}" width="200" height="200" />
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <input type="text" value="{{ public_url }}" readonly style="font-size: 0.8rem; padding: 0.5rem; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--gray-50); flex: 1; max-width: 400px;" />
+        <button class="btn btn-sm btn-outline-dark" onclick="copyURL()">📋 Copy Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyURL() {
+  const input = document.querySelector('input[readonly]');
+  if (input) {
+    input.select();
+    document.execCommand('copy');
+    alert('Profile link copied!');
+  }
+}
+</script>
+{% endblock %}

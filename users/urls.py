@@ -12,4 +12,6 @@ urlpatterns = [
 
     # View other profiles (admin/landlord only)
     path('profile/<str:username>/', views.ProfileDetailView.as_view(), name='profile_detail'),
+    path('profile/<str:username>/', views.PublicProfileView.as_view(), name='public_profile'),
+    path('api/generate-qr/', views.generate_user_qr, name='generate_qr'),
 ]

@@ -1,6 +1,13 @@
 # apps/dashboard/views.py
 from django.views.generic import FormView, TemplateView, DetailView, UpdateView, View, CreateView
 from .models import Profile
+from django.http import JsonResponse
+import base64
+from django.core.files.base import ContentFile
+import uuid
+
+from django.urls import reverse
+from home.models import ViewingSchedule, SavedProperty
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy
@@ -10,7 +17,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import RedirectView
 from .forms import ProfileForm, UserRegistrationForm
 from django.db import models
+import qrcode
+from io import BytesIO
+import base64
+from .utils import generate_qr_code_for_user
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class LoginView(FormView):
     """
@@ -116,6 +129,66 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Add dashboard statistics here
         return context
 
+# public profile view
+class PublicProfileView(DetailView):
+    model = User
+    template_name = 'profiles/public_profile.html'
+    context_object_name = 'user'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+
+    def get_queryset(self):
+        return User.objects.filter(is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+        profile = user.profile
+
+        # Only show basic public info
+        context['profile'] = profile
+        context['current_property'] = profile.current_property
+        context['is_public'] = True
+        return context
+
+def generate_user_qr(request):
+    """Generate QR code for the current user"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+
+    # Public profile URL
+    public_url = request.build_absolute_uri(
+        reverse('public_profile', kwargs={'username': request.user.username})
+    )
+
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(public_url)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="#1E3A8A", back_color="white")
+
+    # Convert to base64
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+    # Save to profile (optional)
+    if request.user.profile:
+        filename = f'qr_{request.user.username}_{uuid.uuid4().hex[:8]}.png'
+        request.user.profile.qr_code.save(filename, ContentFile(buffer.getvalue()))
+        request.user.profile.save()
+
+    return JsonResponse({
+        'qr_data': f'data:image/png;base64,{qr_base64}',
+        'public_url': public_url
+    })
+
 class MyProfileView(LoginRequiredMixin, DetailView):
     """View for users to see their own profile"""
 
@@ -135,7 +208,6 @@ class MyProfileView(LoginRequiredMixin, DetailView):
         context['move_history'] = self.request.user.move_history.all()[:5]
 
         # Get upcoming viewings
-        from home.models import ViewingSchedule
         context['upcoming_viewings'] = ViewingSchedule.objects.filter(
             user=self.request.user,
             status__in=['pending', 'confirmed']
@@ -171,13 +243,16 @@ class MyProfileView(LoginRequiredMixin, DetailView):
             context['utility_usage'] = []
 
         # Get saved properties
-        from home.models import SavedProperty
         saved_properties = SavedProperty.objects.filter(
             user=self.request.user
         ).select_related('property').order_by('-saved_at')
 
         context['saved_properties'] = saved_properties
         context['saved_properties_count'] = saved_properties.count()
+
+        # Generate QR Code
+        context['qr_code_data'] = generate_qr_code_for_user(profile)
+        print(context['qr_code_data'])
 
         return context
 
