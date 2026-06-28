@@ -1,5 +1,5 @@
 /* ============================================
-   TUHAME – Main JavaScript
+   2Hame – Main JavaScript
    ============================================ */
 
 // ─── Dark Mode ───
@@ -8,13 +8,13 @@ const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 
 function setTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  localStorage.setItem('tuhame-theme', dark ? 'dark' : 'light');
+  localStorage.setItem('2Hame-theme', dark ? 'dark' : 'light');
   darkToggleBtns.forEach(btn => {
     btn.innerHTML = dark ? '☀️' : '🌙';
   });
 }
 
-const savedTheme = localStorage.getItem('tuhame-theme');
+const savedTheme = localStorage.getItem('2Hame-theme');
 if (savedTheme) {
   setTheme(savedTheme === 'dark');
 } else {
@@ -253,7 +253,7 @@ function generateQR(canvas, text) {
 
 const qrCanvas = document.querySelector('#qr-canvas');
 if (qrCanvas) {
-  generateQR(qrCanvas, 'TUHAME-HOUSE-001-TENANT-456');
+  generateQR(qrCanvas, '2Hame-HOUSE-001-TENANT-456');
 }
 
 // ─── Mortgage Calculator ───
@@ -579,6 +579,34 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(checkSavedStatus, 500);
 });
 
-console.log('🏠 TuHame loaded. Find. Move. Settle.');
+document.addEventListener('DOMContentLoaded', function () {
+  const toggle = document.getElementById('profile-dropdown-toggle');
+  const menu = document.getElementById('profile-dropdown-menu');
+  const wrap = document.getElementById('profile-dropdown');
 
-console.log('🏠 TuHame loaded. Find. Move. Settle.');
+  if (!toggle || !menu) return;
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    const isOpen = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', isOpen);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!wrap.contains(e.target)) {
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+
+console.log('🏠 2Hame loaded. Find. Move. Settle.');
+
+console.log('🏠 2Hame loaded. Find. Move. Settle.');

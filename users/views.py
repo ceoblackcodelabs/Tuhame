@@ -75,7 +75,7 @@ class RegisterView(CreateView):
 
         messages.success(
             self.request,
-            f'Welcome to TuHame, {user.get_full_name() or user.username}! 🎉 Your account has been created successfully.'
+            f'Welcome to 2Hame, {user.get_full_name() or user.username}! 🎉 Your account has been created successfully.'
         )
 
         return response
@@ -88,7 +88,7 @@ class RegisterView(CreateView):
     def get_context_data(self, **kwargs):
         """Add extra context to template"""
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Create Account - TuHame'
+        context['title'] = 'Create Account - 2Hame'
         return context
 
 class LogoutView(RedirectView):

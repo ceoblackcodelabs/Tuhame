@@ -1,5 +1,5 @@
 /* ============================================
-   TUHAME – Smart Moving & Housing Platform
+   2Hame – Smart Moving & Housing Platform
    Main Stylesheet
    ============================================ */
 
@@ -76,6 +76,23 @@ body {
   transition: background 0.3s, color 0.3s;
   width: 100%;
   min-width: 0;
+}
+
+.nav-logo-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.footer-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -793,7 +810,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: var(--transition);
 }
 
-/* ─── Why TuHame ─── */
+/* ─── Why 2Hame ─── */
 .features-bg {
   background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
   position: relative;
@@ -2384,6 +2401,160 @@ input[type="range"] {
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ─── Profile Dropdown ─── */
+.profile-dropdown {
+  position: relative;
+}
+
+.profile-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.navbar.scrolled .profile-icon-btn,
+.navbar.solid .profile-icon-btn {
+  background: rgba(37,99,235,0.08);
+  border-color: var(--gray-200);
+}
+
+.profile-icon-btn:hover {
+  background: rgba(255,255,255,0.25);
+  transform: translateY(-1px);
+}
+
+.navbar.scrolled .profile-icon-btn:hover,
+.navbar.solid .profile-icon-btn:hover {
+  background: rgba(37,99,235,0.15);
+}
+
+.profile-icon-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-icon-fallback {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.navbar.scrolled .profile-icon-fallback,
+.navbar.solid .profile-icon-fallback {
+  color: var(--primary);
+}
+
+.profile-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  min-width: 220px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: var(--transition-fast);
+  z-index: 1100;
+}
+
+.profile-dropdown-menu.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.profile-dropdown-header {
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 0.4rem;
+}
+
+.profile-dropdown-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-dropdown-email {
+  font-size: 0.78rem;
+  color: var(--gray-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.875rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: var(--transition-fast);
+}
+
+.profile-dropdown-item:hover {
+  background: var(--gray-100);
+  color: var(--primary);
+}
+
+.profile-dropdown-divider {
+  height: 1px;
+  background: var(--gray-100);
+  margin: 0.4rem 0;
+}
+
+.profile-dropdown-danger:hover {
+  background: rgba(239,68,68,0.08);
+  color: var(--danger);
+}
+
+[data-theme="dark"] .profile-dropdown-menu {
+  background: #242526;
+  border-color: #3A3B3C;
+}
+
+[data-theme="dark"] .profile-dropdown-header {
+  border-color: #3A3B3C;
+}
+
+[data-theme="dark"] .profile-dropdown-item {
+  color: #CED0D4;
+}
+
+[data-theme="dark"] .profile-dropdown-item:hover {
+  background: #2D2E30;
+}
+
+@media (max-width: 480px) {
+  .profile-dropdown-menu {
+    position: fixed;
+    top: var(--nav-height);
+    right: 0.75rem;
+    left: 0.75rem;
+    min-width: 0;
+  }
 }
 
 /* ─── Dark mode explicit overrides ─── */

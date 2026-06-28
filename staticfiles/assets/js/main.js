@@ -1,5 +1,5 @@
 /* ============================================
-   TUHAME – Main JavaScript
+   2Hame – Main JavaScript
    ============================================ */
 
 // ─── Dark Mode ───
@@ -8,13 +8,13 @@ const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 
 function setTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  localStorage.setItem('tuhame-theme', dark ? 'dark' : 'light');
+  localStorage.setItem('2Hame-theme', dark ? 'dark' : 'light');
   darkToggleBtns.forEach(btn => {
     btn.innerHTML = dark ? '☀️' : '🌙';
   });
 }
 
-const savedTheme = localStorage.getItem('tuhame-theme');
+const savedTheme = localStorage.getItem('2Hame-theme');
 if (savedTheme) {
   setTheme(savedTheme === 'dark');
 } else {
@@ -113,7 +113,7 @@ if ('IntersectionObserver' in window) {
 }
 
 // ─── Save / Wishlist ───
-const savedProps = new Set(JSON.parse(localStorage.getItem('tuhame-saved') || '[]'));
+const savedProps = new Set(JSON.parse(localStorage.getItem('2Hame-saved') || '[]'));
 
 function updateSaveBtns() {
   document.querySelectorAll('.property-save').forEach(btn => {
@@ -139,7 +139,7 @@ document.addEventListener('click', e => {
     saveBtn.textContent = '❤️';
     showToast('Saved to wishlist!', '❤️');
   }
-  localStorage.setItem('tuhame-saved', JSON.stringify([...savedProps]));
+  localStorage.setItem('2Hame-saved', JSON.stringify([...savedProps]));
 });
 
 updateSaveBtns();
@@ -283,7 +283,7 @@ function generateQR(canvas, text) {
 
 const qrCanvas = document.querySelector('#qr-canvas');
 if (qrCanvas) {
-  generateQR(qrCanvas, 'TUHAME-HOUSE-001-TENANT-456');
+  generateQR(qrCanvas, '2Hame-HOUSE-001-TENANT-456');
 }
 
 // ─── Mortgage Calculator ───
@@ -456,4 +456,4 @@ if (scoreBars.length && 'IntersectionObserver' in window) {
   });
 }
 
-console.log('🏠 TuHame loaded. Find. Move. Settle.');
+console.log('🏠 2Hame loaded. Find. Move. Settle.');

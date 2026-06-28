@@ -235,7 +235,7 @@ def geocode_address(request):
 
     url = f"https://nominatim.openstreetmap.org/search?q={quote(address)}&format=json&limit=1"
     headers = {
-        'User-Agent': 'TuHame Property App'
+        'User-Agent': '2Hame Property App'
     }
 
     try:
@@ -266,7 +266,7 @@ def reverse_geocode(request):
 
     url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
     headers = {
-        'User-Agent': 'TuHame Property App'
+        'User-Agent': '2Hame Property App'
     }
 
     try:

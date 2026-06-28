@@ -105,7 +105,7 @@
       <!-- OVERVIEW -->
       <div id="overview" class="profile-section">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:0.25rem;">Welcome back, {{ profile.get_full_name|default:user.username }} 👋</h2>
-        <p style="color:var(--gray-400);margin-bottom:1.5rem;font-size:0.9rem;">Here's a snapshot of your TuHame dashboard</p>
+        <p style="color:var(--gray-400);margin-bottom:1.5rem;font-size:0.9rem;">Here's a snapshot of your 2Hame dashboard</p>
 
         <div class="stat-cards-grid">
           <div class="stat-card">
@@ -257,7 +257,7 @@
           <div class="qr-section">
             <div style="background:linear-gradient(135deg,var(--secondary) 0%,#1E3A8A 100%);border-radius:var(--radius-xl);padding:2rem;color:#fff;margin-bottom:1.5rem;">
               <div style="text-align:center;margin-bottom:1rem;">
-                <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;">TuHame Digital ID</div>
+                <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;">2Hame Digital ID</div>
                 <div style="font-size:0.78rem;opacity:0.65;">Scan to verify residence</div>
               </div>
               <div style="background:#fff;border-radius:var(--radius);padding:0.75rem;width:fit-content;margin:0 auto;">
@@ -702,7 +702,7 @@
     // Generate QR code data
     const qrData = {% if profile.current_property %} 'TH-2024-{{ profile.current_property.slug|upper }}' {% else %} 'TH-NO-PROPERTY' {% endif %};
     const timestamp = new Date().toISOString().split('T')[0];
-    const fullData = `TuHame-ID: ${qrData}\nDate: ${timestamp}\nName: {{ profile.get_full_name|default:user.username }}\nProperty: {% if profile.current_property %}{{ profile.current_property.title }}{% else %}None{% endif %}`;
+    const fullData = `2Hame-ID: ${qrData}\nDate: ${timestamp}\nName: {{ profile.get_full_name|default:user.username }}\nProperty: {% if profile.current_property %}{{ profile.current_property.title }}{% else %}None{% endif %}`;
 
     // Draw a simple QR-like pattern (placeholder)
     const colors = ['#1E3A8A', '#2563EB', '#3B82F6', '#60A5FA'];

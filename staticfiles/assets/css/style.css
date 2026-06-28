@@ -1,5 +1,5 @@
 /* ============================================
-   TUHAME – Smart Moving & Housing Platform
+   2Hame – Smart Moving & Housing Platform
    Main Stylesheet
    ============================================ */
 
@@ -793,7 +793,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: var(--transition);
 }
 
-/* ─── Why TuHame ─── */
+/* ─── Why 2Hame ─── */
 .features-bg {
   background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
   position: relative;

@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Map Search – TuHame</title>
+<title>Map Search – 2Hame</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" />
 <link rel="stylesheet" href="{% static "assets/css/map.css" %}" />
@@ -20,7 +20,7 @@
       <div class="map-sidebar-scroll">
         <div class="map-sidebar-header">
           <div class="sidebar-brand">
-            <div class="sidebar-brand-icon">🏠</div>TuHame
+            <div class="sidebar-brand-icon">🏠</div>2Hame
           </div>
 
           <div class="map-search-bar">
@@ -65,7 +65,7 @@
       </div>
 
       <div class="map-sidebar-footer">
-        <a href="{% url 'home:home' %}" target="_blank" rel="noopener">TuHame</a> &copy; 2026
+        <a href="{% url 'home:home' %}" target="_blank" rel="noopener">2Hame</a> &copy; 2026
       </div>
     </aside>
 
@@ -137,7 +137,7 @@ function pinClass(type) {
 }
 
 function createMarkerIcon(p, active = false) {
-  const cls = `tuhame-pin ${pinClass(p.type)} ${active ? 'pin-active' : ''}`;
+  const cls = `2Hame-pin ${pinClass(p.type)} ${active ? 'pin-active' : ''}`;
   const label = `${p.type === 'villa' ? '🏘' : p.type === 'bnb' ? '🛏' : p.type === 'commercial' ? '🏢' : '🏠'} KES ${Math.round(p.price/1000)}k`;
   return L.divIcon({
     className: '',

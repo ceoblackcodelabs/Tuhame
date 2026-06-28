@@ -179,17 +179,17 @@ transition: color 0.15s;
 .map-area { position: relative; flex: 1; min-height: 0; }
 #leaflet-map { width: 100%; height: 100%; z-index: 1; }
 
-.tuhame-pin {
+.2Hame-pin {
 background: var(--primary); color: #fff; padding: 5px 10px; border-radius: 20px;
 font-size: 12px; font-weight: 700; white-space: nowrap;
 box-shadow: 0 3px 12px rgba(37,99,235,0.45); font-family: var(--font-display);
 border: 2px solid #fff; cursor: pointer; transition: transform 0.15s;
 }
-.tuhame-pin:hover { transform: scale(1.08); }
-.tuhame-pin.pin-villa { background: #7C3AED; }
-.tuhame-pin.pin-bnb { background: #0891B2; }
-.tuhame-pin.pin-commercial { background: #374151; }
-.tuhame-pin.pin-active { background: #0F172A; transform: scale(1.1); }
+.2Hame-pin:hover { transform: scale(1.08); }
+.2Hame-pin.pin-villa { background: #7C3AED; }
+.2Hame-pin.pin-bnb { background: #0891B2; }
+.2Hame-pin.pin-commercial { background: #374151; }
+.2Hame-pin.pin-active { background: #0F172A; transform: scale(1.1); }
 
 .leaflet-popup-content-wrapper {
 border-radius: 14px !important; padding: 0 !important; overflow: hidden;
