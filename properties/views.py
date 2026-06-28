@@ -7,7 +7,9 @@ from .models import Property, PropertyType, PropertyStatus, Unit, Booking
 from .forms import PropertyForm, UnitForm, BookingForm
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib import messages
 from clients.models import Client
+from django.http import JsonResponse
 from payments.models import Payment
 
 
@@ -179,9 +181,21 @@ class PropertyCreateView(CreateView):
     template_name = 'properties/property_form.html'
     success_url = reverse_lazy('property_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         form.instance.owner = self.request.user
+        messages.success(self.request, 'Property added successfully!')
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Add New Property'
+        context['submit_text'] = 'Add Property'
+        return context
 
 
 class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -193,6 +207,81 @@ class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         property = self.get_object()
         return self.request.user == property.owner or self.request.user.is_staff
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Property updated successfully!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Edit Property'
+        context['submit_text'] = 'Update Property'
+        return context
+
+def geocode_address(request):
+    """Geocode address to get latitude and longitude"""
+    address = request.GET.get('address', '')
+    if not address:
+        return JsonResponse({'error': 'Address is required'}, status=400)
+
+    # Use Nominatim (OpenStreetMap) geocoding API
+    import requests
+    from urllib.parse import quote
+
+    url = f"https://nominatim.openstreetmap.org/search?q={quote(address)}&format=json&limit=1"
+    headers = {
+        'User-Agent': 'TuHame Property App'
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        data = response.json()
+
+        if data:
+            return JsonResponse({
+                'lat': data[0]['lat'],
+                'lon': data[0]['lon'],
+                'display_name': data[0]['display_name']
+            })
+        else:
+            return JsonResponse({'error': 'Location not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def reverse_geocode(request):
+    """Reverse geocode to get address from latitude/longitude"""
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+
+    if not lat or not lon:
+        return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
+
+    import requests
+
+    url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
+    headers = {
+        'User-Agent': 'TuHame Property App'
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        data = response.json()
+
+        if data and 'display_name' in data:
+            return JsonResponse({
+                'display_name': data['display_name'],
+                'address': data.get('display_name', '')
+            })
+        else:
+            return JsonResponse({'error': 'Address not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 class PropertyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):

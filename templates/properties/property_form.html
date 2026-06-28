@@ -1,6 +1,8 @@
 {% extends "AdminBase.html" %}
 {% load humanize %}
 
+{% block title %}Add Property{% endblock title %}
+
 {% block content %}
 
 <div class="main-panel">
@@ -109,6 +111,7 @@
                     <form class="forms-sample" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
 
+                        <!-- Basic Info -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -139,6 +142,7 @@
                             </div>
                         </div>
 
+                        <!-- Address -->
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group">
@@ -151,6 +155,50 @@
                             </div>
                         </div>
 
+                        <!-- Map Section -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label>Location on Map <span class="text-danger">*</span></label>
+                                    <div style="height:400px;border:1px solid #ddd;border-radius:4px;position:relative;" id="map-container">
+                                        <div id="location-map" style="height:100%;width:100%;"></div>
+                                        <div style="position:absolute;bottom:10px;left:10px;background:white;padding:8px 12px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:12px;z-index:1000;">
+                                            <span id="map-coords">Click on map to select location</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-info" onclick="searchAddress()">🔍 Search Address</button>
+                                        <button type="button" class="btn btn-sm btn-success" onclick="locateMe()">📍 My Location</button>
+                                        <button type="button" class="btn btn-sm btn-warning" onclick="clearLocation()">🗑 Clear</button>
+                                    </div>
+                                    <small class="text-muted">Click on the map to set property location. Latitude and Longitude will auto-fill.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Latitude/Longitude (Hidden/Readonly) -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.latitude.id_for_label }}">Latitude</label>
+                                    {{ form.latitude }}
+                                    {% if form.latitude.errors %}
+                                        <small class="text-danger">{{ form.latitude.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.longitude.id_for_label }}">Longitude</label>
+                                    {{ form.longitude }}
+                                    {% if form.longitude.errors %}
+                                        <small class="text-danger">{{ form.longitude.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- City/State/Zip -->
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -190,6 +238,7 @@
                             </div>
                         </div>
 
+                        <!-- Description -->
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group">
@@ -202,6 +251,7 @@
                             </div>
                         </div>
 
+                        <!-- Property Details -->
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -241,6 +291,7 @@
                             </div>
                         </div>
 
+                        <!-- Floor Info -->
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -280,6 +331,7 @@
                             </div>
                         </div>
 
+                        <!-- Lease Details -->
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -319,6 +371,7 @@
                             </div>
                         </div>
 
+                        <!-- Agent & Image -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -340,6 +393,7 @@
                             </div>
                         </div>
 
+                        <!-- Amenities -->
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group">
@@ -372,77 +426,205 @@
             </div>
         </div>
     </div>
-    {% comment %} add properties {% endcomment %}
 
-    <div class="row">
-        <div class="col-sm-4 grid-margin">
-        <div class="card">
-            <div class="card-body">
-            <h5>Revenue</h5>
-            <div class="row">
-                <div class="col-8 col-sm-12 col-xl-8 my-auto">
-                <div class="d-flex d-sm-block d-md-flex align-items-center">
-                    <h2 class="mb-0">$32123</h2>
-                    <p class="text-success ms-2 mb-0 font-weight-medium">+3.5%</p>
-                </div>
-                <h6 class="text-muted font-weight-normal">11.38% Since last month</h6>
-                </div>
-                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
-                <i class="icon-lg mdi mdi-codepen text-primary ml-auto"></i>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-        <div class="col-sm-4 grid-margin">
-        <div class="card">
-            <div class="card-body">
-            <h5>Sales</h5>
-            <div class="row">
-                <div class="col-8 col-sm-12 col-xl-8 my-auto">
-                <div class="d-flex d-sm-block d-md-flex align-items-center">
-                    <h2 class="mb-0">$45850</h2>
-                    <p class="text-success ms-2 mb-0 font-weight-medium">+8.3%</p>
-                </div>
-                <h6 class="text-muted font-weight-normal"> 9.61% Since last month</h6>
-                </div>
-                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
-                <i class="icon-lg mdi mdi-wallet-travel text-danger ml-auto"></i>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-        <div class="col-sm-4 grid-margin">
-        <div class="card">
-            <div class="card-body">
-            <h5>Purchase</h5>
-            <div class="row">
-                <div class="col-8 col-sm-12 col-xl-8 my-auto">
-                <div class="d-flex d-sm-block d-md-flex align-items-center">
-                    <h2 class="mb-0">$2039</h2>
-                    <p class="text-danger ms-2 mb-0 font-weight-medium">-2.1% </p>
-                </div>
-                <h6 class="text-muted font-weight-normal">2.27% Since last month</h6>
-                </div>
-                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
-                <i class="icon-lg mdi mdi-monitor text-success ml-auto"></i>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-    </div>
     </div>
     <!-- content-wrapper ends -->
     <!-- partial:partials/_footer.html -->
     <footer class="footer">
     <div class="d-sm-flex justify-content-center justify-content-sm-between">
         <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
-        <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center"> <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span> <i class="mdi mdi-heart text-danger"></i></span>
+        <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
     </div>
     </footer>
     <!-- partial -->
 </div>
+
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+<script>
+    // Initialize map
+    var map;
+    var marker;
+    var latInput = document.getElementById('latitude-input');
+    var lngInput = document.getElementById('longitude-input');
+    var addressInput = document.getElementById('address-input');
+    var coordsDisplay = document.getElementById('map-coords');
+
+    function initMap() {
+        // Default center: Nairobi, Kenya
+        var defaultLat = -1.2921;
+        var defaultLng = 36.8219;
+
+        // Check if we have existing coordinates
+        var existingLat = latInput ? parseFloat(latInput.value) : null;
+        var existingLng = lngInput ? parseFloat(lngInput.value) : null;
+
+        if (existingLat && existingLng && !isNaN(existingLat) && !isNaN(existingLng)) {
+            defaultLat = existingLat;
+            defaultLng = existingLng;
+        }
+
+        map = L.map('location-map', {
+            center: [defaultLat, defaultLng],
+            zoom: 15,
+            zoomControl: true
+        });
+
+        // Use OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Add marker if coordinates exist
+        if (existingLat && existingLng && !isNaN(existingLat) && !isNaN(existingLng)) {
+            marker = L.marker([existingLat, existingLng], {
+                draggable: true
+            }).addTo(map);
+            coordsDisplay.textContent = '📍 ' + existingLat.toFixed(6) + ', ' + existingLng.toFixed(6);
+        }
+
+        // Click on map to place marker
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+            placeMarker(lat, lng);
+            reverseGeocode(lat, lng);
+        });
+
+        // Drag marker to update coordinates
+        if (marker) {
+            marker.on('dragend', function(e) {
+                var lat = marker.getLatLng().lat;
+                var lng = marker.getLatLng().lng;
+                updateCoordinates(lat, lng);
+                reverseGeocode(lat, lng);
+            });
+        }
+
+        // Fix map size after render
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 500);
+    }
+
+    function placeMarker(lat, lng) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng], {
+            draggable: true
+        }).addTo(map);
+
+        marker.on('dragend', function(e) {
+            var lat = marker.getLatLng().lat;
+            var lng = marker.getLatLng().lng;
+            updateCoordinates(lat, lng);
+            reverseGeocode(lat, lng);
+        });
+
+        map.setView([lat, lng], 15);
+        updateCoordinates(lat, lng);
+        coordsDisplay.textContent = '📍 ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+    }
+
+    function updateCoordinates(lat, lng) {
+        latInput.value = lat.toFixed(6);
+        lngInput.value = lng.toFixed(6);
+        coordsDisplay.textContent = '📍 ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+    }
+
+    function reverseGeocode(lat, lng) {
+        fetch(`/properties/reverse-geocode/?lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.display_name && addressInput) {
+                    // Optionally update address field
+                    // addressInput.value = data.display_name;
+                }
+            })
+            .catch(error => console.error('Reverse geocode error:', error));
+    }
+
+    function searchAddress() {
+        var address = prompt('Enter address to search:');
+        if (!address) return;
+
+        fetch(`/properties/geocode/?address=${encodeURIComponent(address)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.lat && data.lon) {
+                    var lat = parseFloat(data.lat);
+                    var lng = parseFloat(data.lon);
+                    placeMarker(lat, lng);
+                    // Update city and state if available
+                    if (data.display_name) {
+                        var parts = data.display_name.split(',');
+                        if (parts.length > 0 && addressInput) {
+                            addressInput.value = parts[0].trim();
+                        }
+                    }
+                } else {
+                    alert('Location not found. Please try a different address.');
+                }
+            })
+            .catch(error => {
+                alert('Error searching for address. Please try again.');
+                console.error(error);
+            });
+    }
+
+    function locateMe() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+        }
+
+        coordsDisplay.textContent = '📍 Finding your location...';
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                placeMarker(lat, lng);
+                reverseGeocode(lat, lng);
+                map.setView([lat, lng], 15);
+            },
+            function(error) {
+                alert('Could not find your location. Please enable location services.');
+                coordsDisplay.textContent = '📍 Click on map to select location';
+                console.error(error);
+            }
+        );
+    }
+
+    function clearLocation() {
+        if (marker) {
+            map.removeLayer(marker);
+            marker = null;
+        }
+        latInput.value = '';
+        lngInput.value = '';
+        coordsDisplay.textContent = '📍 Click on map to select location';
+        map.setView([-1.2921, 36.8219], 13);
+    }
+
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if map container exists
+        if (document.getElementById('location-map')) {
+            initMap();
+        }
+    });
+
+    // Re-initialize map if inside a tab or hidden on load
+    setTimeout(function() {
+        if (map) {
+            map.invalidateSize();
+        }
+    }, 1000);
+</script>
 
 {% endblock content %}

@@ -13,4 +13,8 @@ urlpatterns = [
 
     path('bookings/', views.BookingListView.as_view(), name='booking_list'),
     path('bookings/add/', views.BookingCreateView.as_view(), name='booking_add'),
+
+    # Geocoding endpoints
+    path('geocode/', views.geocode_address, name='geocode_address'),
+    path('reverse-geocode/', views.reverse_geocode, name='reverse_geocode'),
 ]

@@ -1,17 +1,19 @@
 # apps/properties/forms.py
 from django import forms
 from .models import Property, Unit, Booking
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class PropertyForm(forms.ModelForm):
     class Meta:
         model = Property
         fields = [
             'title', 'property_type', 'status', 'address', 'city', 'state',
-            'zip_code', 'country', 'description', 'area_sqft', 'bedrooms',
-            'bathrooms', 'floor_number', 'total_floors', 'year_built',
-            'price', 'security_deposit', 'maintenance_fee', 'agent',
-            'amenities', 'available_from', 'minimum_lease_days',
+            'zip_code', 'country', 'latitude', 'longitude', 'description',
+            'area_sqft', 'bedrooms', 'bathrooms', 'floor_number', 'total_floors',
+            'year_built', 'price', 'security_deposit', 'maintenance_fee',
+            'agent', 'amenities', 'available_from', 'minimum_lease_days',
             'maximum_lease_days', 'main_image'
         ]
         widgets = {
@@ -23,7 +25,22 @@ class PropertyForm(forms.ModelForm):
             'address': forms.Textarea(attrs={
                 'rows': 3,
                 'class': 'form-control',
-                'placeholder': 'Full street address'
+                'placeholder': 'Full street address',
+                'id': 'address-input'
+            }),
+            'latitude': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'id': 'latitude-input',
+                'step': '0.000001',
+                'readonly': True,
+                'placeholder': 'Auto-filled from map'
+            }),
+            'longitude': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'id': 'longitude-input',
+                'step': '0.000001',
+                'readonly': True,
+                'placeholder': 'Auto-filled from map'
             }),
             'amenities': forms.CheckboxSelectMultiple(attrs={
                 'class': 'form-check-input'
@@ -115,11 +132,20 @@ class PropertyForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
         # Add required class to required fields
         for field_name, field in self.fields.items():
             if field.required:
                 field.widget.attrs['required'] = 'required'
+
+        # Set initial user
+        if self.user and not self.instance.pk:
+            self.fields['agent'].queryset = User.objects.filter(
+                is_active=True,
+                groups__name='agents'
+            )
 
 
 class UnitForm(forms.ModelForm):
