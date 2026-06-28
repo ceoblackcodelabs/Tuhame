@@ -14,6 +14,10 @@
 </head>
 <body>
 
+  {% csrf_token %}
+  <!--Hidden Input-->
+  <input type="hidden" id="user-auth-status" value="{% if user.is_authenticated %}true{% else %}false{% endif %}">
+
 <!-- ─── NAVBAR ─── -->
 <nav class="navbar transparent">
   <div class="nav-container">

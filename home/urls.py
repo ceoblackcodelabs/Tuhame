@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import *
+from .utils import toggle_save_property, get_saved_properties, check_saved_status
 
 app_name = "home"
 
@@ -9,4 +10,9 @@ urlpatterns = [
     path("property/listing/<slug:slug>/", PropertiesDetailView.as_view(), name="about_property"),
     path("property/map-list/", PropertyMapSearchListView.as_view(), name="property_map"),
     path('property/map-data/', PropertyMapDataView.as_view(), name='property_map_data'),
+
+    # Favourites/Saved Properties URLs
+    path('api/save-property/', toggle_save_property, name='toggle_save_property'),
+    path('api/saved-properties/', get_saved_properties, name='get_saved_properties'),
+    path('api/check-saved/', check_saved_status, name='check_saved_status'),
 ]

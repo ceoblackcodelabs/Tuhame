@@ -93,3 +93,26 @@ class ViewingSchedule(models.Model):
             return self.scheduled_datetime > timezone.now()
         return False
 
+
+class SavedProperty(models.Model):
+    """Model to track saved/favourite properties for users"""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='saved_properties'
+    )
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name='saved_by'
+    )
+    saved_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, help_text="Optional notes about why this property was saved")
+
+    class Meta:
+        ordering = ['-saved_at']
+        unique_together = ['user', 'property']  # Prevent duplicate saves
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.property.title}"

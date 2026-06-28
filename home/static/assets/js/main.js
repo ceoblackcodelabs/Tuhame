@@ -112,37 +112,7 @@ if ('IntersectionObserver' in window) {
   fadeEls.forEach(el => fadeObserver.observe(el));
 }
 
-// ─── Save / Wishlist ───
-const savedProps = new Set(JSON.parse(localStorage.getItem('tuhame-saved') || '[]'));
-
-function updateSaveBtns() {
-  document.querySelectorAll('.property-save').forEach(btn => {
-    const id = btn.dataset.id;
-    if (id && savedProps.has(id)) btn.classList.add('saved');
-  });
-}
-
-document.addEventListener('click', e => {
-  const saveBtn = e.target.closest('.property-save');
-  if (!saveBtn) return;
-  const id = saveBtn.dataset.id;
-  if (!id) return;
-
-  if (savedProps.has(id)) {
-    savedProps.delete(id);
-    saveBtn.classList.remove('saved');
-    saveBtn.textContent = '🤍';
-    showToast('Removed from saved', '🗑️');
-  } else {
-    savedProps.add(id);
-    saveBtn.classList.add('saved');
-    saveBtn.textContent = '❤️';
-    showToast('Saved to wishlist!', '❤️');
-  }
-  localStorage.setItem('tuhame-saved', JSON.stringify([...savedProps]));
-});
-
-updateSaveBtns();
+// ─── REMOVED: Save / Wishlist (now handled by AJAX in templates) ───
 
 // ─── Toast Notifications ───
 function showToast(message, icon = '✅', duration = 3000) {
@@ -428,5 +398,187 @@ if (scoreBars.length && 'IntersectionObserver' in window) {
     barObserver.observe(bar);
   });
 }
+
+// ─── Save / Wishlist AJAX Functions ───
+// Make these functions available globally
+window.toggleSave = window.toggleSave || function(element, propertyId) {
+    console.log('toggleSave called from main.js for property:', propertyId);
+
+    // Check if user is authenticated
+    const authInput = document.getElementById('user-auth-status');
+    const isAuthenticated = authInput ? authInput.value === 'true' : false;
+
+    if (!isAuthenticated) {
+        showToast('Please login to save properties', '🔒');
+        setTimeout(() => {
+            window.location.href = "/users/login/?next=" + window.location.pathname;
+        }, 1500);
+        return;
+    }
+
+    // Prevent multiple clicks
+    if (element.disabled) return;
+    element.disabled = true;
+
+    const isSaved = element.classList.contains('saved');
+    const action = isSaved ? 'unsave' : 'save';
+    const originalText = element.textContent;
+    element.textContent = '⏳';
+
+    // Get CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                      document.querySelector('input[name="csrfmiddlewaretoken"]')?.value ||
+                      getCookie('csrftoken');
+
+    if (!csrftoken) {
+        console.error('CSRF token not found');
+        showToast('Security error. Please refresh the page.', '❌');
+        element.disabled = false;
+        element.textContent = originalText;
+        return;
+    }
+
+    const url = "/api/save-property/";
+    const body = JSON.stringify({
+        property_id: propertyId,
+        action: action
+    });
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: body,
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Server error');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'saved') {
+                element.classList.add('saved');
+                element.textContent = '❤️';
+                showToast(data.message || 'Property saved!', '❤️');
+            } else if (data.action === 'unsaved') {
+                element.classList.remove('saved');
+                element.textContent = '🤍';
+                showToast(data.message || 'Property removed from favourites', '💔');
+            } else if (data.action === 'already_saved') {
+                element.classList.add('saved');
+                element.textContent = '❤️';
+                showToast('Property already saved', 'ℹ️');
+            } else if (data.action === 'not_saved') {
+                element.classList.remove('saved');
+                element.textContent = '🤍';
+                showToast('Property was not saved', 'ℹ️');
+            }
+
+            if (data.count !== undefined) {
+                const counterElements = document.querySelectorAll('.saved-count');
+                counterElements.forEach(el => {
+                    el.textContent = data.count;
+                });
+            }
+        } else {
+            const errorMsg = data.error || 'Failed to save property';
+            showToast(errorMsg, '❌');
+            if (isSaved) {
+                element.classList.add('saved');
+                element.textContent = '❤️';
+            } else {
+                element.classList.remove('saved');
+                element.textContent = '🤍';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        showToast(error.message || 'Error saving property. Please try again.', '❌');
+        if (isSaved) {
+            element.classList.add('saved');
+            element.textContent = '❤️';
+        } else {
+            element.classList.remove('saved');
+            element.textContent = '🤍';
+        }
+    })
+    .finally(() => {
+        element.disabled = false;
+    });
+};
+
+// Helper function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Check saved status on page load
+function checkSavedStatus() {
+    const authInput = document.getElementById('user-auth-status');
+    const isAuthenticated = authInput ? authInput.value === 'true' : false;
+
+    if (!isAuthenticated) return;
+
+    const saveButtons = document.querySelectorAll('.property-save');
+    const propertyIds = [];
+    saveButtons.forEach(btn => {
+        const id = btn.dataset.id;
+        if (id) propertyIds.push(id);
+    });
+
+    if (propertyIds.length === 0) return;
+
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                      document.querySelector('input[name="csrfmiddlewaretoken"]')?.value ||
+                      getCookie('csrftoken');
+
+    propertyIds.forEach(id => {
+        fetch(`/api/check-saved/?property_id=${id}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken || ''
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.saved) {
+                const btn = document.querySelector(`.property-save[data-id="${id}"]`);
+                if (btn) {
+                    btn.classList.add('saved');
+                    btn.textContent = '❤️';
+                }
+            }
+        })
+        .catch(error => console.error('Error checking saved status:', error));
+    });
+}
+
+// Run saved status check on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(checkSavedStatus, 500);
+});
+
+console.log('🏠 TuHame loaded. Find. Move. Settle.');
 
 console.log('🏠 TuHame loaded. Find. Move. Settle.');

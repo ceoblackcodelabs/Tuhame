@@ -170,8 +170,16 @@ class MyProfileView(LoginRequiredMixin, DetailView):
             context['total_amount_due'] = 0
             context['utility_usage'] = []
 
-        return context
+        # Get saved properties
+        from home.models import SavedProperty
+        saved_properties = SavedProperty.objects.filter(
+            user=self.request.user
+        ).select_related('property').order_by('-saved_at')
 
+        context['saved_properties'] = saved_properties
+        context['saved_properties_count'] = saved_properties.count()
+
+        return context
 
 class MyProfileUpdateView(LoginRequiredMixin, UpdateView):
     """View for users to update their own profile"""

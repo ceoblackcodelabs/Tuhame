@@ -10,7 +10,7 @@ from properties.models import (
     Amenity,
 )
 
-from .models import ViewingSchedule
+from .models import ViewingSchedule, SavedProperty
 
 
 @admin.register(ViewingSchedule)
@@ -176,3 +176,99 @@ class ViewingScheduleAdmin(admin.ModelAdmin):
                 obj.get_status_display()
             )
         status_badge.short_description = 'Status'
+
+@admin.register(SavedProperty)
+class SavedPropertyAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'user_link',
+        'property_link',
+        'saved_at',
+        'notes_preview'
+    ]
+
+    list_filter = [
+        'saved_at',
+        'user',
+        'property'
+    ]
+
+    search_fields = [
+        'user__username',
+        'user__email',
+        'property__title',
+        'property__address',
+        'notes'
+    ]
+
+    readonly_fields = [
+        'saved_at',
+        'created_at_display'
+    ]
+
+    fieldsets = (
+        ('User & Property', {
+            'fields': ('user', 'property')
+        }),
+        ('Details', {
+            'fields': ('notes', 'saved_at')
+        }),
+        ('Metadata', {
+            'fields': ('created_at_display',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    ordering = ['-saved_at']
+    date_hierarchy = 'saved_at'
+
+    def user_link(self, obj):
+        """Display user with link to admin change page"""
+        if obj.user:
+            url = f"/admin/auth/user/{obj.user.id}/change/"
+            return format_html(
+                '<a href="{}" target="_blank">{}</a>',
+                url,
+                obj.user.username
+            )
+        return '-'
+    user_link.short_description = 'User'
+    user_link.admin_order_field = 'user__username'
+
+    def property_link(self, obj):
+        """Display property with link to admin change page"""
+        if obj.property:
+            url = f"/admin/properties/property/{obj.property.id}/change/"
+            return format_html(
+                '<a href="{}" target="_blank">{}</a>',
+                url,
+                obj.property.title
+            )
+        return '-'
+    property_link.short_description = 'Property'
+    property_link.admin_order_field = 'property__title'
+
+    def notes_preview(self, obj):
+        """Display truncated notes"""
+        if obj.notes:
+            return obj.notes[:50] + ('...' if len(obj.notes) > 50 else '')
+        return '-'
+    notes_preview.short_description = 'Notes'
+
+    def created_at_display(self, obj):
+        """Display created at timestamp"""
+        return obj.saved_at.strftime('%Y-%m-%d %H:%M:%S')
+    created_at_display.short_description = 'Created At'
+
+    actions = ['delete_selected']
+
+    # Custom actions
+    def delete_selected(self, request, queryset):
+        """Delete selected saved properties"""
+        count = queryset.count()
+        queryset.delete()
+        self.message_user(
+            request,
+            f'{count} saved propert{"y" if count == 1 else "ies"} deleted successfully.'
+        )
+    delete_selected.short_description = 'Delete selected saved properties'
