@@ -148,4 +148,4 @@ LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGIN = ["https://fb90-217-199-148-239.ngrok-free.app"]
+CSRF_TRUSTED_ORIGIN = ["https://a17d-217-199-148-239.ngrok-free.app"]
