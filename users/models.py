@@ -147,25 +147,23 @@ class Profile(models.Model):
         self.moved_in_date = None
         self.save()
 
+    # apps/profiles/models.py - Update the generate_qr_code method
     def generate_qr_code(self):
         """Generate QR code for the user's profile"""
         try:
             import qrcode
             from io import BytesIO
             from django.core.files.base import ContentFile
-            from django.urls import reverse
+            from django.conf import settings
 
-            # Create QR code data
-            qr_data = {
-                'user_id': self.user.id,
-                'username': self.user.username,
-                'token': str(self.qr_code_token),
-                'profile_id': self.id,
-            }
+            # Build the URL
+            if hasattr(settings, 'SITE_URL') and settings.SITE_URL:
+                base_url = settings.SITE_URL
+            else:
+                base_url = "https://6b4d-217-199-148-239.ngrok-free.app"
 
-            # Build the URL for the profile
-            # Using the QR token URL
-            qr_url = f"/profile/qr/{self.qr_code_token}/"
+            # Use the shorter QR URL pattern
+            qr_url = f"{base_url}/users/qr/{self.qr_code_token}/"
 
             # Generate QR code
             qr = qrcode.QRCode(

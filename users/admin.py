@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Profile, MoveHistory
+from django.contrib import messages
 
 
 @admin.register(Profile)
@@ -62,6 +63,16 @@ class ProfileAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    actions = ['regenerate_qr_codes']
+
+    def regenerate_qr_codes(self, request, queryset):
+        count = 0
+        for profile in queryset:
+            if profile.regenerate_qr_code():
+                count += 1
+        self.message_user(request, f'QR Codes regenerated for {count} profiles.', messages.SUCCESS)
+    regenerate_qr_codes.short_description = 'Regenerate QR codes for selected profiles'
 
     def full_name_display(self, obj):
         """Display full name"""

@@ -1,7 +1,7 @@
 # apps/dashboard/views.py
 from django.views.generic import FormView, TemplateView, DetailView, UpdateView, View, CreateView
 from .models import Profile
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 import base64
 from django.core.files.base import ContentFile
 import uuid
@@ -129,66 +129,72 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Add dashboard statistics here
         return context
 
-# public profile view
+# public profile view by username
 class PublicProfileView(DetailView):
-    model = User
-    template_name = 'profiles/public_profile.html'
-    context_object_name = 'user'
-    slug_field = 'username'
+    """Public profile view by username - NO LOGIN REQUIRED"""
+    model = Profile
+    template_name = 'auth/public_profile.html'
+    context_object_name = 'profile'
+    slug_field = 'user__username'
     slug_url_kwarg = 'username'
 
     def get_queryset(self):
-        return User.objects.filter(is_active=True)
+        return Profile.objects.filter(is_active=True, user__is_active=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.get_object()
-        profile = user.profile
+        profile = self.get_object()
+        user = profile.user
 
-        # Only show basic public info
-        context['profile'] = profile
+        # Only show public information
+        context['full_name'] = profile.get_full_name()
+        context['user'] = user
+        context['phone'] = profile.phone_number
+        context['email'] = user.email
         context['current_property'] = profile.current_property
+        context['city'] = profile.city
+        context['country'] = profile.country
+        context['profile_picture'] = profile.profile_picture
         context['is_public'] = True
         return context
 
-def generate_user_qr(request):
-    """Generate QR code for the current user"""
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Not authenticated'}, status=401)
+#token qr
+class PublicProfileByTokenView(DetailView):
+    """Public profile view - NO LOGIN REQUIRED"""
+    model = Profile
+    template_name = 'auth/public_profile.html'
+    context_object_name = 'profile'
+    slug_field = 'qr_code_token'
+    slug_url_kwarg = 'token'
 
-    # Public profile URL
-    public_url = request.build_absolute_uri(
-        reverse('public_profile', kwargs={'username': request.user.username})
-    )
+    # IMPORTANT: No LoginRequiredMixin here!
 
-    # Generate QR code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(public_url)
-    qr.make(fit=True)
+    def get_queryset(self):
+        return Profile.objects.filter(is_active=True)
 
-    img = qr.make_image(fill_color="#1E3A8A", back_color="white")
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except (ValueError, TypeError, Profile.DoesNotExist):
+            raise Http404("Profile not found")
 
-    # Convert to base64
-    buffer = BytesIO()
-    img.save(buffer, format='PNG')
-    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile = self.get_object()
+        user = profile.user
 
-    # Save to profile (optional)
-    if request.user.profile:
-        filename = f'qr_{request.user.username}_{uuid.uuid4().hex[:8]}.png'
-        request.user.profile.qr_code.save(filename, ContentFile(buffer.getvalue()))
-        request.user.profile.save()
+        context['full_name'] = profile.get_full_name()
+        context['user'] = user
+        context['phone'] = profile.phone_number
+        context['email'] = user.email
+        context['current_property'] = profile.current_property
+        context['city'] = profile.city
+        context['country'] = profile.country
+        context['profile_picture'] = profile.profile_picture
+        context['is_public'] = True
+        return context
 
-    return JsonResponse({
-        'qr_data': f'data:image/png;base64,{qr_base64}',
-        'public_url': public_url
-    })
-
+# LOGGED IN USER PROFILE VIEW
 class MyProfileView(LoginRequiredMixin, DetailView):
     """View for users to see their own profile"""
 
@@ -321,3 +327,19 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         )
 
         return context
+
+class RegenerateQRView(LoginRequiredMixin, View):
+    """View to regenerate QR code for the current user"""
+
+    def get(self, request):
+        profile = request.user.profile
+
+        # Regenerate QR code
+        success = profile.regenerate_qr_code()
+
+        if success:
+            messages.success(request, 'QR Code regenerated successfully!')
+        else:
+            messages.error(request, 'Failed to regenerate QR code. Please try again.')
+
+        return redirect('my_profile')

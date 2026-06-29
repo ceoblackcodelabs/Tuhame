@@ -302,6 +302,7 @@
                       {% if qr_code_data %}
                           <button class="btn btn-primary" onclick="downloadQR()">⬇️ Download QR</button>
                           <button class="btn btn-outline-dark" onclick="shareQR()">📤 Share</button>
+                          <a href="{% url 'regenerate_qr' %}" class="btn btn-outline-warning">🔄 Regenerate QR</a>
                       {% endif %}
                   </div>
               </div>

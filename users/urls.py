@@ -1,5 +1,7 @@
-from django.urls import path
-from . import views
+# apps/users/urls.py
+from django.urls import path, re_path
+from . import views, tests
+
 
 urlpatterns = [
     # Authentication URLs
@@ -10,8 +12,19 @@ urlpatterns = [
     path('my-profile/', views.MyProfileView.as_view(), name='my_profile'),
     path('my-profile/edit/', views.MyProfileUpdateView.as_view(), name='edit_profile'),
 
-    # View other profiles (admin/landlord only)
+    # Admin/Landlord view other profiles
     path('profile/<str:username>/', views.ProfileDetailView.as_view(), name='profile_detail'),
-    path('profile/<str:username>/', views.PublicProfileView.as_view(), name='public_profile'),
-    path('api/generate-qr/', views.generate_user_qr, name='generate_qr'),
+
+    # PUBLIC profile - NO LOGIN REQUIRED - For QR codes
+    # This uses the UUID token from the profile
+    path('qr/<uuid:token>/', views.PublicProfileByTokenView.as_view(), name='public_profile_by_token'),
+
+    # Also support username-based public profiles
+    path('public/<str:username>/', views.PublicProfileView.as_view(), name='public_profile'),
+
+    # Regenerate QR
+    path('regenerate-qr/', views.RegenerateQRView.as_view(), name='regenerate_qr'),
+
+    # test
+    path('test-qr/', tests.test_qr_url, name='test_qr'),
 ]
