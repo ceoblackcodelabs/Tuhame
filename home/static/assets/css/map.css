@@ -70,15 +70,17 @@ flex-shrink: 0;
 }
 
 .sidebar-brand {
-display: flex;
-align-items: center;
-gap: 0.6rem;
-font-family: var(--font-display);
-font-weight: 800;
-font-size: 1.2rem;
-color: var(--primary);
-margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+  text-decoration: none;
 }
+
 .sidebar-brand-icon {
 width: 34px; height: 34px;
 background: var(--primary);
@@ -160,12 +162,11 @@ white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 
 /* navbar icon */
 .nav-logo-img {
-  width: 100px;
-  height: 100px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   object-fit: cover;
   flex-shrink: 0;
-  transition: var(--transition);
 }
 
 .footer-logo-img {
@@ -198,7 +199,7 @@ transition: color 0.15s;
 #leaflet-map { width: 100%; height: 100%; z-index: 1; }
 
 .tuHame-pin {
-background: var(--primary); color: #fff; padding: 5px 10px; border-radius: 20px;
+background: transparent; color: #000000; padding: 5px 10px; border-radius: 50%;
 font-size: 12px; font-weight: 700; white-space: nowrap;
 box-shadow: 0 3px 12px rgba(37,99,235,0.45); font-family: var(--font-display);
 border: 2px solid #fff; cursor: pointer; transition: transform 0.15s;
@@ -207,7 +208,7 @@ border: 2px solid #fff; cursor: pointer; transition: transform 0.15s;
 .tuHame-pin.pin-villa { background: #7C3AED; }
 .tuHame-pin.pin-bnb { background: #0891B2; }
 .tuHame-pin.pin-commercial { background: #374151; }
-.tuHame-pin.pin-active { background: #0F172A; transform: scale(1.1); }
+.tuHame-pin.pin-active { background: transparent; transform: scale(1.1); border: 2px solid #09cf44;}
 
 .leaflet-popup-content-wrapper {
 border-radius: 14px !important; padding: 0 !important; overflow: hidden;
@@ -224,10 +225,10 @@ box-shadow: 0 12px 32px rgba(0,0,0,0.18) !important; border: none !important;
 .popup-price { font-weight: 800; font-size: 1rem; color: #2563EB; margin-bottom: 0.7rem; }
 .popup-meta { display: flex; gap: 0.6rem; font-size: 0.72rem; color: #6B7280; margin-bottom: 0.75rem; }
 .popup-btn {
-display: block; width: 100%; text-align: center; background: #2563EB; color: #fff;
+display: block; width: 100%; text-align: center; background: #05a71d; color: #e03030;
 border-radius: 8px; padding: 0.6rem; font-size: 0.82rem; font-weight: 700;
 }
-.popup-btn:hover { background: #1D4ED8; }
+.popup-btn:hover { background: #00ff4c; }
 
 .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-md) !important; }
 .leaflet-control-zoom a {

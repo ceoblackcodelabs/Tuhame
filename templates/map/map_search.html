@@ -20,8 +20,9 @@
       <div class="map-sidebar-scroll">
         <div class="map-sidebar-header">
           <div class="sidebar-brand">
-            <a href="{% url "home:home" %}" class="nav-logo">
+            <a href="{% url 'home:home' %}" class="sidebar-brand">
               <img src="{% static 'assets/img/logo.png' %}" alt="2Hame" class="nav-logo-img" />
+              2Hame
             </a>
           </div>
 
@@ -32,11 +33,11 @@
           </div>
 
           <div class="map-filters">
-            <div class="map-filter-chip active" onclick="filterChip(this,'all')">All</div>
+            <div class="map-filter-chip active" onclick="filterChip(this,'all')">🗺 All</div>
             <div class="map-filter-chip" onclick="filterChip(this,'apartment')">🏠 Apartment</div>
             <div class="map-filter-chip" onclick="filterChip(this,'villa')">🏘 Villa</div>
             <div class="map-filter-chip" onclick="filterChip(this,'bnb')">🛏 BnB</div>
-            <div class="map-filter-chip" onclick="filterChip(this,'residential')">🏡 Residential</div>
+            <div class="map-filter-chip" onclick="filterChip(this,'residential')">🏡 House</div>
             <div class="map-filter-chip" onclick="filterChip(this,'commercial')">🏢 Commercial</div>
           </div>
 
@@ -140,7 +141,7 @@ function pinClass(type) {
 
 function createMarkerIcon(p, active = false) {
   const cls = `tuHame-pin ${pinClass(p.type)} ${active ? 'pin-active' : ''}`;
-  const label = `${p.type === 'villa' ? '🏘' : p.type === 'bnb' ? '🛏' : p.type === 'commercial' ? '🏢' : '🏠'} KES ${Math.round(p.price/1000)}k`;
+  const label = `${p.type === 'villa' ? '🏘' : p.type === 'bnb' ? '🛏' : p.type === 'commercial' ? '🏢' : '🏠'} KES ${Math.round(p.price)}`;
   return L.divIcon({
     className: '',
     html: `<div class="${cls}">${label}</div>`,
@@ -225,7 +226,7 @@ function renderListings(list) {
         <div class="map-listing-name">${p.name}</div>
         <div class="map-listing-loc">📍 ${p.location} · ${p.dist}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;">
-          <div class="map-listing-price">KES ${Math.round(p.price/1000)}k</div>
+          <div class="map-listing-price">KES ${Math.round(p.price)}</div>
           <span style="font-size:0.72rem;color:#F59E0B;font-weight:600;">⭐ ${p.rating}</span>
         </div>
         <div style="font-size:0.72rem;color:var(--gray-400);margin-top:0.2rem;">🛏 ${p.beds} · 🚿 ${p.baths}</div>
