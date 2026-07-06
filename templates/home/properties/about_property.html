@@ -215,22 +215,180 @@
 
       <!-- Reviews -->
       <div class="detail-section-title">Tenant Reviews</div>
-      <div style="display:flex;flex-direction:column;gap:1.25rem;">
-        {% for booking in property.bookings.all|slice:":2" %}
-          <div style="background:var(--gray-50);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--gray-200);">
-            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
-              <div style="width:42px;height:42px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">{{ booking.client|default:"T"|slice:":2"|upper }}</div>
-              <div>
-                <div style="font-weight:700;font-size:0.9rem;color:var(--gray-900);">{{ booking.client|default:"Tenant" }}</div>
-                <div style="font-size:0.78rem;color:var(--gray-400);">Tenant · {{ booking.created_at|date:"F Y" }}</div>
-              </div>
-              <div style="margin-left:auto;color:var(--warning);">⭐⭐⭐⭐⭐</div>
+
+      <!-- Review Summary Bar -->
+      {% if property.reviews.count > 0 %}
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;">
+          <div style="text-align:center;flex-shrink:0;">
+            <div style="font-size:3rem;font-weight:800;color:var(--primary);font-family:var(--font-display);line-height:1;">
+              {{ avg_rating|floatformat:1 }}
             </div>
-            <p style="font-size:0.875rem;color:var(--gray-600);line-height:1.7;">{{ booking.special_requests|default:"Great property! Would definitely recommend." }}</p>
+            <div style="color:var(--warning);font-size:1.1rem;margin:0.25rem 0;">
+              {% with avg_rating|floatformat:0 as stars %}
+                {% for i in "12345" %}⭐{% endfor %}
+              {% endwith %}
+            </div>
+            <div style="font-size:0.78rem;color:var(--gray-400);">{{ property.reviews.count }} review{{ property.reviews.count|pluralize }}</div>
+          </div>
+          <div style="flex:1;min-width:180px;">
+            {% for n in "54321" %}
+              {% with n|add:0 as star %}
+                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.35rem;">
+                  <span style="font-size:0.78rem;color:var(--gray-500);width:10px;text-align:right;flex-shrink:0;">{{ n }}</span>
+                  <span style="color:var(--warning);font-size:0.75rem;flex-shrink:0;">⭐</span>
+                  <div style="flex:1;background:var(--gray-200);border-radius:var(--radius-full);height:6px;overflow:hidden;">
+                    <div style="height:100%;background:var(--warning);border-radius:var(--radius-full);width:{% if n == '5' %}{{ rating_5_pct }}{% elif n == '4' %}{{ rating_4_pct }}{% elif n == '3' %}{{ rating_3_pct }}{% elif n == '2' %}{{ rating_2_pct }}{% else %}{{ rating_1_pct }}{% endif %}%;transition:width 0.6s ease;"></div>
+                  </div>
+                </div>
+              {% endwith %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Write a Review -->
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--gray-900);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+          ✍️ Write a Review
+        </div>
+
+        {% if user.is_authenticated %}
+          {% if can_review %}
+            {% if user_review %}
+              <!-- Already reviewed -->
+              <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);padding:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                <span style="font-size:1.5rem;">✅</span>
+                <div>
+                  <div style="font-weight:600;font-size:0.9rem;color:var(--gray-800);">You've already reviewed this property</div>
+                  <div style="font-size:0.8rem;color:var(--gray-400);">Your {{ user_review.rating }}-star review was posted on {{ user_review.created_at|date:"F d, Y" }}</div>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-left:auto;flex-wrap:wrap;">
+                  <a href="{% url 'home:edit_review' property.slug %}" class="btn btn-sm btn-outline-dark">✏️ Edit Review</a>
+                  <form method="post" action="{% url 'home:delete_review' property.slug %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete your review?')">🗑️ Delete</button>
+                  </form>
+                </div>
+              </div>
+            {% else %}
+              <form method="post" action="{% url 'home:submit_review' property.slug %}" id="review-form">
+                {% csrf_token %}
+
+                {% if review_form.non_field_errors %}
+                  <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);color:var(--danger);padding:0.75rem 1rem;border-radius:var(--radius);margin-bottom:1rem;font-size:0.875rem;">
+                    {{ review_form.non_field_errors }}
+                  </div>
+                {% endif %}
+
+                <!-- Star Rating Picker -->
+                <div style="margin-bottom:1rem;">
+                  <div style="font-size:0.82rem;font-weight:600;color:var(--gray-600);margin-bottom:0.5rem;">Your Rating *</div>
+                  <div class="star-picker" id="star-picker" style="display:flex;gap:0.35rem;">
+                    {% for i in "12345" %}
+                      <button type="button"
+                              class="star-btn"
+                              data-value="{{ i }}"
+                              style="font-size:2rem;background:none;border:none;cursor:pointer;padding:0;color:var(--gray-200);transition:color 0.15s ease;line-height:1;"
+                              onclick="setRating({{ i }})">★</button>
+                    {% endfor %}
+                  </div>
+                  <input type="hidden" name="rating" id="rating-input" value="{{ review_form.rating.value|default:'' }}" />
+                  {% if review_form.rating.errors %}
+                    <div style="color:var(--danger);font-size:0.78rem;margin-top:0.35rem;">{{ review_form.rating.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Comment -->
+                <div style="margin-bottom:1rem;">
+                  <div style="font-size:0.82rem;font-weight:600;color:var(--gray-600);margin-bottom:0.5rem;">Your Review</div>
+                  <textarea name="comment"
+                            rows="4"
+                            placeholder="Tell others what you loved about this property…"
+                            style="width:100%;padding:0.75rem 1rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.9rem;color:var(--gray-800);background:var(--gray-50);outline:none;resize:vertical;font-family:inherit;transition:border-color 0.2s;"
+                            onfocus="this.style.borderColor='var(--primary)';this.style.background='var(--white)'"
+                            onblur="this.style.borderColor='var(--gray-200)';this.style.background='var(--gray-50)'"
+                            >{{ review_form.comment.value|default:'' }}</textarea>
+                  {% if review_form.comment.errors %}
+                    <div style="color:var(--danger);font-size:0.78rem;margin-top:0.35rem;">{{ review_form.comment.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+                  🌟 Submit Review
+                </button>
+              </form>
+            {% endif %}
+          {% else %}
+            <!-- User cannot review this property (not living there) -->
+            <div style="text-align:center;padding:1.5rem;background:var(--gray-50);border-radius:var(--radius);border:1px dashed var(--gray-200);">
+              <div style="font-size:2rem;margin-bottom:0.5rem;">🏠</div>
+              <p style="color:var(--gray-500);font-size:0.875rem;margin-bottom:0.5rem;">
+                You can only review properties you are currently living in.
+              </p>
+              <p style="color:var(--gray-400);font-size:0.8rem;">
+                Your current property:
+                {% if user.profile.current_property %}
+                  <strong>{{ user.profile.current_property.title }}</strong>
+                {% else %}
+                  <span style="color:var(--gray-400);">None assigned</span>
+                {% endif %}
+              </p>
+              <a href="{% url 'home:properties' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.75rem;">Browse Properties</a>
+            </div>
+          {% endif %}
+        {% else %}
+          <div style="text-align:center;padding:1.5rem;background:var(--gray-50);border-radius:var(--radius);border:1px dashed var(--gray-200);">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">🔐</div>
+            <p style="color:var(--gray-500);font-size:0.875rem;margin-bottom:1rem;">Sign in to leave a review for this property</p>
+            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-sm">Login to Review</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Review List -->
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+        {% for review in property.reviews.all %}
+          <div style="background:var(--gray-50);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--gray-200);">
+            <div style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+              <!-- Avatar -->
+              <div style="width:42px;height:42px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;font-size:1rem;">
+                {% if review.user.profile.profile_picture %}
+                  <img src="{{ review.user.profile.profile_picture.url }}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;" alt="" />
+                {% else %}
+                  {{ review.user.get_full_name|slice:":1"|default:review.user.username|slice:":1"|upper }}
+                {% endif %}
+              </div>
+              <!-- Name + date -->
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                  <span style="font-weight:700;font-size:0.9rem;color:var(--gray-900);">
+                    {{ review.user.get_full_name|default:review.user.username }}
+                  </span>
+                  {% if review.user == request.user %}
+                    <span style="font-size:0.7rem;background:rgba(37,99,235,0.08);color:var(--primary);padding:0.1rem 0.5rem;border-radius:var(--radius-full);font-weight:600;">You</span>
+                  {% endif %}
+                </div>
+                <div style="font-size:0.78rem;color:var(--gray-400);">{{ review.created_at|date:"F d, Y" }}</div>
+              </div>
+              <!-- Star rating -->
+              <div style="display:flex;align-items:center;gap:0.25rem;flex-shrink:0;">
+                {% for i in "12345" %}
+                  <span style="color:{% if forloop.counter <= review.rating %}var(--warning){% else %}var(--gray-200){% endif %};font-size:1rem;">★</span>
+                {% endfor %}
+                <span style="font-size:0.78rem;font-weight:700;color:var(--gray-600);margin-left:0.25rem;">{{ review.rating }}.0</span>
+              </div>
+            </div>
+            {% if review.comment %}
+              <p style="font-size:0.875rem;color:var(--gray-600);line-height:1.7;margin:0;">{{ review.comment }}</p>
+            {% else %}
+              <p style="font-size:0.875rem;color:var(--gray-400);font-style:italic;margin:0;">No comment left.</p>
+            {% endif %}
           </div>
         {% empty %}
-          <div style="background:var(--gray-50);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--gray-200);text-align:center;color:var(--gray-500);">
-            No reviews yet. Be the first to review this property!
+          <div style="background:var(--gray-50);border-radius:var(--radius);padding:2rem;border:1px solid var(--gray-200);text-align:center;">
+            <div style="font-size:2.5rem;margin-bottom:0.75rem;">💬</div>
+            <div style="font-weight:600;color:var(--gray-500);margin-bottom:0.25rem;">No reviews yet</div>
+            <div style="font-size:0.85rem;color:var(--gray-400);">Be the first to share your experience with this property.</div>
           </div>
         {% endfor %}
       </div>
@@ -446,3 +604,79 @@
 </div>
 
 {% endblock content %}
+
+{% block inject_js %}
+<script>
+  // ── Star rating picker ──
+  const currentRating = parseInt(document.getElementById('rating-input')?.value) || 0;
+  if (currentRating) paintStars(currentRating);
+
+  function setRating(val) {
+    document.getElementById('rating-input').value = val;
+    paintStars(val);
+  }
+
+  function paintStars(val) {
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.style.color = parseInt(btn.dataset.value) <= val
+        ? 'var(--warning)'
+        : 'var(--gray-200)';
+    });
+  }
+
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', () => paintStars(parseInt(btn.dataset.value)));
+    btn.addEventListener('mouseleave', () => {
+      const current = parseInt(document.getElementById('rating-input').value) || 0;
+      paintStars(current);
+    });
+  });
+
+  // ── Move cost calculator ──
+  function calcMove() {
+    const dist = parseFloat(document.getElementById('move-distance')?.value) || 0;
+    const rooms = parseInt(document.getElementById('move-rooms')?.value) || 0;
+    const result = document.getElementById('move-cost-result');
+    if (!result) return;
+    if (!dist || !rooms) { result.textContent = 'Enter details above'; return; }
+    const base = 3000;
+    const perKm = 80;
+    const perRoom = 1500;
+    const total = base + (dist * perKm) + (rooms * perRoom);
+    result.textContent = `≈ KES ${total.toLocaleString()}`;
+  }
+
+  document.getElementById('move-distance')?.addEventListener('input', calcMove);
+  document.getElementById('move-rooms')?.addEventListener('input', calcMove);
+
+  // ── Mortgage calculator ──
+  function calcMortgage() {
+    const P = parseFloat(document.getElementById('loan-amount')?.value) || 0;
+    const r = (parseFloat(document.getElementById('interest-rate')?.value) || 0) / 100 / 12;
+    const n = (parseFloat(document.getElementById('loan-term')?.value) || 0) * 12;
+    const result = document.getElementById('mortgage-result');
+    if (!result) return;
+    if (!P || !r || !n) { result.textContent = 'Fill in details above'; return; }
+    const monthly = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    result.textContent = `≈ KES ${Math.round(monthly).toLocaleString()} /mo`;
+  }
+
+  document.getElementById('loan-amount')?.addEventListener('input', calcMortgage);
+  document.getElementById('interest-rate')?.addEventListener('input', calcMortgage);
+  document.getElementById('loan-term')?.addEventListener('input', calcMortgage);
+
+  // ── Animate score bars on scroll ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.score-bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width;
+        });
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.move-score-card').forEach(card => observer.observe(card));
+</script>
+{% endblock inject_js %}

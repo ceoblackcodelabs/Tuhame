@@ -2,6 +2,7 @@
 from django import forms
 from django.utils import timezone
 from .models import ViewingSchedule
+from properties.models import PropertyReview
 
 
 class ViewingScheduleForm(forms.ModelForm):
@@ -43,3 +44,24 @@ class ViewingScheduleForm(forms.ModelForm):
             'preferred_time': 'Preferred Time',
             'special_requests': 'Special Requests (Optional)',
         }
+
+
+class ReviewForm(forms.ModelForm):
+    """Form for submitting property reviews"""
+
+    class Meta:
+        model = PropertyReview
+        fields = ['rating', 'comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Tell others what you loved (or didn\'t love) about this property…',
+                'style': 'width:100%;padding:0.75rem 1rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.9rem;color:var(--gray-800);background:var(--gray-50);outline:none;resize:vertical;font-family:inherit;transition:border-color 0.2s;'
+            }),
+            'rating': forms.HiddenInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['rating'].required = True
+        self.fields['comment'].required = False

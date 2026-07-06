@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from properties.models import Property, PropertyStatus, PropertyImage, PropertyType, Amenity
+from properties.models import Property, PropertyStatus, PropertyType, Amenity, PropertyReview
 from django.db import models
-from .forms import ViewingScheduleForm
+from .forms import ViewingScheduleForm, ReviewForm
 from django.contrib import messages
 import json
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.db.models import Q, Avg, Count
+from users.models import Profile
 
 class HomeView(ListView):
     model = Property
@@ -237,22 +239,22 @@ class PropertiesDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        property = self.get_object()
+        property_obj = self.get_object()
 
         # Get similar properties
         similar_properties = Property.objects.filter(
             is_active=True,
             status=PropertyStatus.AVAILABLE
         ).exclude(
-            id=property.id
+            id=property_obj.id
         ).filter(
-            models.Q(city=property.city) |
-            models.Q(property_type=property.property_type)
+            Q(city=property_obj.city) |
+            Q(property_type=property_obj.property_type)
         )[:3]
 
         context['similar_properties'] = similar_properties
 
-        # Initialize form with user data if authenticated
+        # Initialize viewing form with user data if authenticated
         initial_data = {}
         if self.request.user.is_authenticated:
             initial_data = {
@@ -261,7 +263,61 @@ class PropertiesDetailView(DetailView):
             }
         context['form'] = ViewingScheduleForm(initial=initial_data)
 
+        # Initialize review form
+        context['review_form'] = ReviewForm()
+
+        # Check if user has already reviewed
+        if self.request.user.is_authenticated:
+            user_review = PropertyReview.objects.filter(
+                property=property_obj,
+                user=self.request.user
+            ).first()
+            context['user_review'] = user_review
+
+            # Check if user can review this property (they must live there)
+            context['can_review'] = self.can_user_review_property(self.request.user, property_obj)
+        else:
+            context['user_review'] = None
+            context['can_review'] = False
+
+        # Calculate review statistics
+        reviews = property_obj.reviews.all()
+        review_count = reviews.count()
+
+        if review_count > 0:
+            # Average rating
+            avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+
+            # Rating percentages for the bar chart
+            rating_counts = {}
+            for i in range(1, 6):
+                rating_counts[i] = reviews.filter(rating=i).count()
+
+            total = review_count
+            context['avg_rating'] = avg_rating
+            context['rating_5_pct'] = (rating_counts.get(5, 0) / total * 100) if total > 0 else 0
+            context['rating_4_pct'] = (rating_counts.get(4, 0) / total * 100) if total > 0 else 0
+            context['rating_3_pct'] = (rating_counts.get(3, 0) / total * 100) if total > 0 else 0
+            context['rating_2_pct'] = (rating_counts.get(2, 0) / total * 100) if total > 0 else 0
+            context['rating_1_pct'] = (rating_counts.get(1, 0) / total * 100) if total > 0 else 0
+        else:
+            context['avg_rating'] = 0
+            context['rating_5_pct'] = 0
+            context['rating_4_pct'] = 0
+            context['rating_3_pct'] = 0
+            context['rating_2_pct'] = 0
+            context['rating_1_pct'] = 0
+
         return context
+
+    def can_user_review_property(self, user, property_obj):
+        """Check if a user can review a property (they must live there)"""
+        try:
+            profile = user.profile
+            # Check if the user's current property matches this property
+            return profile.current_property == property_obj
+        except Profile.DoesNotExist:
+            return False
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -283,6 +339,108 @@ class PropertiesDetailView(DetailView):
             context = self.get_context_data()
             context['form'] = form
             return self.render_to_response(context)
+
+
+class SubmitReviewView(LoginRequiredMixin, View):
+    """View for submitting a property review - only for current residents"""
+
+    def post(self, request, *args, **kwargs):
+        property_obj = get_object_or_404(Property, slug=kwargs.get('slug'))
+
+        # Check if user can review this property
+        if not self.can_user_review_property(request.user, property_obj):
+            messages.error(request, "You can only review properties you are currently living in.")
+            return redirect('home:about_property', slug=property_obj.slug)
+
+        # Check if user already reviewed
+        existing_review = PropertyReview.objects.filter(
+            property=property_obj,
+            user=request.user
+        ).first()
+
+        if existing_review:
+            messages.warning(request, "You have already reviewed this property.")
+            return redirect('home:about_property', slug=property_obj.slug)
+
+        form = ReviewForm(request.POST)
+
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.property = property_obj
+            review.user = request.user
+            review.save()
+            messages.success(request, f"Your {review.rating}-star review was submitted successfully!")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+
+        return redirect('home:about_property', slug=property_obj.slug)
+
+    def can_user_review_property(self, user, property_obj):
+        """Check if a user can review a property (they must live there)"""
+        try:
+            profile = user.profile
+            return profile.current_property == property_obj
+        except Profile.DoesNotExist:
+            return False
+
+
+class EditReviewView(LoginRequiredMixin, View):
+    """View for editing a property review - only for current residents"""
+
+    def get(self, request, *args, **kwargs):
+        property_obj = get_object_or_404(Property, slug=kwargs.get('slug'))
+
+        # Check if user can review this property
+        if not self.can_user_review_property(request.user, property_obj):
+            messages.error(request, "You can only review properties you are currently living in.")
+            return redirect('home:about_property', slug=property_obj.slug)
+
+        review = get_object_or_404(PropertyReview, property=property_obj, user=request.user)
+        return redirect('home:about_property', slug=property_obj.slug)
+
+    def post(self, request, *args, **kwargs):
+        property_obj = get_object_or_404(Property, slug=kwargs.get('slug'))
+
+        # Check if user can review this property
+        if not self.can_user_review_property(request.user, property_obj):
+            messages.error(request, "You can only review properties you are currently living in.")
+            return redirect('home:about_property', slug=property_obj.slug)
+
+        review = get_object_or_404(PropertyReview, property=property_obj, user=request.user)
+        form = ReviewForm(request.POST, instance=review)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Your review was updated successfully!")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+
+        return redirect('home:about_property', slug=property_obj.slug)
+
+    def can_user_review_property(self, user, property_obj):
+        """Check if a user can review a property (they must live there)"""
+        try:
+            profile = user.profile
+            return profile.current_property == property_obj
+        except Profile.DoesNotExist:
+            return False
+
+
+class DeleteReviewView(LoginRequiredMixin, View):
+    """View for deleting a property review"""
+
+    def post(self, request, *args, **kwargs):
+        property_obj = get_object_or_404(Property, slug=kwargs.get('slug'))
+        review = get_object_or_404(PropertyReview, property=property_obj, user=request.user)
+
+        review.delete()
+        messages.success(request, "Your review was deleted successfully.")
+
+        return redirect('home:about_property', slug=property_obj.slug)
 
 class PropertyMapSearchListView(View):
     """

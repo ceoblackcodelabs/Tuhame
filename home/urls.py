@@ -11,6 +11,11 @@ urlpatterns = [
     path("property/map-list/", PropertyMapSearchListView.as_view(), name="property_map"),
     path('property/map-data/', PropertyMapDataView.as_view(), name='property_map_data'),
 
+    # Review URLs
+    path('property/listing/<slug:slug>/review/submit/', SubmitReviewView.as_view(), name='submit_review'),
+    path('property/listing/<slug:slug>/review/edit/', EditReviewView.as_view(), name='edit_review'),
+    path('property/listing/<slug:slug>/review/delete/', DeleteReviewView.as_view(), name='delete_review'),
+
     # Favourites/Saved Properties URLs
     path('api/save-property/', toggle_save_property, name='toggle_save_property'),
     path('api/saved-properties/', get_saved_properties, name='get_saved_properties'),

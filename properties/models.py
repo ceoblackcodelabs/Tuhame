@@ -115,6 +115,20 @@ class PropertyImage(models.Model):
     class Meta:
         ordering = ['order']
 
+class PropertyReview(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='property_reviews')
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['property', 'user']
+
+    def __str__(self):
+        return f"Review by {self.user.username} for {self.property.title}"
+
 
 class Unit(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='units')
