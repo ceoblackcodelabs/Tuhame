@@ -199,6 +199,11 @@ class Profile(models.Model):
         self.qr_code_token = uuid.uuid4()
         return self.generate_qr_code()
 
+    @property
+    def total_moves(self):
+        """Get total number of moves for this user"""
+        return self.move_history.count()
+
 class MoveHistory(models.Model):
     """Track user moves between properties"""
 

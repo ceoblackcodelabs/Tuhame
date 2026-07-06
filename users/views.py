@@ -4,6 +4,7 @@ from .models import Profile
 from django.http import JsonResponse, Http404
 import base64
 from django.core.files.base import ContentFile
+from django.conf import settings
 import uuid
 
 from django.urls import reverse
@@ -167,8 +168,6 @@ class PublicProfileByTokenView(DetailView):
     slug_field = 'qr_code_token'
     slug_url_kwarg = 'token'
 
-    # IMPORTANT: No LoginRequiredMixin here!
-
     def get_queryset(self):
         return Profile.objects.filter(is_active=True)
 
@@ -183,6 +182,7 @@ class PublicProfileByTokenView(DetailView):
         profile = self.get_object()
         user = profile.user
 
+        # All public information including emergency contact
         context['full_name'] = profile.get_full_name()
         context['user'] = user
         context['phone'] = profile.phone_number
@@ -191,7 +191,28 @@ class PublicProfileByTokenView(DetailView):
         context['city'] = profile.city
         context['country'] = profile.country
         context['profile_picture'] = profile.profile_picture
+        context['bio'] = profile.bio
+        context['occupation'] = profile.occupation
+        context['employer'] = profile.employer
+        context['total_moves'] = profile.move_history.count()
         context['is_public'] = True
+
+        # Emergency contact information
+        context['emergency_contact_name'] = profile.emergency_contact_name
+        context['emergency_contact_phone'] = profile.emergency_contact_phone
+        context['emergency_contact_relationship'] = profile.emergency_contact_relationship
+
+        # Generate QR code for this profile
+        from .utils import generate_qr_code_for_user
+        context['qr_code'] = generate_qr_code_for_user(profile)
+
+        # Public URL for sharing
+        if hasattr(settings, 'SITE_URL'):
+            base_url = settings.SITE_URL
+        else:
+            base_url = "https://6b4d-217-199-148-239.ngrok-free.app"
+        context['public_url'] = f"{base_url}/users/qr/{profile.qr_code_token}/"
+
         return context
 
 # LOGGED IN USER PROFILE VIEW
@@ -258,7 +279,7 @@ class MyProfileView(LoginRequiredMixin, DetailView):
 
         # Generate QR Code
         context['qr_code_data'] = generate_qr_code_for_user(profile)
-        print(context['qr_code_data'])
+        # print(context['qr_code_data'])
 
         return context
 

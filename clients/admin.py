@@ -9,9 +9,9 @@ from .models import (Client, ClientType, ClientDocument,
 
 
 # Optional: Custom admin site headers
-admin.site.site_header = 'Real Estate Management System'
-admin.site.site_title = 'Real Estate Admin Portal'
-admin.site.index_title = 'Welcome to Real Estate Management'
+admin.site.site_header = '2HAME MANAGEMENT PORTAL'
+admin.site.site_title = '2HAME Admin Portal'
+admin.site.index_title = 'Welcome to 2HAME Management'
 
 
 class ClientDocumentInline(admin.TabularInline):

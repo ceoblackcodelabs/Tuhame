@@ -465,9 +465,3 @@ class LateFeeAdmin(admin.ModelAdmin):
         updated = queryset.update(waived=False, waiver_reason='')
         self.message_user(request, f'{updated} late fee(s) were unwaived.')
     unwaive_fees.short_description = 'Unwaive selected late fees'
-
-
-# Custom admin site headers
-admin.site.site_header = 'Real Estate Management System - Payments'
-admin.site.site_title = 'Real Estate Admin Portal'
-admin.site.index_title = 'Welcome to Real Estate Management'
