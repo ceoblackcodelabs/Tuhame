@@ -20,4 +20,8 @@ urlpatterns = [
     path('api/save-property/', toggle_save_property, name='toggle_save_property'),
     path('api/saved-properties/', get_saved_properties, name='get_saved_properties'),
     path('api/check-saved/', check_saved_status, name='check_saved_status'),
+
+    # move request
+    path('submit-move-request/', SubmitMoveRequestView.as_view(), name='submit_move_request'),
+    path('api/cancel-move-request/<int:pk>/', CancelMoveRequestView.as_view(), name='cancel_move_request'),
 ]

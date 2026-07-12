@@ -118,3 +118,76 @@ class SavedProperty(models.Model):
         return f"{self.user.username} saved {self.property.title}"
 
 
+
+# move
+class MoveRequest(models.Model):
+    """Model for move requests"""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    TIME_CHOICES = [
+        ('morning', 'Morning (8am-12pm)'),
+        ('afternoon', 'Afternoon (12pm-5pm)'),
+        ('evening', 'Evening (5pm-8pm)'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='move_requests')
+
+    # Move details
+    moving_from = models.TextField()
+    moving_from_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    moving_from_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    moving_to_property = models.ForeignKey(
+        Property,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='move_in_requests'
+    )
+    moving_to_manual = models.TextField(blank=True, help_text="If not selecting a property")
+    moving_to_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    moving_to_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    move_date = models.DateField()
+    move_time = models.CharField(max_length=20, choices=TIME_CHOICES, default='afternoon')
+
+    # Items
+    items = models.JSONField(default=list, help_text="List of items to move")
+    items_list = models.CharField(max_length=500, blank=True, help_text="Comma-separated list for display")
+
+    # Special instructions
+    special_instructions = models.TextField(blank=True)
+
+    # Mover request
+    request_mover = models.BooleanField(default=False)
+    movers_count = models.IntegerField(default=2)
+    estimated_hours = models.IntegerField(default=4)
+    mover_notes = models.TextField(blank=True)
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    notes = models.TextField(blank=True, help_text="Admin notes")
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Move request by {self.user.username} - {self.move_date}"
+
+    def get_items_display(self):
+        """Get readable items list"""
+        if self.items:
+            return ', '.join(self.items)
+        return self.items_list

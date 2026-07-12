@@ -216,6 +216,8 @@ class PublicProfileByTokenView(DetailView):
         return context
 
 # LOGGED IN USER PROFILE VIEW
+from home.models import MoveRequest
+from properties.models import Property
 class MyProfileView(LoginRequiredMixin, DetailView):
     """View for users to see their own profile"""
 
@@ -229,6 +231,24 @@ class MyProfileView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+         # Move requests
+        context['move_requests'] = MoveRequest.objects.filter(
+            user=self.request.user
+        ).order_by('-created_at')[:10]
+
+        # Available properties for move to
+        context['available_properties'] = Property.objects.filter(
+            is_active=True,
+            status='available'
+        )
+
+        # Checklist progress
+        # This should come from a model or session
+        context['checklist_progress'] = 7
+        context['checklist_total'] = 12
+        context['checklist_percentage'] = 58
+
         context['user'] = self.request.user
 
         # Get move history for this user

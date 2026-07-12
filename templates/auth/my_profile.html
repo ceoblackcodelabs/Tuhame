@@ -544,16 +544,253 @@
       <!-- MOVE PLANNER -->
       <div id="planner" class="profile-section" style="display:none;">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">📦 Smart Move Planner</h2>
+
+        <!-- Move Request Form -->
         <div class="dashboard-card">
+          <div class="dashboard-card-title">🚚 Initiate Move</div>
+          <form id="move-request-form" method="post" action="{% url 'home:submit_move_request' %}">
+            {% csrf_token %}
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+              <!-- Moving From -->
+              <div style="grid-column:1/-1;">
+                <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
+                  📍 Moving From (Current Address)
+                </label>
+                <input type="text" name="moving_from" class="filter-input" placeholder="Enter your current address" required
+                      value="{{ profile.address|default:'' }}" style="width:100%;" />
+              </div>
+
+              <!-- Moving To -->
+              <div style="grid-column:1/-1;">
+                <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
+                  🏠 Moving To
+                </label>
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                  <div style="flex:1;min-width:200px;">
+                    <select name="moving_to_property" class="filter-input" style="width:100%;" onchange="togglePropertyAddress(this)">
+                      <option value="">Select a property (or enter manually)</option>
+                      {% for property in available_properties %}
+                        <option value="{{ property.id }}">{{ property.title }} - {{ property.city }}, {{ property.state }}</option>
+                      {% endfor %}
+                      <option value="other">Other (Enter manually)</option>
+                    </select>
+                  </div>
+                  <div style="flex:1;min-width:200px;display:none;" id="manual-address-container">
+                    <input type="text" name="moving_to_manual" class="filter-input" placeholder="Enter full address" style="width:100%;" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Move Date -->
+              <div>
+                <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
+                  📅 Preferred Move Date
+                </label>
+                <input type="date" name="move_date" class="filter-input" required style="width:100%;" />
+              </div>
+
+              <!-- Move Time -->
+              <div>
+                <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
+                  🕐 Preferred Time
+                </label>
+                <select name="move_time" class="filter-input" style="width:100%;">
+                  <option value="morning">Morning (8am - 12pm)</option>
+                  <option value="afternoon" selected>Afternoon (12pm - 5pm)</option>
+                  <option value="evening">Evening (5pm - 8pm)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Item Details -->
+            <div style="margin-top:1rem;">
+              <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.5rem;">
+                📦 Items to Move
+              </label>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="furniture" />
+                  🛋️ Furniture (Sofa, Tables, Chairs)
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="electronics" />
+                  💻 Electronics (TV, Computer, Appliances)
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="kitchen" />
+                  🍳 Kitchen Items (Cookware, Utensils)
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="bedroom" />
+                  🛏️ Bedroom Furniture (Beds, Mattresses)
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="boxes" />
+                  📦 Boxes / Luggage
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="delicate" />
+                  ⚠️ Delicate Items (Glassware, Art)
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="heavy" />
+                  🏋️ Heavy Items (Safes, Equipment)
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
+                  <input type="checkbox" name="items" value="other" />
+                  📋 Other (Specify in notes)
+                </label>
+              </div>
+            </div>
+
+            <!-- Special Instructions -->
+            <div style="margin-top:1rem;">
+              <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
+                📝 Special Instructions
+              </label>
+              <textarea name="special_instructions" rows="3" class="filter-input" placeholder="Any special instructions, fragile items, access issues, etc..." style="width:100%;resize:vertical;"></textarea>
+            </div>
+
+            <!-- Request Mover -->
+            <div style="margin-top:1rem;padding:1rem;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--gray-200);">
+              <label style="display:flex;align-items:center;gap:0.75rem;font-size:0.9rem;font-weight:600;color:var(--gray-700);cursor:pointer;">
+                <input type="checkbox" name="request_mover" id="request-mover" style="width:18px;height:18px;accent-color:var(--primary);" />
+                🚛 I need someone to help me move out
+              </label>
+              <div id="mover-details" style="display:none;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--gray-200);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                  <div>
+                    <label style="font-size:0.8rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:0.25rem;">
+                      Number of Movers Needed
+                    </label>
+                    <select name="movers_count" class="filter-input" style="width:100%;">
+                      <option value="1">1 Mover</option>
+                      <option value="2" selected>2 Movers</option>
+                      <option value="3">3 Movers</option>
+                      <option value="4">4+ Movers</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:0.8rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:0.25rem;">
+                      Estimated Hours
+                    </label>
+                    <select name="estimated_hours" class="filter-input" style="width:100%;">
+                      <option value="2">2 hours</option>
+                      <option value="3">3 hours</option>
+                      <option value="4" selected>4 hours</option>
+                      <option value="6">6 hours</option>
+                      <option value="8">8+ hours</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="margin-top:0.5rem;">
+                  <label style="font-size:0.8rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:0.25rem;">
+                    Additional Notes for Mover
+                  </label>
+                  <input type="text" name="mover_notes" class="filter-input" placeholder="e.g., Parking space, elevator access, heavy items on 3rd floor..." style="width:100%;" />
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">
+              🚀 Submit Move Request
+            </button>
+          </form>
+        </div>
+
+        <!-- Current Move Request Status -->
+        <div class="dashboard-card" style="margin-top:1.5rem;">
+          <div class="dashboard-card-title">📋 My Move Requests</div>
+          {% if move_requests %}
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              {% for request in move_requests %}
+                <div style="background:var(--gray-50);border-radius:var(--radius);padding:1rem;border-left:4px solid
+                  {% if request.status == 'pending' %}var(--warning)
+                  {% elif request.status == 'approved' %}var(--success)
+                  {% elif request.status == 'in_progress' %}var(--info)
+                  {% elif request.status == 'completed' %}var(--primary)
+                  {% else %}var(--danger){% endif %};">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;">
+                    <div>
+                      <div style="font-weight:600;font-size:0.95rem;">
+                        📍 {{ request.moving_from|truncatechars:30 }} →
+                        {% if request.moving_to_property %}
+                          {{ request.moving_to_property.title }}
+                        {% else %}
+                          {{ request.moving_to_manual|truncatechars:30 }}
+                        {% endif %}
+                      </div>
+                      <div style="font-size:0.8rem;color:var(--gray-500);">
+                        📅 {{ request.move_date|date:"M d, Y" }} ·
+                        {% if request.move_time == 'morning' %}🌅 Morning
+                        {% elif request.move_time == 'afternoon' %}☀️ Afternoon
+                        {% else %}🌙 Evening{% endif %}
+                      </div>
+                      <div style="font-size:0.8rem;color:var(--gray-500);">
+                        📦 Items: {{ request.items_list }}
+                      </div>
+                      {% if request.request_mover %}
+                        <div style="font-size:0.8rem;color:var(--gray-500);">
+                          🚛 {{ request.movers_count }} mover(s) needed · {{ request.estimated_hours }} hours
+                        </div>
+                      {% endif %}
+                      {% if request.special_instructions %}
+                        <div style="font-size:0.8rem;color:var(--gray-400);margin-top:0.25rem;">
+                          📝 {{ request.special_instructions|truncatechars:60 }}
+                        </div>
+                      {% endif %}
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                      <div>
+                        {% if request.status == 'pending' %}
+                          <span class="badge badge-warning">⏳ Pending</span>
+                        {% elif request.status == 'approved' %}
+                          <span class="badge badge-success">✅ Approved</span>
+                        {% elif request.status == 'in_progress' %}
+                          <span class="badge badge-info">🔄 In Progress</span>
+                        {% elif request.status == 'completed' %}
+                          <span class="badge badge-primary">✔️ Completed</span>
+                        {% else %}
+                          <span class="badge badge-danger">❌ Rejected</span>
+                        {% endif %}
+                      </div>
+                      <div style="font-size:0.7rem;color:var(--gray-400);margin-top:0.25rem;">
+                        {{ request.created_at|timesince }} ago
+                      </div>
+                      {% if request.status == 'pending' %}
+                        <button class="btn btn-sm btn-danger" style="margin-top:0.25rem;padding:0.15rem 0.5rem;font-size:0.7rem;"
+                                onclick="cancelMoveRequest({{ request.id }})">Cancel</button>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div style="text-align:center;padding:2rem 0;">
+              <div style="font-size:2.5rem;margin-bottom:0.5rem;">📦</div>
+              <p style="color:var(--gray-400);">No move requests yet</p>
+              <p style="color:var(--gray-400);font-size:0.85rem;">Start planning your move above</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Moving Checklist -->
+        <div class="dashboard-card" style="margin-top:1.5rem;">
           <div class="dashboard-card-title">✅ Moving Checklist</div>
 
           <!-- Progress -->
           <div style="margin-bottom:1.5rem;">
             <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;font-size:0.875rem;">
               <span style="color:var(--gray-600);">Progress</span>
-              <span style="color:var(--accent);font-weight:700;">7 / 12 done</span>
+              <span style="color:var(--accent);font-weight:700;">{{ checklist_progress }}/{{ checklist_total }} done</span>
             </div>
-            <div class="progress-bar-wrap"><div class="progress-bar-fill green" style="width:58%;"></div></div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill green" style="width:{{ checklist_percentage }}%;"></div>
+            </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:0.6rem;" id="checklist">
@@ -563,21 +800,6 @@
             <input type="text" id="new-task" placeholder="Add a task…" class="filter-input" style="flex:1;" />
             <button class="btn btn-primary btn-sm" onclick="addTask()">+ Add</button>
           </div>
-        </div>
-
-        <div class="dashboard-card">
-          <div class="dashboard-card-title">📅 Moving Schedule</div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;">
-            <div>
-              <div class="filter-group-title" style="margin-bottom:0.4rem;">Move Date</div>
-              <input type="date" class="filter-input" />
-            </div>
-            <div>
-              <div class="filter-group-title" style="margin-bottom:0.4rem;">Moving Company</div>
-              <input type="text" class="filter-input" placeholder="e.g. Quick Movers Kenya" />
-            </div>
-          </div>
-          <button class="btn btn-primary btn-sm" style="margin-top:1rem;" onclick="profileToast('Schedule saved!','📅')">Save Schedule</button>
         </div>
       </div>
 
@@ -738,5 +960,55 @@
   }
 
   renderChecklist();
+
+// Toggle manual address input
+  function togglePropertyAddress(select) {
+    const manualContainer = document.getElementById('manual-address-container');
+    if (select.value === 'other') {
+      manualContainer.style.display = 'block';
+      document.querySelector('input[name="moving_to_manual"]').required = true;
+    } else {
+      manualContainer.style.display = 'none';
+      document.querySelector('input[name="moving_to_manual"]').required = false;
+    }
+  }
+
+  // Toggle mover details
+  document.addEventListener('DOMContentLoaded', function() {
+    const requestMoverCheckbox = document.getElementById('request-mover');
+    if (requestMoverCheckbox) {
+      requestMoverCheckbox.addEventListener('change', function() {
+        const moverDetails = document.getElementById('mover-details');
+        if (this.checked) {
+          moverDetails.style.display = 'block';
+        } else {
+          moverDetails.style.display = 'none';
+        }
+      });
+    }
+  });
+
+  // Cancel move request
+  function cancelMoveRequest(requestId) {
+    if (confirm('Are you sure you want to cancel this move request?')) {
+      fetch(`/api/cancel-move-request/${requestId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          profileToast('Move request cancelled', '🗑️');
+          location.reload();
+        } else {
+          profileToast('Error cancelling request', '❌');
+        }
+      });
+    }
+  }
+
 </script>
 {% endblock extra_js %}

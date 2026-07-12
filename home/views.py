@@ -578,3 +578,80 @@ class PropertyMapDataView(View):
             'properties': properties_data,
             'count': len(properties_data)
         })
+
+
+# move
+from .models import MoveRequest
+class SubmitMoveRequestView(LoginRequiredMixin, View):
+    """View for submitting a move request"""
+
+    def post(self, request):
+        user = request.user
+
+        # Get form data
+        moving_from = request.POST.get('moving_from')
+        moving_from_lat = request.POST.get('moving_from_lat')
+        moving_from_lng = request.POST.get('moving_from_lng')
+
+        moving_to_property_id = request.POST.get('moving_to_property')
+        moving_to_manual = request.POST.get('moving_to_manual')
+        moving_to_lat = request.POST.get('moving_to_lat')
+        moving_to_lng = request.POST.get('moving_to_lng')
+
+        move_date = request.POST.get('move_date')
+        move_time = request.POST.get('move_time')
+        items = request.POST.getlist('items')
+        special_instructions = request.POST.get('special_instructions')
+        request_mover = request.POST.get('request_mover') == 'on'
+        movers_count = request.POST.get('movers_count', 2)
+        estimated_hours = request.POST.get('estimated_hours', 4)
+        mover_notes = request.POST.get('mover_notes', '')
+
+        # Validate
+        if not moving_from or not move_date:
+            messages.error(request, 'Please fill in all required fields.')
+            return redirect('my_profile')
+
+        # Get property if selected
+        moving_to_property = None
+        if moving_to_property_id and moving_to_property_id != 'other':
+            try:
+                moving_to_property = Property.objects.get(id=moving_to_property_id)
+            except Property.DoesNotExist:
+                pass
+
+        # Create move request
+        move_request = MoveRequest.objects.create(
+            user=user,
+            moving_from=moving_from,
+            moving_from_lat=moving_from_lat or None,
+            moving_from_lng=moving_from_lng or None,
+            moving_to_property=moving_to_property,
+            moving_to_manual=moving_to_manual if moving_to_property_id == 'other' else '',
+            moving_to_lat=moving_to_lat or None,
+            moving_to_lng=moving_to_lng or None,
+            move_date=move_date,
+            move_time=move_time,
+            items=items,
+            items_list=', '.join(items) if items else 'No items specified',
+            special_instructions=special_instructions,
+            request_mover=request_mover,
+            movers_count=int(movers_count) if request_mover else 0,
+            estimated_hours=int(estimated_hours) if request_mover else 0,
+            mover_notes=mover_notes if request_mover else '',
+        )
+
+        messages.success(request, 'Move request submitted successfully!')
+        return redirect('my_profile')
+
+
+class CancelMoveRequestView(LoginRequiredMixin, View):
+    """View for cancelling a move request"""
+
+    def post(self, request, pk):
+        move_request = get_object_or_404(MoveRequest, pk=pk, user=request.user)
+        if move_request.status == 'pending':
+            move_request.status = 'cancelled'
+            move_request.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'Cannot cancel this request'})
