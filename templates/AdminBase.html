@@ -148,7 +148,24 @@
           </li>
           {% comment %} end bookings {% endcomment %}
 
-          {% comment %} bookings {% endcomment %}
+          {% comment %} Review request {% endcomment %}
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-bs-toggle="collapse" href="#ui-viewing" aria-expanded="false" aria-controls="ui-basic">
+              <span class="menu-icon">
+                <i class="mdi mdi-laptop"></i>
+              </span>
+              <span class="menu-title">Viewing Request</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-viewing">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url "schedule_view" %}">Viewing</a></li>
+              </ul>
+            </div>
+          </li>
+          {% comment %} end review request {% endcomment %}
+
+          {% comment %} contact {% endcomment %}
           <li class="nav-item menu-items">
             <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic2" aria-expanded="false" aria-controls="ui-basic">
               <span class="menu-icon">
@@ -163,7 +180,7 @@
               </ul>
             </div>
           </li>
-          {% comment %} end bookings {% endcomment %}
+          {% comment %} end contact {% endcomment %}
 
           {% comment %} Clients {% endcomment %}
           <li class="nav-item menu-items">

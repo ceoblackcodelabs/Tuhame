@@ -1,10 +1,11 @@
 # apps/properties/views.py
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
 from django.db.models import Q, Sum, Count
 from .models import Property, PropertyType, PropertyStatus, Unit, Booking
-from .forms import PropertyForm, UnitForm, BookingForm
+from .forms import PropertyForm, UnitForm, BookingForm, ViewingScheduleForm
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib import messages
@@ -336,3 +337,204 @@ class BookingCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('properties:booking_list')
+
+from home.models import ViewingSchedule
+class ReviewListView(LoginRequiredMixin, ListView):
+    """View for listing viewing schedules"""
+    model = ViewingSchedule
+    template_name = 'properties/schedule_view.html'
+    context_object_name = 'viewings'
+    paginate_by = 20
+
+    def get_queryset(self):
+        queryset = ViewingSchedule.objects.all().select_related('property', 'user').order_by('-created_at')
+
+        # Filter by search
+        search = self.request.GET.get('search', '')
+        if search:
+            queryset = queryset.filter(
+                Q(full_name__icontains=search) |
+                Q(email__icontains=search) |
+                Q(phone_number__icontains=search) |
+                Q(property__title__icontains=search)
+            )
+
+        # Filter by status
+        status = self.request.GET.get('status', '')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        # Filter by time
+        time = self.request.GET.get('time', '')
+        if time:
+            queryset = queryset.filter(preferred_time=time)
+
+        # Filter by date range
+        date_from = self.request.GET.get('date_from', '')
+        if date_from:
+            queryset = queryset.filter(preferred_date__gte=date_from)
+
+        date_to = self.request.GET.get('date_to', '')
+        if date_to:
+            queryset = queryset.filter(preferred_date__lte=date_to)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = self.get_queryset()
+
+        # Statistics
+        context['total_viewings'] = queryset.count()
+        context['pending_count'] = queryset.filter(status='pending').count()
+        context['confirmed_count'] = queryset.filter(status='confirmed').count()
+        context['completed_count'] = queryset.filter(status='completed').count()
+        context['cancelled_count'] = queryset.filter(status='cancelled').count()
+        context['no_show_count'] = queryset.filter(status='no_show').count()
+
+        # Recent viewings
+        context['recent_viewings'] = queryset[:10]
+
+        # Growth calculations (simple example)
+        total = context['total_viewings']
+        context['viewings_growth'] = 12  # You can calculate this based on previous month
+
+        return context
+
+class ViewingDetailView(LoginRequiredMixin, DetailView):
+    """View for displaying a single viewing schedule"""
+    model = ViewingSchedule
+    template_name = 'properties/viewing_detail.html'
+    context_object_name = 'viewing'
+    pk_url_kwarg = 'pk'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        viewing = self.get_object()
+
+        # Get the property details
+        context['property'] = viewing.property
+
+        # Get the user who requested the viewing
+        context['user'] = viewing.user
+
+        # Add current time for comparison
+        context['now'] = timezone.now()
+
+        # Calculate time status
+        if viewing.status == 'confirmed' and viewing.scheduled_datetime:
+            if viewing.scheduled_datetime > timezone.now():
+                context['time_status'] = 'upcoming'
+                context['time_status_label'] = 'Upcoming'
+                context['time_status_class'] = 'success'
+            elif viewing.scheduled_datetime < timezone.now():
+                context['time_status'] = 'past'
+                context['time_status_label'] = 'Past'
+                context['time_status_class'] = 'secondary'
+        else:
+            context['time_status'] = 'not_scheduled'
+            context['time_status_label'] = 'Not Scheduled'
+            context['time_status_class'] = 'warning'
+
+        # Get activity log
+        context['activity_log'] = [
+            {
+                'action': 'Created',
+                'date': viewing.created_at,
+                'icon': 'mdi mdi-plus-circle',
+                'color': 'primary'
+            },
+        ]
+
+        if viewing.confirmed_at:
+            context['activity_log'].append({
+                'action': 'Confirmed',
+                'date': viewing.confirmed_at,
+                'icon': 'mdi mdi-check-circle',
+                'color': 'success'
+            })
+
+        if viewing.completed_at:
+            context['activity_log'].append({
+                'action': 'Completed',
+                'date': viewing.completed_at,
+                'icon': 'mdi mdi-check-all',
+                'color': 'info'
+            })
+
+        if viewing.cancelled_at:
+            context['activity_log'].append({
+                'action': 'Cancelled',
+                'date': viewing.cancelled_at,
+                'icon': 'mdi mdi-close-circle',
+                'color': 'danger'
+            })
+
+        return context
+
+class ViewingUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """View for updating a viewing schedule"""
+    model = ViewingSchedule
+    form_class = ViewingScheduleForm
+    template_name = 'properties/viewing_form.html'
+    pk_url_kwarg = 'pk'
+    success_url = reverse_lazy('schedule_view')
+
+    def test_func(self):
+        viewing = self.get_object()
+        return self.request.user.is_staff or self.request.user == viewing.user
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Viewing schedule updated successfully!')
+        return super().form_valid(form)
+
+
+class ConfirmViewingView(LoginRequiredMixin, View):
+    """View to confirm a viewing"""
+
+    def get(self, request, pk):
+        viewing = get_object_or_404(ViewingSchedule, pk=pk)
+        if viewing.status == 'pending':
+            viewing.confirm_viewing()
+            messages.success(request, f'Viewing for {viewing.full_name} has been confirmed!')
+        else:
+            messages.warning(request, 'This viewing cannot be confirmed.')
+        return redirect('viewing_detail', pk=pk)
+
+class ConfirmViewingView(LoginRequiredMixin, View):
+    """View to confirm a viewing"""
+
+    def get(self, request, pk):
+        viewing = get_object_or_404(ViewingSchedule, pk=pk)
+        if viewing.status == 'pending':
+            viewing.confirm_viewing()
+            messages.success(request, f'Viewing for {viewing.full_name} has been confirmed!')
+        else:
+            messages.warning(request, 'This viewing cannot be confirmed.')
+        return redirect('schedule_view')
+
+
+class CancelViewingView(LoginRequiredMixin, View):
+    """View to cancel a viewing"""
+
+    def get(self, request, pk):
+        viewing = get_object_or_404(ViewingSchedule, pk=pk)
+        if viewing.status in ['pending', 'confirmed']:
+            viewing.cancel_viewing()
+            messages.success(request, f'Viewing for {viewing.full_name} has been cancelled.')
+        else:
+            messages.warning(request, 'This viewing cannot be cancelled.')
+        return redirect('schedule_view')
+
+
+class CompleteViewingView(LoginRequiredMixin, View):
+    """View to mark a viewing as completed"""
+
+    def get(self, request, pk):
+        viewing = get_object_or_404(ViewingSchedule, pk=pk)
+        if viewing.status == 'confirmed':
+            viewing.complete_viewing()
+            messages.success(request, f'Viewing for {viewing.full_name} has been marked as completed!')
+        else:
+            messages.warning(request, 'This viewing cannot be marked as completed.')
+        return redirect('schedule_view')

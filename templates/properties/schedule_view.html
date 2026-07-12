@@ -1,0 +1,480 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Viewing Schedule{% endblock title %}
+
+{% block content %}
+
+<div class="main-panel">
+    <div class="content-wrapper">
+
+    {% comment %} stats {% endcomment %}
+    <div class="row">
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">{{ total_viewings|default:0 }}</h3>
+                        <p class="text-success ms-2 mb-0 font-weight-medium">+{{ viewings_growth|default:0 }}%</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-success">
+                        <span class="mdi mdi-calendar-clock icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Total Viewings</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">{{ pending_count|default:0 }}</h3>
+                        <p class="text-warning ms-2 mb-0 font-weight-medium">Pending</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-warning">
+                        <span class="mdi mdi-clock icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Pending Viewings</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">{{ confirmed_count|default:0 }}</h3>
+                        <p class="text-success ms-2 mb-0 font-weight-medium">Confirmed</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-success">
+                        <span class="mdi mdi-check-circle icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Confirmed Viewings</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">{{ completed_count|default:0 }}</h3>
+                        <p class="text-info ms-2 mb-0 font-weight-medium">Completed</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-info">
+                        <span class="mdi mdi-check-all icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Completed Viewings</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} Filter Section {% endcomment %}
+    <div class="row">
+        <div class="col-lg-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Filter Viewings</h4>
+                    <form method="get" class="row">
+                        <div class="col-md-3 mb-3">
+                            <input type="text" name="search" class="form-control" placeholder="Search by name, email, property..." value="{{ request.GET.search|default:'' }}">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                <option value="no_show" {% if request.GET.status == 'no_show' %}selected{% endif %}>No Show</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <select name="time" class="form-select">
+                                <option value="">All Times</option>
+                                <option value="morning" {% if request.GET.time == 'morning' %}selected{% endif %}>Morning (8am-12pm)</option>
+                                <option value="afternoon" {% if request.GET.time == 'afternoon' %}selected{% endif %}>Afternoon (12pm-5pm)</option>
+                                <option value="evening" {% if request.GET.time == 'evening' %}selected{% endif %}>Evening (5pm-7pm)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from|default:'' }}" placeholder="Date From">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to|default:'' }}" placeholder="Date To">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            <a href="{% url 'schedule_view' %}" class="btn btn-secondary">Clear Filters</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} table {% endcomment %}
+    <div class="row">
+        <div class="col-lg-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Viewing Schedule</h4>
+                    <p class="card-description">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} viewings
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Property</th>
+                                    <th>Full Name</th>
+                                    <th>Contact</th>
+                                    <th>Preferred Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Scheduled</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for viewing in viewings %}
+                                <tr>
+                                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                    <td>
+                                        <a href="{% url 'property_detail' viewing.property.pk %}">
+                                            {{ viewing.property.title|truncatechars:25 }}
+                                        </a>
+                                    </td>
+                                    <td>{{ viewing.full_name }}</td>
+                                    <td>
+                                        <div style="font-size:0.85rem;">
+                                            <div>📧 {{ viewing.email|truncatechars:20 }}</div>
+                                            <div>📱 {{ viewing.phone_number }}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ viewing.preferred_date|date:"M d, Y" }}
+                                        {% if viewing.is_upcoming %}
+                                            <span class="badge badge-info" style="font-size:0.65rem;">Upcoming</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if viewing.preferred_time == 'morning' %}
+                                            🌅 Morning
+                                        {% elif viewing.preferred_time == 'afternoon' %}
+                                            ☀️ Afternoon
+                                        {% elif viewing.preferred_time == 'evening' %}
+                                            🌙 Evening
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if viewing.status == 'pending' %}
+                                            <label class="badge badge-warning">⏳ Pending</label>
+                                        {% elif viewing.status == 'confirmed' %}
+                                            <label class="badge badge-success">✅ Confirmed</label>
+                                        {% elif viewing.status == 'completed' %}
+                                            <label class="badge badge-info">✔️ Completed</label>
+                                        {% elif viewing.status == 'cancelled' %}
+                                            <label class="badge badge-danger">❌ Cancelled</label>
+                                        {% elif viewing.status == 'no_show' %}
+                                            <label class="badge badge-secondary">🚫 No Show</label>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if viewing.scheduled_datetime %}
+                                            {{ viewing.scheduled_datetime|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span style="color:var(--gray-400);">Not scheduled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'viewing_detail' viewing.pk %}" class="btn btn-sm btn-info" title="View">
+                                                <i class="mdi mdi-eye"></i>
+                                            </a>
+                                            {% if viewing.status == 'pending' %}
+                                                <a href="{% url 'confirm_viewing' viewing.pk %}" class="btn btn-sm btn-success" title="Confirm" onclick="return confirm('Confirm this viewing?')">
+                                                    <i class="mdi mdi-check"></i>
+                                                </a>
+                                                <a href="{% url 'cancel_viewing' viewing.pk %}" class="btn btn-sm btn-danger" title="Cancel" onclick="return confirm('Cancel this viewing?')">
+                                                    <i class="mdi mdi-close"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if viewing.status == 'confirmed' %}
+                                                <a href="{% url 'complete_viewing' viewing.pk %}" class="btn btn-sm btn-info" title="Complete" onclick="return confirm('Mark this viewing as completed?')">
+                                                    <i class="mdi mdi-check-all"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">
+                                        <div style="font-size:2rem;margin-bottom:0.5rem;">📅</div>
+                                        <p style="color:var(--gray-500);">No viewing requests found.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% comment %} Pagination {% endcomment %}
+                    {% if is_paginated %}
+                    <div class="pagination-wrapper mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page=1" aria-label="First">
+                                            <span aria-hidden="true">&laquo;&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&laquo;&laquo;</span>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&laquo;</span>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                            <span aria-hidden="true">&raquo;&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&raquo;</span>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&raquo;&raquo;</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        <div class="text-center text-muted mt-2">
+                            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} viewings
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end table {% endcomment %}
+
+    {% comment %} Recent Viewings Activity {% endcomment %}
+    <div class="row">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-row justify-content-between">
+                        <h4 class="card-title mb-1">Recent Viewing Activity</h4>
+                        <p class="text-muted mb-1">Latest requests</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="preview-list">
+                                {% for viewing in recent_viewings %}
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-{% if viewing.status == 'pending' %}warning{% elif viewing.status == 'confirmed' %}success{% elif viewing.status == 'completed' %}info{% elif viewing.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                                <i class="mdi mdi-calendar-clock"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">{{ viewing.full_name }} requested viewing for <strong>{{ viewing.property.title|truncatechars:30 }}</strong></h6>
+                                                <p class="text-muted mb-0">
+                                                    📅 {{ viewing.preferred_date|date:"M d, Y" }}
+                                                    {% if viewing.preferred_time == 'morning' %}🌅 Morning
+                                                    {% elif viewing.preferred_time == 'afternoon' %}☀️ Afternoon
+                                                    {% else %}🌙 Evening{% endif %}
+                                                    · 📱 {{ viewing.phone_number }}
+                                                </p>
+                                            </div>
+                                            <div class="mr-auto text-sm-right pt-2 pt-sm-0">
+                                                <p class="text-muted">{{ viewing.created_at|timesince }} ago</p>
+                                                <p>
+                                                    {% if viewing.status == 'pending' %}
+                                                        <label class="badge badge-warning">Pending</label>
+                                                    {% elif viewing.status == 'confirmed' %}
+                                                        <label class="badge badge-success">Confirmed</label>
+                                                    {% elif viewing.status == 'completed' %}
+                                                        <label class="badge badge-info">Completed</label>
+                                                    {% elif viewing.status == 'cancelled' %}
+                                                        <label class="badge badge-danger">Cancelled</label>
+                                                    {% else %}
+                                                        <label class="badge badge-secondary">No Show</label>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="preview-item">
+                                        <div class="text-center w-100 py-3">
+                                            <p class="mb-0">No recent viewing activity</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+    <!-- content-wrapper ends -->
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+        <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+            <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+        </div>
+    </footer>
+    <!-- partial -->
+</div>
+
+<style>
+/* Pagination Styles */
+.pagination-wrapper {
+    margin-top: 20px;
+}
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.page-item {
+    margin: 0 2px;
+}
+
+.page-link {
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: auto;
+}
+
+.pagination .page-link:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .page-link {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+}
+
+/* Filter form styling */
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.badge-info {
+    background-color: #17a2b8;
+    color: #fff;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+</style>
+
+{% endblock content %}
