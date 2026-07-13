@@ -213,7 +213,7 @@ class PublicProfileByTokenView(DetailView):
         return context
 
 # LOGGED IN USER PROFILE VIEW
-from home.models import MoveRequest
+from home.models import MoveRequest, MoveChecklistItem
 from properties.models import Property
 class MyProfileView(LoginRequiredMixin, DetailView):
     """View for users to see their own profile"""
@@ -240,11 +240,24 @@ class MyProfileView(LoginRequiredMixin, DetailView):
             status='available'
         )
 
-        # Checklist progress
-        # This should come from a model or session
-        context['checklist_progress'] = 7
-        context['checklist_total'] = 12
-        context['checklist_percentage'] = 58
+        # Checklist progress - backed by MoveChecklistItem, seeded with sensible
+        # defaults the first time a user visits (previously this was hardcoded
+        # to 7/12/58% for everyone and never matched the on-page checklist)
+        checklist_items = MoveChecklistItem.objects.filter(user=self.request.user)
+        if not checklist_items.exists():
+            checklist_items = MoveChecklistItem.seed_defaults_for(self.request.user)
+
+        checklist_total = checklist_items.count()
+        checklist_progress = checklist_items.filter(done=True).count()
+        checklist_percentage = round((checklist_progress / checklist_total) * 100) if checklist_total else 0
+
+        context['checklist_items'] = checklist_items
+        context['checklist_items_json'] = [
+            {'id': item.pk, 'text': item.text, 'done': item.done} for item in checklist_items
+        ]
+        context['checklist_progress'] = checklist_progress
+        context['checklist_total'] = checklist_total
+        context['checklist_percentage'] = checklist_percentage
 
         context['user'] = self.request.user
 

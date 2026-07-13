@@ -593,7 +593,7 @@ class PropertyMapDataView(View):
 
 
 # move
-from .models import MoveRequest
+from .models import MoveRequest, MoveChecklistItem
 class SubmitMoveRequestView(LoginRequiredMixin, View):
     """View for submitting a move request"""
 
@@ -676,3 +676,68 @@ class CancelMoveRequestView(LoginRequiredMixin, View):
             move_request.save()
             return JsonResponse({'success': True})
         return JsonResponse({'success': False, 'error': 'Cannot cancel this request'})
+
+
+class ChecklistToggleView(LoginRequiredMixin, View):
+    """Toggle a moving checklist item's done state"""
+
+    def post(self, request, pk):
+        item = get_object_or_404(MoveChecklistItem, pk=pk, user=request.user)
+        item.done = not item.done
+        item.save()
+
+        total = MoveChecklistItem.objects.filter(user=request.user).count()
+        done = MoveChecklistItem.objects.filter(user=request.user, done=True).count()
+        percentage = round((done / total) * 100) if total else 0
+
+        return JsonResponse({
+            'success': True,
+            'done': item.done,
+            'progress': done,
+            'total': total,
+            'percentage': percentage,
+        })
+
+
+class ChecklistAddView(LoginRequiredMixin, View):
+    """Add a new moving checklist item"""
+
+    def post(self, request):
+        text = request.POST.get('text', '').strip()
+        if not text:
+            return JsonResponse({'success': False, 'error': 'Task text is required'}, status=400)
+
+        last_order = MoveChecklistItem.objects.filter(user=request.user).count()
+        item = MoveChecklistItem.objects.create(user=request.user, text=text[:255], order=last_order)
+
+        total = MoveChecklistItem.objects.filter(user=request.user).count()
+        done = MoveChecklistItem.objects.filter(user=request.user, done=True).count()
+        percentage = round((done / total) * 100) if total else 0
+
+        return JsonResponse({
+            'success': True,
+            'id': item.pk,
+            'text': item.text,
+            'progress': done,
+            'total': total,
+            'percentage': percentage,
+        })
+
+
+class ChecklistDeleteView(LoginRequiredMixin, View):
+    """Delete a moving checklist item"""
+
+    def post(self, request, pk):
+        item = get_object_or_404(MoveChecklistItem, pk=pk, user=request.user)
+        item.delete()
+
+        total = MoveChecklistItem.objects.filter(user=request.user).count()
+        done = MoveChecklistItem.objects.filter(user=request.user, done=True).count()
+        percentage = round((done / total) * 100) if total else 0
+
+        return JsonResponse({
+            'success': True,
+            'progress': done,
+            'total': total,
+            'percentage': percentage,
+        })

@@ -10,7 +10,7 @@ from properties.models import (
     Amenity,
 )
 
-from .models import ViewingSchedule, SavedProperty
+from .models import ViewingSchedule, SavedProperty, MoveChecklistItem
 
 
 @admin.register(ViewingSchedule)
@@ -272,3 +272,9 @@ class SavedPropertyAdmin(admin.ModelAdmin):
             f'{count} saved propert{"y" if count == 1 else "ies"} deleted successfully.'
         )
     delete_selected.short_description = 'Delete selected saved properties'
+
+@admin.register(MoveChecklistItem)
+class MoveChecklistItemAdmin(admin.ModelAdmin):
+    list_display = ('text', 'user', 'done', 'order', 'created_at')
+    list_filter = ('done',)
+    search_fields = ('text', 'user__username')

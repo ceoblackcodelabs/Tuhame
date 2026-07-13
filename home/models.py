@@ -191,3 +191,44 @@ class MoveRequest(models.Model):
         if self.items:
             return ', '.join(self.items)
         return self.items_list
+
+
+DEFAULT_CHECKLIST_ITEMS = [
+    'Notify current landlord',
+    'Book moving company',
+    'Transfer utilities to new address',
+    'Update address with bank',
+    'Pack bedroom',
+    'Pack kitchen',
+    'Pack living room',
+    'Arrange cleaning service',
+    'Return keys to old property',
+    'Set up internet at new place',
+    'Update address with KRA',
+    'Update address with NHIF/NSSF',
+]
+
+
+class MoveChecklistItem(models.Model):
+    """A single to-do item on a user's moving checklist"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='checklist_items')
+    text = models.CharField(max_length=255)
+    done = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.text} ({'done' if self.done else 'pending'}) - {self.user.username}"
+
+    @classmethod
+    def seed_defaults_for(cls, user):
+        """Create the default checklist for a user who has none yet"""
+        items = [
+            cls(user=user, text=text, done=False, order=i)
+            for i, text in enumerate(DEFAULT_CHECKLIST_ITEMS)
+        ]
+        cls.objects.bulk_create(items)
+        return cls.objects.filter(user=user).order_by('order', 'created_at')

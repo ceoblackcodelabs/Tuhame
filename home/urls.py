@@ -24,4 +24,9 @@ urlpatterns = [
     # move request
     path('submit-move-request/', SubmitMoveRequestView.as_view(), name='submit_move_request'),
     path('api/cancel-move-request/<int:pk>/', CancelMoveRequestView.as_view(), name='cancel_move_request'),
+
+    # moving checklist
+    path('api/checklist/add/', ChecklistAddView.as_view(), name='checklist_add'),
+    path('api/checklist/<int:pk>/toggle/', ChecklistToggleView.as_view(), name='checklist_toggle'),
+    path('api/checklist/<int:pk>/delete/', ChecklistDeleteView.as_view(), name='checklist_delete'),
 ]

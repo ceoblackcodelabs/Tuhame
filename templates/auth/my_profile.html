@@ -3,6 +3,7 @@
 {% block title %}My Profile{% endblock title %}
 
 {% block inject_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 
 <style>
   .qr-canvas-wrap {
@@ -558,8 +559,36 @@
                 <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
                   📍 Moving From (Current Address)
                 </label>
-                <input type="text" name="moving_from" class="filter-input" placeholder="Enter your current address" required
-                      value="{{ profile.address|default:'' }}" style="width:100%;" />
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                  <div style="flex:1;min-width:200px;">
+                    <select name="moving_from_property" id="moving-from-select" class="filter-input" style="width:100%;" onchange="handleLocationSelect('from', this)">
+                      <option value="">Select a property (or enter manually)</option>
+                      {% for property in available_properties %}
+                        <option value="{{ property.id }}" data-address="{{ property.title }} - {{ property.address }}, {{ property.city }}" data-lat="{{ property.latitude|default:'' }}" data-lng="{{ property.longitude|default:'' }}">{{ property.title }} - {{ property.city }}, {{ property.state }}</option>
+                      {% endfor %}
+                      <option value="other">Other (Enter manually)</option>
+                    </select>
+                  </div>
+                  <div style="flex:1;min-width:200px;">
+                    <button type="button" class="btn btn-sm" style="width:100%;justify-content:center;background:var(--gray-100);color:var(--gray-700);border:1px solid var(--gray-300);" onclick="useCurrentLocation()">
+                      📡 Use My Current Location
+                    </button>
+                  </div>
+                </div>
+                <div style="display:none;margin-top:0.75rem;" id="from-manual-container">
+                  <input type="text" name="moving_from" id="moving-from-manual" class="filter-input" placeholder="Enter your current address" style="width:100%;" value="{{ profile.address|default:'' }}" />
+                </div>
+                <input type="hidden" name="moving_from_lat" id="moving-from-lat" />
+                <input type="hidden" name="moving_from_lng" id="moving-from-lng" />
+              </div>
+
+              <!-- Shared map: shown when either field is set to manual entry -->
+              <div style="grid-column:1/-1;display:none;" id="location-map-container">
+                <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
+                  🗺️ Click the map to set <span id="location-map-target-label">the location</span> precisely
+                </label>
+                <div id="move-location-map" style="height:280px;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
+                <div style="font-size:0.75rem;color:var(--gray-400);margin-top:0.35rem;" id="location-map-coords">No location selected yet — click on the map.</div>
               </div>
 
               <!-- Moving To -->
@@ -569,10 +598,10 @@
                 </label>
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                   <div style="flex:1;min-width:200px;">
-                    <select name="moving_to_property" class="filter-input" style="width:100%;" onchange="togglePropertyAddress(this)">
+                    <select name="moving_to_property" id="moving-to-select" class="filter-input" style="width:100%;" onchange="handleLocationSelect('to', this)">
                       <option value="">Select a property (or enter manually)</option>
                       {% for property in available_properties %}
-                        <option value="{{ property.id }}">{{ property.title }} - {{ property.city }}, {{ property.state }}</option>
+                        <option value="{{ property.id }}" data-lat="{{ property.latitude|default:'' }}" data-lng="{{ property.longitude|default:'' }}">{{ property.title }} - {{ property.city }}, {{ property.state }}</option>
                       {% endfor %}
                       <option value="other">Other (Enter manually)</option>
                     </select>
@@ -581,6 +610,8 @@
                     <input type="text" name="moving_to_manual" class="filter-input" placeholder="Enter full address" style="width:100%;" />
                   </div>
                 </div>
+                <input type="hidden" name="moving_to_lat" id="moving-to-lat" />
+                <input type="hidden" name="moving_to_lng" id="moving-to-lng" />
               </div>
 
               <!-- Move Date -->
@@ -786,16 +817,17 @@
           <div style="margin-bottom:1.5rem;">
             <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;font-size:0.875rem;">
               <span style="color:var(--gray-600);">Progress</span>
-              <span style="color:var(--accent);font-weight:700;">{{ checklist_progress }}/{{ checklist_total }} done</span>
+              <span style="color:var(--accent);font-weight:700;" id="checklist-progress-label">{{ checklist_progress }}/{{ checklist_total }} done</span>
             </div>
             <div class="progress-bar-wrap">
-              <div class="progress-bar-fill green" style="width:{{ checklist_percentage }}%;"></div>
+              <div class="progress-bar-fill green" id="checklist-progress-fill" style="width:{{ checklist_percentage }}%;"></div>
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:0.6rem;" id="checklist">
             <!-- Items generated by JS below -->
           </div>
+          {{ checklist_items_json|json_script:"checklist-data" }}
           <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap;">
             <input type="text" id="new-task" placeholder="Add a task…" class="filter-input" style="flex:1;" />
             <button class="btn btn-primary btn-sm" onclick="addTask()">+ Add</button>
@@ -861,7 +893,8 @@
 
 {% endblock content %}
 
-{% block extra_js %}
+{% block inject_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
   // Toast helper
   function profileToast(msg, icon) {
@@ -881,42 +914,98 @@
     document.getElementById(id).style.display = 'block';
   }
 
-  // Checklist
-  const tasks = [
-    { text: 'Notify current landlord', done: true },
-    { text: 'Book moving company', done: true },
-    { text: 'Transfer utilities to new address', done: false },
-    { text: 'Update address with bank', done: true },
-    { text: 'Pack bedroom', done: true },
-    { text: 'Pack kitchen', done: false },
-    { text: 'Pack living room', done: true },
-    { text: 'Arrange cleaning service', done: false },
-    { text: 'Return keys to old property', done: false },
-    { text: 'Set up internet at new place', done: true },
-    { text: 'Update address with KRA', done: true },
-    { text: 'Update address with NHIF/NSSF', done: false },
-  ];
+  // Checklist - backed by MoveChecklistItem on the server
+  const checklistDataEl = document.getElementById('checklist-data');
+  const tasks = checklistDataEl ? JSON.parse(checklistDataEl.textContent) : [];
+
+  function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+  }
+
+  function updateChecklistProgress(progress, total, percentage) {
+    const doneLabel = document.getElementById('checklist-progress-label');
+    if (doneLabel) doneLabel.textContent = `${progress}/${total} done`;
+    const fill = document.getElementById('checklist-progress-fill');
+    if (fill) fill.style.width = percentage + '%';
+  }
 
   function renderChecklist() {
     const container = document.getElementById('checklist');
     if (!container) return;
-    container.innerHTML = tasks.map((t, i) => `
+    container.innerHTML = tasks.map((t) => `
       <label style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);background:var(--gray-50);cursor:pointer;${t.done ? 'opacity:0.7;' : ''}">
-        <input type="checkbox" ${t.done ? 'checked' : ''} style="accent-color:var(--primary);width:16px;height:16px;" onchange="toggleTask(${i})"/>
-        <span style="${t.done ? 'text-decoration:line-through;color:var(--gray-400);' : 'color:var(--gray-800);'} font-size:0.875rem;">${t.text}</span>
+        <input type="checkbox" ${t.done ? 'checked' : ''} style="accent-color:var(--primary);width:16px;height:16px;" onchange="toggleTask(${t.id})"/>
+        <span style="${t.done ? 'text-decoration:line-through;color:var(--gray-400);' : 'color:var(--gray-800);'} font-size:0.875rem;flex:1;">${t.text}</span>
+        <button type="button" onclick="deleteTask(${t.id})" style="border:none;background:none;color:var(--gray-300);cursor:pointer;font-size:0.9rem;" title="Delete task">✕</button>
       </label>
     `).join('');
   }
 
-  function toggleTask(i) { tasks[i].done = !tasks[i].done; renderChecklist(); }
+  function toggleTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    fetch(`/api/checklist/${id}/toggle/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCsrfToken() },
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          profileToast('Could not update task', '❌');
+          return;
+        }
+        task.done = data.done;
+        renderChecklist();
+        updateChecklistProgress(data.progress, data.total, data.percentage);
+      })
+      .catch(() => profileToast('Could not update task', '❌'));
+  }
+
+  function deleteTask(id) {
+    fetch(`/api/checklist/${id}/delete/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCsrfToken() },
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          profileToast('Could not delete task', '❌');
+          return;
+        }
+        const idx = tasks.findIndex(t => t.id === id);
+        if (idx !== -1) tasks.splice(idx, 1);
+        renderChecklist();
+        updateChecklistProgress(data.progress, data.total, data.percentage);
+      })
+      .catch(() => profileToast('Could not delete task', '❌'));
+  }
 
   function addTask() {
     const input = document.getElementById('new-task');
-    if (!input?.value.trim()) return;
-    tasks.push({ text: input.value.trim(), done: false });
-    input.value = '';
-    renderChecklist();
-    profileToast('Task added!', '✅');
+    const text = input?.value.trim();
+    if (!text) return;
+
+    fetch('/api/checklist/add/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCsrfToken(),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `text=${encodeURIComponent(text)}`,
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          profileToast(data.error || 'Could not add task', '❌');
+          return;
+        }
+        tasks.push({ id: data.id, text: data.text, done: false });
+        input.value = '';
+        renderChecklist();
+        updateChecklistProgress(data.progress, data.total, data.percentage);
+        profileToast('Task added!', '✅');
+      })
+      .catch(() => profileToast('Could not add task', '❌'));
   }
 
   // QR Code functions
@@ -961,17 +1050,147 @@
 
   renderChecklist();
 
-// Toggle manual address input
-  function togglePropertyAddress(select) {
-    const manualContainer = document.getElementById('manual-address-container');
-    if (select.value === 'other') {
+// Move planner: property dropdowns, shared map, and geolocation
+  let moveMap = null;
+  let moveMapMarker = null;
+  let currentMapTarget = null; // 'from' or 'to'
+
+  function fieldEls(which) {
+    if (which === 'from') {
+      return {
+        manualContainer: document.getElementById('from-manual-container'),
+        manualInput: document.getElementById('moving-from-manual'),
+        latInput: document.getElementById('moving-from-lat'),
+        lngInput: document.getElementById('moving-from-lng'),
+        label: 'Moving From',
+      };
+    }
+    return {
+      manualContainer: document.getElementById('manual-address-container'),
+      manualInput: document.querySelector('input[name="moving_to_manual"]'),
+      latInput: document.getElementById('moving-to-lat'),
+      lngInput: document.getElementById('moving-to-lng'),
+      label: 'Moving To',
+    };
+  }
+
+  function anyFieldIsManual() {
+    return document.getElementById('moving-from-select')?.value === 'other'
+        || document.getElementById('moving-to-select')?.value === 'other';
+  }
+
+  function handleLocationSelect(which, select) {
+    const opt = select.options[select.selectedIndex];
+    const isOther = select.value === 'other';
+    const isEmpty = select.value === '';
+    const { manualContainer, manualInput, latInput, lngInput } = fieldEls(which);
+
+    if (isOther) {
       manualContainer.style.display = 'block';
-      document.querySelector('input[name="moving_to_manual"]').required = true;
+      if (manualInput) { manualInput.required = true; manualInput.value = ''; }
+      if (latInput) latInput.value = '';
+      if (lngInput) lngInput.value = '';
+      showLocationMap(which);
+    } else if (!isEmpty) {
+      manualContainer.style.display = 'none';
+      if (manualInput) {
+        manualInput.required = false;
+        manualInput.value = opt.dataset.address || opt.textContent.trim();
+      }
+      if (latInput) latInput.value = opt.dataset.lat || '';
+      if (lngInput) lngInput.value = opt.dataset.lng || '';
+      if (!anyFieldIsManual()) hideLocationMap();
     } else {
       manualContainer.style.display = 'none';
-      document.querySelector('input[name="moving_to_manual"]').required = false;
+      if (manualInput) { manualInput.required = false; manualInput.value = ''; }
+      if (latInput) latInput.value = '';
+      if (lngInput) lngInput.value = '';
+      if (!anyFieldIsManual()) hideLocationMap();
     }
   }
+
+  function showLocationMap(which) {
+    currentMapTarget = which;
+    const container = document.getElementById('location-map-container');
+    const label = document.getElementById('location-map-target-label');
+    if (label) label.textContent = fieldEls(which).label;
+    container.style.display = 'block';
+
+    if (!moveMap && typeof L !== 'undefined') {
+      moveMap = L.map('move-location-map', { center: [-1.2921, 36.8219], zoom: 12 });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(moveMap);
+      moveMap.on('click', function (e) { setMapLocation(e.latlng.lat, e.latlng.lng, true); });
+    }
+    setTimeout(function () { if (moveMap) moveMap.invalidateSize(); }, 200);
+  }
+
+  function hideLocationMap() {
+    const container = document.getElementById('location-map-container');
+    if (container) container.style.display = 'none';
+    currentMapTarget = null;
+  }
+
+  function setMapLocation(lat, lng, reverseGeocode) {
+    if (!currentMapTarget || !moveMap) return;
+    const { latInput, lngInput, manualInput } = fieldEls(currentMapTarget);
+    if (latInput) latInput.value = lat.toFixed(6);
+    if (lngInput) lngInput.value = lng.toFixed(6);
+
+    if (moveMapMarker) {
+      moveMapMarker.setLatLng([lat, lng]);
+    } else {
+      moveMapMarker = L.marker([lat, lng]).addTo(moveMap);
+    }
+    moveMap.setView([lat, lng], 15);
+
+    const coordsLabel = document.getElementById('location-map-coords');
+    if (coordsLabel) coordsLabel.textContent = `Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+    if (reverseGeocode) {
+      fetch(`/properties/reverse-geocode/?lat=${lat}&lon=${lng}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.display_name && manualInput) {
+            manualInput.value = data.display_name;
+          }
+          if (data.display_name && coordsLabel) {
+            coordsLabel.textContent = `📍 ${data.display_name}`;
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      profileToast('Location access is not supported by your browser', '❌');
+      return;
+    }
+    profileToast('Getting your location…', '📡');
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Force "Moving From" into manual mode so the map + address field are active
+        const select = document.getElementById('moving-from-select');
+        select.value = 'other';
+        handleLocationSelect('from', select);
+
+        setMapLocation(lat, lng, true);
+        profileToast('Location found!', '✅');
+      },
+      function () {
+        profileToast('Could not get your location - check browser permissions', '❌');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  // Toggle manual address input
 
   // Toggle mover details
   document.addEventListener('DOMContentLoaded', function() {
@@ -1011,4 +1230,4 @@
   }
 
 </script>
-{% endblock extra_js %}
+{% endblock inject_js %}
