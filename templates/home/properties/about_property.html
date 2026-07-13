@@ -2,6 +2,10 @@
 
 {% block title %}{{ property.title }} - Available Properties on Sale{% endblock title %}
 
+{% block inject_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+{% endblock inject_css %}
+
 {% block content %}
 
 <div class="page-hero">
@@ -395,22 +399,21 @@
 
       <!-- Map Preview -->
       <div class="detail-section-title">Location on Map</div>
-      <div style="height:280px;background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--gray-200);position:relative;overflow:hidden;">
-        <div style="text-align:center;">
-          <div style="font-size:2.5rem;margin-bottom:0.5rem;">🗺</div>
-          <p style="color:var(--gray-500);font-size:0.9rem;">
-            {% if property.latitude and property.longitude %}
-              📍 {{ property.latitude }}, {{ property.longitude }}
-            {% else %}
-              Map preview — <a href="map.html" style="color:var(--primary);font-weight:600;">Open full map →</a>
-            {% endif %}
-          </p>
+      {% if property.latitude and property.longitude %}
+        <div id="property-mini-map" style="height:280px;border-radius:var(--radius-lg);border:1px solid var(--gray-200);overflow:hidden;"></div>
+        <div style="margin-top:0.5rem;text-align:right;">
+          <a href="{% url 'home:property_map' %}" style="color:var(--primary);font-weight:600;font-size:0.85rem;">Open full map search &rarr;</a>
         </div>
-        <!-- Decorative markers -->
-        <div class="map-marker-demo" style="position:absolute;top:40%;left:45%;">📍 {{ property.title }}</div>
-        <div class="map-marker-demo" style="position:absolute;top:60%;left:60%;background:var(--accent);font-size:0.75rem;">🛒 Nearby</div>
-        <div class="map-marker-demo" style="position:absolute;top:25%;left:30%;background:var(--warning);color:var(--gray-900);font-size:0.75rem;">🏫 School</div>
-      </div>
+      {% else %}
+        <div style="height:280px;background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--gray-200);">
+          <div style="text-align:center;">
+            <div style="font-size:2.5rem;margin-bottom:0.5rem;">🗺</div>
+            <p style="color:var(--gray-500);font-size:0.9rem;">
+              Exact location not available for this listing — <a href="{% url 'home:property_map' %}" style="color:var(--primary);font-weight:600;">browse the map search →</a>
+            </p>
+          </div>
+        </div>
+      {% endif %}
 
     </div>
 
@@ -606,6 +609,36 @@
 {% endblock content %}
 
 {% block inject_js %}
+{% if property.latitude and property.longitude %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+  (function () {
+    var lat = {{ property.latitude }};
+    var lng = {{ property.longitude }};
+    var mapEl = document.getElementById('property-mini-map');
+    if (!mapEl || typeof L === 'undefined') return;
+
+    var miniMap = L.map('property-mini-map', {
+      center: [lat, lng],
+      zoom: 15,
+      zoomControl: true,
+      scrollWheelZoom: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(miniMap);
+
+    L.marker([lat, lng]).addTo(miniMap)
+      .bindPopup("{{ property.title|escapejs }}")
+      .openPopup();
+
+    // Leaflet needs a resize nudge when its container becomes visible after initial paint
+    setTimeout(function () { miniMap.invalidateSize(); }, 300);
+  })();
+</script>
+{% endif %}
 <script>
   // ── Star rating picker ──
   const currentRating = parseInt(document.getElementById('rating-input')?.value) || 0;

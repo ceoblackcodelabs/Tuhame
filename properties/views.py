@@ -38,15 +38,24 @@ class PropertyListView(ListView):
 
         min_price = self.request.GET.get('min_price')
         if min_price:
-            queryset = queryset.filter(price__gte=min_price)
+            try:
+                queryset = queryset.filter(price__gte=float(min_price))
+            except (ValueError, TypeError):
+                pass
 
         max_price = self.request.GET.get('max_price')
         if max_price:
-            queryset = queryset.filter(price__lte=max_price)
+            try:
+                queryset = queryset.filter(price__lte=float(max_price))
+            except (ValueError, TypeError):
+                pass
 
         bedrooms = self.request.GET.get('bedrooms')
         if bedrooms:
-            queryset = queryset.filter(bedrooms__gte=bedrooms)
+            try:
+                queryset = queryset.filter(bedrooms__gte=int(bedrooms))
+            except (ValueError, TypeError):
+                pass
 
         search = self.request.GET.get('search')
         if search:
@@ -110,10 +119,10 @@ class PropertyListView(ListView):
         property_growth = (last_month_properties / total_properties * 100) if total_properties > 0 else 0
 
         # Client statistics
-        total_clients = Client.objects.filter(is_active=True).count() if 'Client' in globals() else 0
+        total_clients = Client.objects.filter(is_active=True).count()
         new_clients_month = Client.objects.filter(
             created_at__date__gte=first_day_of_month
-        ).count() if 'Client' in globals() else 0
+        ).count()
 
         client_growth = (new_clients_month / total_clients * 100) if total_clients > 0 else 0
 
@@ -135,6 +144,39 @@ class PropertyListView(ListView):
         else:
             revenue_percentage = 0
 
+        # ============ CHART DATA ============
+
+        # Line chart: revenue trend, last 7 days
+        line_chart_labels = []
+        line_chart_data = []
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            daily_total = Payment.objects.filter(
+                status='paid',
+                payment_date=date
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            line_chart_labels.append(date.strftime('%m/%d'))
+            line_chart_data.append(float(daily_total))
+
+        # Bar chart: properties by type
+        type_display = dict(PropertyType.choices)
+        property_type_counts = Property.objects.filter(is_active=True).values('property_type').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        bar_chart_labels = [type_display.get(p['property_type'], p['property_type']) for p in property_type_counts]
+        bar_chart_data = [p['count'] for p in property_type_counts]
+
+        # Doughnut chart: paid transactions by payment method
+        method_display = {
+            'cash': 'Cash', 'bank_transfer': 'Bank Transfer', 'credit_card': 'Credit Card',
+            'debit_card': 'Debit Card', 'check': 'Check', 'online': 'Online', 'mpesa': 'M-Pesa',
+        }
+        payment_methods = Payment.objects.filter(status='paid').values('payment_method').annotate(
+            total=Sum('amount')
+        )
+        doughnut_labels = [method_display.get(m['payment_method'], (m['payment_method'] or 'Other').title()) for m in payment_methods]
+        doughnut_data = [float(m['total']) for m in payment_methods]
+
         context.update({
             'total_revenue': total_revenue,
             'monthly_revenue': monthly_revenue,
@@ -152,14 +194,16 @@ class PropertyListView(ListView):
             'total_transactions': total_transactions,
             'recent_properties': recent_properties,
             'revenue_percentage': round(revenue_percentage, 1),
+            'property_types': PropertyType.choices,
+            'statuses': PropertyStatus.choices,
+            'line_chart_labels': line_chart_labels,
+            'line_chart_data': line_chart_data,
+            'bar_chart_labels': bar_chart_labels,
+            'bar_chart_data': bar_chart_data,
+            'doughnut_labels': doughnut_labels,
+            'doughnut_data': doughnut_data,
         })
 
-        return context
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['property_types'] = PropertyType.choices
-        context['statuses'] = PropertyStatus.choices
         return context
 
 
@@ -176,7 +220,7 @@ class PropertyDetailView(DetailView):
         return context
 
 
-class PropertyCreateView(CreateView):
+class PropertyCreateView(LoginRequiredMixin, CreateView):
     model = Property
     form_class = PropertyForm
     template_name = 'properties/property_form.html'
@@ -203,7 +247,7 @@ class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Property
     form_class = PropertyForm
     template_name = 'properties/property_form.html'
-    success_url = reverse_lazy('properties:list')
+    success_url = reverse_lazy('property_list')
 
     def test_func(self):
         property = self.get_object()
@@ -306,7 +350,7 @@ class UnitCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('properties:detail', kwargs={'pk': self.kwargs['property_pk']})
+        return reverse_lazy('property_detail', kwargs={'pk': self.kwargs['property_pk']})
 
 
 class BookingListView(LoginRequiredMixin, ListView):
@@ -316,7 +360,10 @@ class BookingListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return Booking.objects.filter(client__user=self.request.user)
+        queryset = Booking.objects.select_related('property', 'client', 'unit').order_by('-created_at')
+        if self.request.user.is_staff:
+            return queryset
+        return queryset.filter(client__user=self.request.user)
 
 
 class BookingCreateView(LoginRequiredMixin, CreateView):
@@ -325,7 +372,15 @@ class BookingCreateView(LoginRequiredMixin, CreateView):
     template_name = 'properties/booking_form.html'
 
     def form_valid(self, form):
-        form.instance.client = self.request.user.client_profile
+        client_profile = getattr(self.request.user, 'client_profile', None)
+        if client_profile is None:
+            messages.error(
+                self.request,
+                'Your account needs a client profile before you can make a booking. '
+                'Please contact support.'
+            )
+            return redirect('booking_list')
+        form.instance.client = client_profile
         form.instance.total_price = self.calculate_total_price(form.cleaned_data)
         return super().form_valid(form)
 
@@ -336,7 +391,7 @@ class BookingCreateView(LoginRequiredMixin, CreateView):
         return property.price * nights
 
     def get_success_url(self):
-        return reverse_lazy('properties:booking_list')
+        return reverse_lazy('booking_list')
 
 from home.models import ViewingSchedule
 class ReviewListView(LoginRequiredMixin, ListView):
@@ -488,18 +543,6 @@ class ViewingUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         messages.success(self.request, 'Viewing schedule updated successfully!')
         return super().form_valid(form)
 
-
-class ConfirmViewingView(LoginRequiredMixin, View):
-    """View to confirm a viewing"""
-
-    def get(self, request, pk):
-        viewing = get_object_or_404(ViewingSchedule, pk=pk)
-        if viewing.status == 'pending':
-            viewing.confirm_viewing()
-            messages.success(request, f'Viewing for {viewing.full_name} has been confirmed!')
-        else:
-            messages.warning(request, 'This viewing cannot be confirmed.')
-        return redirect('viewing_detail', pk=pk)
 
 class ConfirmViewingView(LoginRequiredMixin, View):
     """View to confirm a viewing"""

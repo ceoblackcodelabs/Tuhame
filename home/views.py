@@ -21,7 +21,7 @@ class HomeView(ListView):
         queryset = Property.objects.filter(
             is_active=True,
             status=PropertyStatus.AVAILABLE
-        ).order_by('-created_at')[:6]  # Show 6 featured properties
+        )
 
         # Get search parameters
         search_query = self.request.GET.get('search', '').strip()
@@ -29,23 +29,23 @@ class HomeView(ListView):
 
         # Apply search filter
         if search_query:
-            queryset = Property.objects.filter(
-                Q(is_active=True, status=PropertyStatus.AVAILABLE) &
-                (
-                    Q(title__icontains=search_query) |
-                    Q(address__icontains=search_query) |
-                    Q(city__icontains=search_query) |
-                    Q(state__icontains=search_query) |
-                    Q(country__icontains=search_query) |
-                    Q(description__icontains=search_query)
-                )
-            ).order_by('-created_at')[:6]
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(address__icontains=search_query) |
+                Q(city__icontains=search_query) |
+                Q(state__icontains=search_query) |
+                Q(country__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
 
         # Apply property type filter
         if property_type and property_type != 'All Types':
             queryset = queryset.filter(property_type=property_type.lower())
 
-        return queryset
+        # Slice LAST, after all filters - filtering a sliced queryset raises
+        # an AssertionError in Django, which was crashing the homepage
+        # whenever a property_type filter was combined with the featured list.
+        return queryset.order_by('-created_at')[:6]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -474,10 +474,16 @@ class PropertyMapSearchListView(View):
             )
 
         if min_price:
-            properties = properties.filter(price__gte=min_price)
+            try:
+                properties = properties.filter(price__gte=float(min_price))
+            except (ValueError, TypeError):
+                pass
 
         if max_price:
-            properties = properties.filter(price__lte=max_price)
+            try:
+                properties = properties.filter(price__lte=float(max_price))
+            except (ValueError, TypeError):
+                pass
 
         # Prepare data for the map
         properties_data = []
@@ -543,10 +549,16 @@ class PropertyMapDataView(View):
             )
 
         if min_price:
-            properties = properties.filter(price__gte=min_price)
+            try:
+                properties = properties.filter(price__gte=float(min_price))
+            except (ValueError, TypeError):
+                pass
 
         if max_price:
-            properties = properties.filter(price__lte=max_price)
+            try:
+                properties = properties.filter(price__lte=float(max_price))
+            except (ValueError, TypeError):
+                pass
 
         # Prepare data for the map
         properties_data = []
@@ -621,6 +633,15 @@ class SubmitMoveRequestView(LoginRequiredMixin, View):
                 pass
 
         # Create move request
+        try:
+            movers_count = int(movers_count) if request_mover else 0
+        except (TypeError, ValueError):
+            movers_count = 2
+        try:
+            estimated_hours = int(estimated_hours) if request_mover else 0
+        except (TypeError, ValueError):
+            estimated_hours = 4
+
         move_request = MoveRequest.objects.create(
             user=user,
             moving_from=moving_from,
@@ -636,8 +657,8 @@ class SubmitMoveRequestView(LoginRequiredMixin, View):
             items_list=', '.join(items) if items else 'No items specified',
             special_instructions=special_instructions,
             request_mover=request_mover,
-            movers_count=int(movers_count) if request_mover else 0,
-            estimated_hours=int(estimated_hours) if request_mover else 0,
+            movers_count=movers_count,
+            estimated_hours=estimated_hours,
             mover_notes=mover_notes if request_mover else '',
         )
 

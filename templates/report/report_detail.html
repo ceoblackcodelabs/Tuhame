@@ -523,4 +523,50 @@
     }
 </style>
 
+<script>
+window.addEventListener('load', function () {
+    var canvas = document.getElementById('transaction-history');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    var existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+
+    var methodDisplay = {
+        cash: 'Cash', bank_transfer: 'Bank Transfer', credit_card: 'Credit Card',
+        debit_card: 'Debit Card', check: 'Check', online: 'Online', mpesa: 'M-Pesa'
+    };
+
+    var paymentMethods = {{ payment_methods_data|default:"[]"|safe }};
+    var labels = paymentMethods.map(function (m) {
+        return methodDisplay[m.payment_method] || (m.payment_method ? m.payment_method : 'Other');
+    });
+    var data = paymentMethods.map(function (m) { return m.total; });
+
+    if (data.length === 0) return;
+
+    new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)', 'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+            }
+        }
+    });
+});
+</script>
+
 {% endblock content %}

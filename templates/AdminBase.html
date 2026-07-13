@@ -142,7 +142,7 @@
             </a>
             <div class="collapse" id="ui-basic1">
               <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> <a class="nav-link" href="{% url "property_list" %}">All Bookings</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "booking_list" %}">All Bookings</a></li>
               </ul>
             </div>
           </li>
@@ -195,7 +195,7 @@
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{% url "client_list" %}">All Clients</a></li>
                 <li class="nav-item"> <a class="nav-link" href="{% url "client_add" %}">Add Client</a></li>
-                <li class="nav-item"> <a class="nav-link" href="">Add Bill</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "bill_create" %}">Add Bill</a></li>
               </ul>
             </div>
           </li>
@@ -213,7 +213,7 @@
             <div class="collapse" id="ui-basic3s">
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{% url "bill_list" %}">List Bills</a></li>
-                <li class="nav-item"> <a class="nav-link" href="">Add Bill</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "bill_create" %}">Add Bill</a></li>
               </ul>
             </div>
           </li>
@@ -237,6 +237,24 @@
             </div>
           </li>
           {% comment %} end Invoices {% endcomment %}
+
+          {% comment %} Contracts {% endcomment %}
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic4c" aria-expanded="false" aria-controls="ui-basic">
+              <span class="menu-icon">
+                <i class="mdi mdi-file-document-outline"></i>
+              </span>
+              <span class="menu-title">Contracts</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-basic4c">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url "contract_list" %}">All Contracts</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "contract_add" %}">New Contract</a></li>
+              </ul>
+            </div>
+          </li>
+          {% comment %} end Contracts {% endcomment %}
 
           {% comment %} Report {% endcomment %}
           <li class="nav-item menu-items">

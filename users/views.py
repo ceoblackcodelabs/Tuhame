@@ -207,10 +207,7 @@ class PublicProfileByTokenView(DetailView):
         context['qr_code'] = generate_qr_code_for_user(profile)
 
         # Public URL for sharing
-        if hasattr(settings, 'SITE_URL'):
-            base_url = settings.SITE_URL
-        else:
-            base_url = "https://6b4d-217-199-148-239.ngrok-free.app"
+        base_url = settings.SITE_URL.rstrip('/')
         context['public_url'] = f"{base_url}/users/qr/{profile.qr_code_token}/"
 
         return context

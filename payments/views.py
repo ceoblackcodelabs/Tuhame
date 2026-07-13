@@ -68,6 +68,29 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         context['pending_amount'] = Invoice.objects.filter(status='pending').aggregate(total=Sum('total_amount'))['total'] or 0
         context['overdue_amount'] = Invoice.objects.filter(status='overdue').aggregate(total=Sum('total_amount'))['total'] or 0
 
+        # Line chart: revenue (paid invoice totals) by issue date, last 7 days
+        today = timezone.now().date()
+        line_chart_labels = []
+        line_chart_data = []
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            daily_total = Invoice.objects.filter(
+                status='paid', issue_date=date
+            ).aggregate(total=Sum('total_amount'))['total'] or 0
+            line_chart_labels.append(date.strftime('%m/%d'))
+            line_chart_data.append(float(daily_total))
+
+        # Bar chart: invoice status breakdown
+        status_display = dict(PaymentStatus.choices)
+        status_counts = Invoice.objects.values('status').annotate(count=Count('id')).order_by('-count')
+        bar_chart_labels = [status_display.get(s['status'], s['status']) for s in status_counts]
+        bar_chart_data = [s['count'] for s in status_counts]
+
+        context['line_chart_labels'] = line_chart_labels
+        context['line_chart_data'] = line_chart_data
+        context['bar_chart_labels'] = bar_chart_labels
+        context['bar_chart_data'] = bar_chart_data
+
         return context
 
 
@@ -91,9 +114,6 @@ class InvoiceDetailView(LoginRequiredMixin, DetailView):
         context['total_paid'] = total_paid
         context['remaining_balance'] = remaining_balance
         context['can_add_payment'] = self.object.status != 'paid' and remaining_balance > Decimal('0.01')
-
-        # Debug output
-        print(f"Invoice {self.object.invoice_number}: Total=${self.object.total_amount}, Paid=${total_paid}, Remaining=${remaining_balance}")
 
         return context
 
@@ -229,6 +249,31 @@ class PaymentListView(LoginRequiredMixin, ListView):
         context['recent_payments'] = Payment.objects.filter(
             payment_date__gte=thirty_days_ago
         ).count()
+
+        # Line chart: paid revenue trend, last 7 days
+        today = timezone.now().date()
+        line_chart_labels = []
+        line_chart_data = []
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            daily_total = Payment.objects.filter(
+                status='paid', payment_date=date
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            line_chart_labels.append(date.strftime('%m/%d'))
+            line_chart_data.append(float(daily_total))
+
+        # Bar chart: payments by method
+        method_display = {
+            'cash': 'Cash', 'bank_transfer': 'Bank Transfer', 'credit_card': 'Credit Card',
+            'debit_card': 'Debit Card', 'check': 'Check', 'online': 'Online', 'mpesa': 'M-Pesa',
+        }
+        bar_chart_labels = [method_display.get(m['payment_method'], (m['payment_method'] or 'Other').title()) for m in context['payment_methods']]
+        bar_chart_data = [m['count'] for m in context['payment_methods']]
+
+        context['line_chart_labels'] = line_chart_labels
+        context['line_chart_data'] = line_chart_data
+        context['bar_chart_labels'] = bar_chart_labels
+        context['bar_chart_data'] = bar_chart_data
 
         return context
 

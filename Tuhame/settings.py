@@ -21,12 +21,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$sh_r03e35qx-nl9u!k0(!gfa!3=7ynmuxg0hbh@ga&^w8xqak'
+# Falls back to the old insecure key only in local dev so the project still
+# boots without a .env file. ALWAYS set SECRET_KEY in your environment/.env
+# before deploying anywhere real.
+SECRET_KEY = config(
+    'SECRET_KEY',
+    default='django-insecure-$sh_r03e35qx-nl9u!k0(!gfa!3=7ynmuxg0hbh@ga&^w8xqak'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ["*"]
+# Comma separated list in .env, e.g. ALLOWED_HOSTS=tuhame.co.ke,www.tuhame.co.ke
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='*' if DEBUG else '',
+    cast=lambda v: [h.strip() for h in v.split(',') if h.strip()]
+)
 
 
 # Application definition
@@ -116,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = config('TIME_ZONE', default='Africa/Nairobi')
 
 USE_I18N = True
 
@@ -149,6 +160,40 @@ LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ["https://6b4d-217-199-148-239.ngrok-free.app"]
+# Comma separated list in .env, e.g.
+# CSRF_TRUSTED_ORIGINS=https://tuhame.co.ke,https://www.tuhame.co.ke
+# Add your ngrok/dev tunnel URL here locally instead of hardcoding it.
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=lambda v: [h.strip() for h in v.split(',') if h.strip()]
+)
 
-SITE_URL = config("SITE_URL")
+# Used to build absolute URLs (QR codes, emails, share links). Falls back to
+# localhost in dev so the app doesn't crash if .env is missing SITE_URL.
+SITE_URL = config("SITE_URL", default="http://127.0.0.1:8000")
+
+# ============ EMAIL (used for notifications e.g. move requests, viewings) ============
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='TuHame <no-reply@tuhame.co.ke>')
+
+# ============ PRODUCTION SECURITY HARDENING ============
+# These only kick in when DEBUG=False (i.e. on your live server), so local
+# development over plain http:// keeps working exactly as before.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7  # 1 week, raise once confirmed working
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'

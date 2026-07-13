@@ -152,15 +152,15 @@ class Profile(models.Model):
         """Generate QR code for the user's profile"""
         try:
             import qrcode
+            import logging
             from io import BytesIO
             from django.core.files.base import ContentFile
             from django.conf import settings
 
-            # Build the URL
-            if hasattr(settings, 'SITE_URL') and settings.SITE_URL:
-                base_url = settings.SITE_URL
-            else:
-                base_url = "https://6b4d-217-199-148-239.ngrok-free.app"
+            logger = logging.getLogger(__name__)
+
+            # Build the URL from SITE_URL (always set - see settings.py)
+            base_url = settings.SITE_URL.rstrip('/')
 
             # Use the shorter QR URL pattern
             qr_url = f"{base_url}/users/qr/{self.qr_code_token}/"
@@ -190,7 +190,7 @@ class Profile(models.Model):
 
             return True
         except Exception as e:
-            print(f"Error generating QR code: {e}")
+            logging.getLogger(__name__).warning("Error generating QR code for profile %s: %s", self.pk, e)
             return False
 
     def regenerate_qr_code(self):

@@ -13,7 +13,7 @@ urlpatterns = [
     path('report/', include('Report.urls')),
     path('users/', include('users.urls')),
     path('payments/', include('payments.urls')),
-    # path('contracts/', include('contracts.urls', namespace='contracts')),
+    path('contracts/', include('contracts.urls')),
 ]
 
 

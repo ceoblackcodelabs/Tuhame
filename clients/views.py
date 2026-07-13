@@ -4,12 +4,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count
 from .models import Client, ClientDocument, Watchlist, ClientType, Bill, BillCategory
 from .forms import ClientForm, ClientDocumentForm, WatchlistForm, BillForm
 from properties.models import Property
 from django.db import models
 from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
 
 
 class ClientListView(LoginRequiredMixin, ListView):
@@ -47,9 +49,46 @@ class ClientListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['client_types'] = ClientType.choices
-        context['total_clients'] = Client.objects.count()
-        context['active_clients'] = Client.objects.filter(is_active=True).count()
+        today = timezone.now().date()
+        first_day_of_month = today.replace(day=1)
+
+        total_clients = Client.objects.count()
+        active_clients = Client.objects.filter(is_active=True).count()
+        inactive_clients = total_clients - active_clients
+        new_clients_month = Client.objects.filter(created_at__date__gte=first_day_of_month).count()
+
+        last_month_clients = Client.objects.filter(
+            created_at__date__gte=today - timedelta(days=30)
+        ).count()
+        client_growth = (last_month_clients / total_clients * 100) if total_clients > 0 else 0
+
+        # Line chart: new clients per day, last 7 days
+        line_chart_labels = []
+        line_chart_data = []
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            count = Client.objects.filter(created_at__date=date).count()
+            line_chart_labels.append(date.strftime('%m/%d'))
+            line_chart_data.append(count)
+
+        # Bar chart: clients by type
+        type_display = dict(ClientType.choices)
+        type_counts = Client.objects.values('client_type').annotate(count=Count('id')).order_by('-count')
+        bar_chart_labels = [type_display.get(t['client_type'], t['client_type']) for t in type_counts]
+        bar_chart_data = [t['count'] for t in type_counts]
+
+        context.update({
+            'client_types': ClientType.choices,
+            'total_clients': total_clients,
+            'active_clients': active_clients,
+            'inactive_clients': inactive_clients,
+            'new_clients_month': new_clients_month,
+            'client_growth': round(client_growth, 1),
+            'line_chart_labels': line_chart_labels,
+            'line_chart_data': line_chart_data,
+            'bar_chart_labels': bar_chart_labels,
+            'bar_chart_data': bar_chart_data,
+        })
         return context
 
 
@@ -141,27 +180,13 @@ class ClientDocumentCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('detail', kwargs={'pk': self.client.pk})
+        return reverse_lazy('client_detail', kwargs={'pk': self.client.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['client'] = self.client
         context['title'] = f'Add Document for {self.client.name}'
         return context
-
-
-class ClientDocumentDeleteView(LoginRequiredMixin, DeleteView):
-    model = ClientDocument
-    template_name = 'clients/document_confirm_delete.html'
-
-    def get_success_url(self):
-        return reverse_lazy('client_detail', kwargs={'pk': self.object.client.pk})
-
-    def delete(self, request, *args, **kwargs):
-        document = self.get_object()
-        client_name = document.client.name
-        messages.success(request, f'Document "{document.title}" has been deleted successfully!')
-        return super().delete(request, *args, **kwargs)
 
 
 class WatchlistCreateView(LoginRequiredMixin, CreateView):
@@ -350,16 +375,28 @@ class BillListView(LoginRequiredMixin, ListView):
         # Filter by amount range
         min_amount = self.request.GET.get('min_amount', '')
         if min_amount:
-            queryset = queryset.filter(amount__gte=min_amount)
+            try:
+                queryset = queryset.filter(amount__gte=float(min_amount))
+            except (ValueError, TypeError):
+                pass
 
         max_amount = self.request.GET.get('max_amount', '')
         if max_amount:
-            queryset = queryset.filter(amount__lte=max_amount)
+            try:
+                queryset = queryset.filter(amount__lte=float(max_amount))
+            except (ValueError, TypeError):
+                pass
 
-        # Sort
+        # Sort - whitelist fields so an arbitrary ?sort= value can't raise
+        # a FieldError (500 error) or be used to probe the schema
+        allowed_sort_fields = {
+            'due_date', '-due_date', 'amount', '-amount',
+            'created_at', '-created_at', 'status', '-status',
+        }
         sort_by = self.request.GET.get('sort', '-due_date')
-        if sort_by:
-            queryset = queryset.order_by(sort_by)
+        if sort_by not in allowed_sort_fields:
+            sort_by = '-due_date'
+        queryset = queryset.order_by(sort_by)
 
         return queryset
 

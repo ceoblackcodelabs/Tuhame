@@ -160,7 +160,10 @@ class Booking(models.Model):
 
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='bookings')
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='bookings', null=True, blank=True)
-    # client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='bookings')
+    client = models.ForeignKey(
+        'clients.Client', on_delete=models.CASCADE, related_name='bookings',
+        null=True, blank=True
+    )
     check_in_date = models.DateField()
     check_out_date = models.DateField()
     guests_count = models.IntegerField(default=1)
@@ -173,6 +176,7 @@ class Booking(models.Model):
         ordering = ['check_in_date']
 
     def __str__(self):
-        return f"Booking for {self.client.name} - {self.property.title}"
+        client_name = self.client.name if self.client else 'Unknown client'
+        return f"Booking for {client_name} - {self.property.title}"
 
 

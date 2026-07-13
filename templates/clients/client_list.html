@@ -32,13 +32,13 @@
                 <div class="row">
                     <div class="col-9">
                     <div class="d-flex align-items-center align-self-start">
-                        <h3 class="mb-0">${{ active_clients }}</h3>
-                        <p class="text-success ms-2 mb-0 font-weight-medium">+{{ client_growth|default:1 }}</p>
+                        <h3 class="mb-0">{{ active_clients }}</h3>
+                        <p class="text-success ms-2 mb-0 font-weight-medium">+{{ client_growth|default:1 }}%</p>
                     </div>
                     </div>
                     <div class="col-3">
                     <div class="icon icon-box-success">
-                        <span class="mdi mdi-arrow-top-right icon-item"></span>
+                        <span class="mdi mdi-account-check icon-item"></span>
                     </div>
                     </div>
                 </div>
@@ -52,17 +52,16 @@
                 <div class="row">
                     <div class="col-9">
                     <div class="d-flex align-items-center align-self-start">
-                        <h3 class="mb-0">{{ total_properties }}</h3>
-                        <p class="text-success ms-2 mb-0 font-weight-medium">+{{ property_growth }}%</p>
+                        <h3 class="mb-0">{{ inactive_clients }}</h3>
                     </div>
                     </div>
                     <div class="col-3">
                     <div class="icon icon-box-success">
-                        <span class="mdi mdi-domain icon-item"></span>
+                        <span class="mdi mdi-account-off icon-item"></span>
                     </div>
                     </div>
                 </div>
-                <h6 class="text-muted font-weight-normal">Total Properties</h6>
+                <h6 class="text-muted font-weight-normal">Inactive Clients</h6>
                 </div>
             </div>
             </div>
@@ -72,17 +71,16 @@
                 <div class="row">
                     <div class="col-9">
                     <div class="d-flex align-items-center align-self-start">
-                        <h3 class="mb-0">{{ active_clients }}</h3>
-                        <p class="text-success ms-2 mb-0 font-weight-medium">+{{ client_growth }}%</p>
+                        <h3 class="mb-0">{{ new_clients_month }}</h3>
                     </div>
                     </div>
                     <div class="col-3">
                     <div class="icon icon-box-success ">
-                        <span class="mdi mdi-account-group icon-item"></span>
+                        <span class="mdi mdi-account-plus icon-item"></span>
                     </div>
                     </div>
                 </div>
-                <h6 class="text-muted font-weight-normal">Active Clients</h6>
+                <h6 class="text-muted font-weight-normal">New This Month</h6>
                 </div>
             </div>
             </div>
@@ -93,7 +91,7 @@
             <div class="col-lg-6 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                <h4 class="card-title">Revenue Trend</h4>
+                <h4 class="card-title">New Clients Trend (Last 7 Days)</h4>
                 <canvas id="lineChart" style="height:250px"></canvas>
                 </div>
             </div>
@@ -101,7 +99,7 @@
             <div class="col-lg-6 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                <h4 class="card-title">Properties by Type</h4>
+                <h4 class="card-title">Clients by Type</h4>
                 <canvas id="barChart" style="height:230px"></canvas>
                 </div>
             </div>
@@ -240,4 +238,67 @@
         </div>
     </div>
 </div>
+
+<script>
+window.addEventListener('load', function () {
+    function freshChart(canvasId, config) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || typeof Chart === 'undefined') return null;
+        var existing = Chart.getChart(canvas);
+        if (existing) existing.destroy();
+        return new Chart(canvas.getContext('2d'), config);
+    }
+
+    freshChart('lineChart', {
+        type: 'line',
+        data: {
+            labels: {{ line_chart_labels|safe }},
+            datasets: [{
+                label: 'New Clients',
+                data: {{ line_chart_data|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    freshChart('barChart', {
+        type: 'bar',
+        data: {
+            labels: {{ bar_chart_labels|safe }},
+            datasets: [{
+                label: 'Number of Clients',
+                data: {{ bar_chart_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -264,9 +264,21 @@
 </div>
 
 <script>
+window.addEventListener('load', function () {
+    // The theme's own demo script (chart.js) also targets #barChart/#lineChart
+    // with placeholder data, and this script previously ran before Chart.js
+    // itself had loaded (block content renders above the vendor <script> tags),
+    // which silently threw "Chart is not defined" and left these canvases blank.
+    function freshChart(canvasId, config) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || typeof Chart === 'undefined') return null;
+        var existing = Chart.getChart(canvas);
+        if (existing) existing.destroy();
+        return new Chart(canvas.getContext('2d'), config);
+    }
+
     // Line Chart
-    var ctxL = document.getElementById("lineChart").getContext('2d');
-    var lineChart = new Chart(ctxL, {
+    freshChart('lineChart', {
         type: 'line',
         data: {
             labels: {{ line_chart_labels|safe }},
@@ -305,8 +317,7 @@
     });
 
     // Bar Chart
-    var ctxB = document.getElementById("barChart").getContext('2d');
-    var barChart = new Chart(ctxB, {
+    freshChart('barChart', {
         type: 'bar',
         data: {
             labels: {{ bar_chart_labels|safe }},
@@ -349,8 +360,7 @@
     });
 
     // Doughnut Chart for Transaction History
-    var ctxD = document.getElementById("transaction-history").getContext('2d');
-    var doughnutChart = new Chart(ctxD, {
+    freshChart('transaction-history', {
         type: 'doughnut',
         data: {
             labels: {{ doughnut_labels|safe }},
@@ -384,6 +394,7 @@
             }
         }
     });
+});
 </script>
 
 {% endblock content %}

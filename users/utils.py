@@ -2,7 +2,10 @@
 import qrcode
 from io import BytesIO
 import base64
+import logging
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def generate_qr_code_for_user(user_profile):
@@ -12,16 +15,11 @@ def generate_qr_code_for_user(user_profile):
     try:
         token = user_profile.qr_code_token
 
-        # Build the full URL
-        if hasattr(settings, 'SITE_URL') and settings.SITE_URL:
-            base_url = settings.SITE_URL
-        else:
-            base_url = "https://6b4d-217-199-148-239.ngrok-free.app"
+        # Build the full URL from SITE_URL (always set - see settings.py)
+        base_url = settings.SITE_URL.rstrip('/')
 
         # Use the shorter QR URL pattern
         qr_url = f"{base_url}/users/qr/{token}/"
-
-        print(f"QR URL: {qr_url}")  # Debug print
 
         qr = qrcode.QRCode(
             version=2,
@@ -40,5 +38,5 @@ def generate_qr_code_for_user(user_profile):
 
         return f"data:image/png;base64,{img_base64}"
     except Exception as e:
-        print(f"QR generation error: {e}")
+        logger.warning("QR generation error for profile %s: %s", getattr(user_profile, 'pk', '?'), e)
         return None

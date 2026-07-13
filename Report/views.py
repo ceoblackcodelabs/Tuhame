@@ -58,6 +58,37 @@ class ReportListView(LoginRequiredMixin, ListView):
         context['recent_reports'] = Report.objects.filter(
             generated_at__date__gte=timezone.now().date() - timezone.timedelta(days=7)
         ).count()
+
+        # These were referenced in the template but never set - always rendered blank
+        context['pending_invoices'] = Invoice.objects.filter(status='pending').count()
+        context['overdue_invoices'] = Invoice.objects.filter(status='overdue').count()
+
+        # Line chart: revenue trend, last 7 days
+        today = timezone.now().date()
+        line_chart_labels = []
+        line_chart_data = []
+        for i in range(6, -1, -1):
+            date = today - timezone.timedelta(days=i)
+            daily_total = Payment.objects.filter(
+                status='paid', payment_date=date
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            line_chart_labels.append(date.strftime('%m/%d'))
+            line_chart_data.append(float(daily_total))
+
+        # Bar chart: properties by type
+        from properties.models import PropertyType
+        type_display = dict(PropertyType.choices)
+        property_type_counts = Property.objects.filter(is_active=True).values('property_type').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        bar_chart_labels = [type_display.get(p['property_type'], p['property_type']) for p in property_type_counts]
+        bar_chart_data = [p['count'] for p in property_type_counts]
+
+        context['line_chart_labels'] = line_chart_labels
+        context['line_chart_data'] = line_chart_data
+        context['bar_chart_labels'] = bar_chart_labels
+        context['bar_chart_data'] = bar_chart_data
+
         return context
 
 

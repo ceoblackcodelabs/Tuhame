@@ -110,7 +110,7 @@
             <div class="col-lg-6 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                <h4 class="card-title">Properties by Type</h4>
+                <h4 class="card-title">Payments by Method</h4>
                 <canvas id="barChart" style="height:230px"></canvas>
                 </div>
             </div>
@@ -516,5 +516,73 @@ function exportTableToCSV() {
         }
     }
 </style>
+
+<script>
+window.addEventListener('load', function () {
+    function freshChart(canvasId, config) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || typeof Chart === 'undefined') return null;
+        var existing = Chart.getChart(canvas);
+        if (existing) existing.destroy();
+        return new Chart(canvas.getContext('2d'), config);
+    }
+
+    freshChart('lineChart', {
+        type: 'line',
+        data: {
+            labels: {{ line_chart_labels|safe }},
+            datasets: [{
+                label: 'Paid Revenue (KES)',
+                data: {{ line_chart_data|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: function(value) { return 'KES ' + value.toLocaleString(); } }
+                }
+            }
+        }
+    });
+
+    freshChart('barChart', {
+        type: 'bar',
+        data: {
+            labels: {{ bar_chart_labels|safe }},
+            datasets: [{
+                label: 'Payments',
+                data: {{ bar_chart_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+});
+</script>
 
 {% endblock content %}
