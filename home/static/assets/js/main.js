@@ -67,6 +67,8 @@ if (hamburger && mobileMenu) {
 // ─── Hero Carousel ───
 const heroSlides = document.querySelectorAll('.hero-slide');
 const heroDots = document.querySelectorAll('.hero-dot');
+const heroTitleEl = document.querySelector('.hero-title');
+const heroSubtitleEl = document.querySelector('.hero-subtitle');
 let currentSlide = 0;
 let heroTimer;
 
@@ -74,8 +76,25 @@ function goToSlide(n) {
   heroSlides[currentSlide]?.classList.remove('active');
   heroDots[currentSlide]?.classList.remove('active');
   currentSlide = (n + heroSlides.length) % heroSlides.length;
-  heroSlides[currentSlide]?.classList.add('active');
+  const slide = heroSlides[currentSlide];
+  slide?.classList.add('active');
   heroDots[currentSlide]?.classList.add('active');
+
+  // Swap the headline/subtitle to match the active slide, with a quick fade
+  if (slide && heroTitleEl && heroSubtitleEl) {
+    const newTitle = slide.dataset.title;
+    const newSubtitle = slide.dataset.subtitle;
+    if (newTitle && newSubtitle) {
+      heroTitleEl.style.opacity = 0;
+      heroSubtitleEl.style.opacity = 0;
+      setTimeout(() => {
+        heroTitleEl.innerHTML = newTitle;
+        heroSubtitleEl.textContent = newSubtitle;
+        heroTitleEl.style.opacity = 1;
+        heroSubtitleEl.style.opacity = 1;
+      }, 250);
+    }
+  }
 }
 
 function startCarousel() {

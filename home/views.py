@@ -81,6 +81,12 @@ class HomeView(ListView):
                 'icon': self.get_category_icon(property_type[0])
             })
         context['categories'] = categories
+        context['total_active_properties'] = Property.objects.filter(is_active=True).count()
+
+        # Testimonials - pulled from real, positive property reviews
+        context['testimonials'] = PropertyReview.objects.filter(
+            rating__gte=4
+        ).exclude(comment='').select_related('user', 'property').order_by('-rating', '-created_at')[:6]
 
         return context
 
