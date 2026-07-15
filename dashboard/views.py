@@ -23,25 +23,34 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         last_month = today - timedelta(days=30)
         last_week = today - timedelta(days=7)
 
+        # Scope everything to properties owned by this landlord, unless superuser
+        user = self.request.user
+        if user.is_superuser:
+            own_properties = Property.objects.all()
+            own_payments = Payment.objects.all()
+        else:
+            own_properties = Property.objects.filter(owner=user)
+            own_payments = Payment.objects.filter(invoice__property__owner=user)
+
         # ============ STATS CARDS DATA ============
 
         # Potential growth (Total Properties Growth)
-        last_month_properties = Property.objects.filter(
+        last_month_properties = own_properties.filter(
             created_at__date__gte=last_month,
             created_at__date__lte=today
         ).count()
-        total_properties = Property.objects.count()
+        total_properties = own_properties.count()
         potential_growth = (last_month_properties / total_properties * 100) if total_properties > 0 else 0
 
         # Revenue current (Monthly Revenue)
-        monthly_revenue = Payment.objects.filter(
+        monthly_revenue = own_payments.filter(
             status='paid',
             payment_date__year=today.year,
             payment_date__month=today.month
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
         # Previous month revenue for growth calculation
-        prev_month_revenue = Payment.objects.filter(
+        prev_month_revenue = own_payments.filter(
             status='paid',
             payment_date__year=last_month.year,
             payment_date__month=last_month.month
@@ -50,14 +59,14 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         revenue_growth = ((monthly_revenue - prev_month_revenue) / prev_month_revenue * 100) if prev_month_revenue > 0 else 0
 
         # Daily Income (Today's Revenue)
-        daily_income = Payment.objects.filter(
+        daily_income = own_payments.filter(
             status='paid',
             payment_date=today
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
         # Yesterday's income for comparison
         yesterday = today - timedelta(days=1)
-        yesterday_income = Payment.objects.filter(
+        yesterday_income = own_payments.filter(
             status='paid',
             payment_date=yesterday
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
@@ -65,12 +74,12 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         daily_income_growth = ((daily_income - yesterday_income) / yesterday_income * 100) if yesterday_income > 0 else 0
 
         # Expense current (Monthly Expenses - Maintenance fees)
-        monthly_expenses = Property.objects.filter(
+        monthly_expenses = own_properties.filter(
             is_active=True
         ).aggregate(total=Sum('maintenance_fee'))['total'] or Decimal('0')
 
         # Previous month expenses
-        prev_month_expenses = Property.objects.filter(
+        prev_month_expenses = own_properties.filter(
             created_at__date__lte=last_month
         ).aggregate(total=Sum('maintenance_fee'))['total'] or Decimal('0')
 
@@ -99,7 +108,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            daily_total = Payment.objects.filter(
+            daily_total = own_payments.filter(
                 status='paid',
                 payment_date=date
             ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
@@ -110,7 +119,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         context['line_chart_data'] = line_chart_values
 
         # Bar Chart Data (Properties by Type)
-        property_types = Property.objects.values('property_type').annotate(
+        property_types = own_properties.values('property_type').annotate(
             count=Count('id')
         ).order_by('-count')
 
@@ -137,10 +146,10 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         # ============ TRANSACTION HISTORY ============
 
         # Total for doughnut chart
-        total_payments = Payment.objects.filter(status='paid').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        total_payments = own_payments.filter(status='paid').aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
         # Payment methods breakdown for doughnut chart
-        payment_methods = Payment.objects.filter(status='paid').values('payment_method').annotate(
+        payment_methods = own_payments.filter(status='paid').values('payment_method').annotate(
             total=Sum('amount')
         )
 
@@ -165,7 +174,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         context['total_transactions_value'] = f"${float(total_payments):.0f}"
 
         # Recent transactions list
-        recent_transactions = Payment.objects.filter(status='paid').select_related('client').order_by('-payment_date')[:2]
+        recent_transactions = own_payments.filter(status='paid').select_related('client').order_by('-payment_date')[:2]
 
         transaction_list = []
         for transaction in recent_transactions:
@@ -179,7 +188,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
         # ============ OPEN PROJECTS (Recent Properties) ============
 
-        recent_properties = Property.objects.filter(is_active=True).select_related('owner').order_by('-created_at')[:5]
+        recent_properties = own_properties.filter(is_active=True).select_related('owner').order_by('-created_at')[:5]
 
         open_projects = []
         for property in recent_properties:
@@ -197,15 +206,15 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         # ============ BOTTOM STATS CARDS ============
 
         # Revenue (Total Revenue All Time)
-        total_revenue_all = Payment.objects.filter(status='paid').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        total_revenue_all = own_payments.filter(status='paid').aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
         # Sales (Active Properties Value)
-        active_properties_value = Property.objects.filter(is_active=True, status='available').aggregate(
+        active_properties_value = own_properties.filter(is_active=True, status='available').aggregate(
             total=Sum('price')
         )['total'] or Decimal('0')
 
         # Purchase (Total Maintenance Fees)
-        total_maintenance = Property.objects.filter(is_active=True).aggregate(
+        total_maintenance = own_properties.filter(is_active=True).aggregate(
             total=Sum('maintenance_fee')
         )['total'] or Decimal('0')
 
@@ -214,7 +223,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         context['purchase_value'] = f"${float(total_maintenance):.0f}"
 
         # Calculate percentages for bottom stats
-        last_month_revenue = Payment.objects.filter(
+        last_month_revenue = own_payments.filter(
             status='paid',
             payment_date__gte=last_month,
             payment_date__lte=today
@@ -222,14 +231,14 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
         revenue_bottom_growth = ((total_revenue_all - last_month_revenue) / last_month_revenue * 100) if last_month_revenue > 0 else 0
 
-        last_month_sales = Property.objects.filter(
+        last_month_sales = own_properties.filter(
             created_at__date__gte=last_month,
             created_at__date__lte=today
         ).aggregate(total=Sum('price'))['total'] or Decimal('0')
 
         sales_growth = ((active_properties_value - last_month_sales) / last_month_sales * 100) if last_month_sales > 0 else 0
 
-        last_month_maintenance = Property.objects.filter(
+        last_month_maintenance = own_properties.filter(
             created_at__date__gte=last_month,
             created_at__date__lte=today
         ).aggregate(total=Sum('maintenance_fee'))['total'] or Decimal('0')

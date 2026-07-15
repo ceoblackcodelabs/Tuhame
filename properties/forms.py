@@ -309,8 +309,8 @@ class ViewingScheduleForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # Filter properties for non-staff users
-        if self.user and not self.user.is_staff:
+        # Filter properties for non-superusers to just their own
+        if self.user and not self.user.is_superuser:
             self.fields['property'].queryset = Property.objects.filter(
                 owner=self.user,
                 is_active=True

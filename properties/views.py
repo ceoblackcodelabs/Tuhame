@@ -23,6 +23,10 @@ class PropertyListView(ListView):
     def get_queryset(self):
         queryset = Property.objects.filter(is_active=True)
 
+        # Landlords/owners only ever see their own properties; superusers see everything
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(owner=self.request.user)
+
         # Filters
         property_type = self.request.GET.get('type')
         if property_type:
@@ -70,25 +74,34 @@ class PropertyListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        user = self.request.user
+        is_super = user.is_superuser
+
         # Financial Statistics
         today = timezone.now().date()
         first_day_of_month = today.replace(day=1)
         last_month = today - timedelta(days=30)
 
+        own_properties = Property.objects.all() if is_super else Property.objects.filter(owner=user)
+        own_payments = Payment.objects.all() if is_super else Payment.objects.filter(invoice__property__owner=user)
+        own_clients = Client.objects.all() if is_super else Client.objects.filter(
+            Q(invoices__property__owner=user) | Q(contracts__property__owner=user) | Q(bookings__property__owner=user)
+        ).distinct()
+
         # Total revenue (from paid payments)
-        total_revenue = Payment.objects.filter(
+        total_revenue = own_payments.filter(
             status='paid'
         ).aggregate(total=Sum('amount'))['total'] or 0
 
         # Monthly revenue
-        monthly_revenue = Payment.objects.filter(
+        monthly_revenue = own_payments.filter(
             status='paid',
             payment_date__year=today.year,
             payment_date__month=today.month
         ).aggregate(total=Sum('amount'))['total'] or 0
 
         # Previous month revenue for growth calculation
-        prev_month_revenue = Payment.objects.filter(
+        prev_month_revenue = own_payments.filter(
             status='paid',
             payment_date__year=last_month.year,
             payment_date__month=last_month.month
@@ -103,8 +116,8 @@ class PropertyListView(ListView):
             monthly_growth = 0
 
         # Property statistics
-        total_properties = Property.objects.filter(is_active=True).count()
-        active_properties_count = Property.objects.filter(is_active=True, status='available').count()
+        total_properties = own_properties.filter(is_active=True).count()
+        active_properties_count = own_properties.filter(is_active=True, status='available').count()
 
         if total_properties > 0:
             active_percentage = (active_properties_count / total_properties) * 100
@@ -112,31 +125,31 @@ class PropertyListView(ListView):
             active_percentage = 0
 
         # Property growth (comparing to last month)
-        last_month_properties = Property.objects.filter(
+        last_month_properties = own_properties.filter(
             created_at__date__gte=last_month,
             created_at__date__lte=today
         ).count()
         property_growth = (last_month_properties / total_properties * 100) if total_properties > 0 else 0
 
         # Client statistics
-        total_clients = Client.objects.filter(is_active=True).count()
-        new_clients_month = Client.objects.filter(
+        total_clients = own_clients.filter(is_active=True).count()
+        new_clients_month = own_clients.filter(
             created_at__date__gte=first_day_of_month
         ).count()
 
         client_growth = (new_clients_month / total_clients * 100) if total_clients > 0 else 0
 
         # Recent transactions
-        recent_transactions = Payment.objects.filter(
+        recent_transactions = own_payments.filter(
             status='paid'
         ).order_by('-payment_date')[:5]
 
-        total_transactions = Payment.objects.filter(
+        total_transactions = own_payments.filter(
             status='paid'
         ).aggregate(total=Sum('amount'))['total'] or 0
 
         # Recent properties
-        recent_properties = Property.objects.filter(is_active=True).order_by('-created_at')[:5]
+        recent_properties = own_properties.filter(is_active=True).order_by('-created_at')[:5]
 
         # Revenue percentage change
         if prev_month_revenue > 0:
@@ -151,7 +164,7 @@ class PropertyListView(ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            daily_total = Payment.objects.filter(
+            daily_total = own_payments.filter(
                 status='paid',
                 payment_date=date
             ).aggregate(total=Sum('amount'))['total'] or 0
@@ -160,7 +173,7 @@ class PropertyListView(ListView):
 
         # Bar chart: properties by type
         type_display = dict(PropertyType.choices)
-        property_type_counts = Property.objects.filter(is_active=True).values('property_type').annotate(
+        property_type_counts = own_properties.filter(is_active=True).values('property_type').annotate(
             count=Count('id')
         ).order_by('-count')
         bar_chart_labels = [type_display.get(p['property_type'], p['property_type']) for p in property_type_counts]
@@ -171,7 +184,7 @@ class PropertyListView(ListView):
             'cash': 'Cash', 'bank_transfer': 'Bank Transfer', 'credit_card': 'Credit Card',
             'debit_card': 'Debit Card', 'check': 'Check', 'online': 'Online', 'mpesa': 'M-Pesa',
         }
-        payment_methods = Payment.objects.filter(status='paid').values('payment_method').annotate(
+        payment_methods = own_payments.filter(status='paid').values('payment_method').annotate(
             total=Sum('amount')
         )
         doughnut_labels = [method_display.get(m['payment_method'], (m['payment_method'] or 'Other').title()) for m in payment_methods]
@@ -207,10 +220,16 @@ class PropertyListView(ListView):
         return context
 
 
-class PropertyDetailView(DetailView):
+class PropertyDetailView(LoginRequiredMixin, DetailView):
     model = Property
     template_name = 'properties/property_detail.html'
     context_object_name = 'property'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(owner=self.request.user)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -251,7 +270,7 @@ class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         property = self.get_object()
-        return self.request.user == property.owner or self.request.user.is_staff
+        return self.request.user == property.owner or self.request.user.is_superuser
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -336,13 +355,17 @@ class PropertyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         property = self.get_object()
-        return self.request.user == property.owner or self.request.user.is_staff
+        return self.request.user == property.owner or self.request.user.is_superuser
 
 
-class UnitCreateView(LoginRequiredMixin, CreateView):
+class UnitCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Unit
     form_class = UnitForm
     template_name = 'properties/unit_form.html'
+
+    def test_func(self):
+        property_obj = get_object_or_404(Property, pk=self.kwargs.get('property_pk'))
+        return self.request.user.is_superuser or property_obj.owner == self.request.user
 
     def form_valid(self, form):
         property_pk = self.kwargs.get('property_pk')
@@ -361,9 +384,14 @@ class BookingListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Booking.objects.select_related('property', 'client', 'unit').order_by('-created_at')
-        if self.request.user.is_staff:
+        user = self.request.user
+        if user.is_superuser:
             return queryset
-        return queryset.filter(client__user=self.request.user)
+        if user.is_staff:
+            # Landlord/property manager: only bookings on properties they own
+            return queryset.filter(property__owner=user)
+        # Regular tenant: only their own bookings
+        return queryset.filter(client__user=user)
 
 
 class BookingCreateView(LoginRequiredMixin, CreateView):
@@ -403,6 +431,9 @@ class ReviewListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = ViewingSchedule.objects.all().select_related('property', 'user').order_by('-created_at')
+
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(property__owner=self.request.user)
 
         # Filter by search
         search = self.request.GET.get('search', '')
@@ -462,6 +493,12 @@ class ViewingDetailView(LoginRequiredMixin, DetailView):
     template_name = 'properties/viewing_detail.html'
     context_object_name = 'viewing'
     pk_url_kwarg = 'pk'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(property__owner=self.request.user)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -537,7 +574,7 @@ class ViewingUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         viewing = self.get_object()
-        return self.request.user.is_staff or self.request.user == viewing.user
+        return self.request.user.is_superuser or self.request.user == viewing.property.owner or self.request.user == viewing.user
 
     def form_valid(self, form):
         messages.success(self.request, 'Viewing schedule updated successfully!')
@@ -549,6 +586,9 @@ class ConfirmViewingView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         viewing = get_object_or_404(ViewingSchedule, pk=pk)
+        if not request.user.is_superuser and viewing.property.owner != request.user:
+            messages.error(request, "You don't have permission to manage this viewing.")
+            return redirect('schedule_view')
         if viewing.status == 'pending':
             viewing.confirm_viewing()
             messages.success(request, f'Viewing for {viewing.full_name} has been confirmed!')
@@ -562,6 +602,9 @@ class CancelViewingView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         viewing = get_object_or_404(ViewingSchedule, pk=pk)
+        if not request.user.is_superuser and viewing.property.owner != request.user:
+            messages.error(request, "You don't have permission to manage this viewing.")
+            return redirect('schedule_view')
         if viewing.status in ['pending', 'confirmed']:
             viewing.cancel_viewing()
             messages.success(request, f'Viewing for {viewing.full_name} has been cancelled.')
@@ -575,6 +618,9 @@ class CompleteViewingView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         viewing = get_object_or_404(ViewingSchedule, pk=pk)
+        if not request.user.is_superuser and viewing.property.owner != request.user:
+            messages.error(request, "You don't have permission to manage this viewing.")
+            return redirect('schedule_view')
         if viewing.status == 'confirmed':
             viewing.complete_viewing()
             messages.success(request, f'Viewing for {viewing.full_name} has been marked as completed!')

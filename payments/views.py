@@ -11,6 +11,7 @@ from .models import Invoice, Payment, PaymentStatus, PaymentCategory
 from .forms import InvoiceForm, PaymentForm, InvoiceFilterForm, PaymentFilterForm
 from django.db import models
 from decimal import Decimal
+from django.http import Http404
 
 
 class InvoiceListView(LoginRequiredMixin, ListView):
@@ -21,6 +22,9 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Invoice.objects.all().select_related('client', 'property', 'contract')
+
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(property__owner=self.request.user)
 
         # Filter by status
         status = self.request.GET.get('status')
@@ -56,17 +60,19 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filter_form'] = InvoiceFilterForm(self.request.GET)
 
+        own_invoices = Invoice.objects.all() if self.request.user.is_superuser else Invoice.objects.filter(property__owner=self.request.user)
+
         # Statistics
-        context['total_invoices'] = Invoice.objects.count()
-        context['paid_invoices'] = Invoice.objects.filter(status='paid').count()
-        context['pending_invoices'] = Invoice.objects.filter(status='pending').count()
-        context['overdue_invoices'] = Invoice.objects.filter(status='overdue').count()
+        context['total_invoices'] = own_invoices.count()
+        context['paid_invoices'] = own_invoices.filter(status='paid').count()
+        context['pending_invoices'] = own_invoices.filter(status='pending').count()
+        context['overdue_invoices'] = own_invoices.filter(status='overdue').count()
 
         # Financial totals
-        context['total_amount'] = Invoice.objects.aggregate(total=Sum('total_amount'))['total'] or 0
-        context['paid_amount'] = Invoice.objects.filter(status='paid').aggregate(total=Sum('total_amount'))['total'] or 0
-        context['pending_amount'] = Invoice.objects.filter(status='pending').aggregate(total=Sum('total_amount'))['total'] or 0
-        context['overdue_amount'] = Invoice.objects.filter(status='overdue').aggregate(total=Sum('total_amount'))['total'] or 0
+        context['total_amount'] = own_invoices.aggregate(total=Sum('total_amount'))['total'] or 0
+        context['paid_amount'] = own_invoices.filter(status='paid').aggregate(total=Sum('total_amount'))['total'] or 0
+        context['pending_amount'] = own_invoices.filter(status='pending').aggregate(total=Sum('total_amount'))['total'] or 0
+        context['overdue_amount'] = own_invoices.filter(status='overdue').aggregate(total=Sum('total_amount'))['total'] or 0
 
         # Line chart: revenue (paid invoice totals) by issue date, last 7 days
         today = timezone.now().date()
@@ -74,7 +80,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            daily_total = Invoice.objects.filter(
+            daily_total = own_invoices.filter(
                 status='paid', issue_date=date
             ).aggregate(total=Sum('total_amount'))['total'] or 0
             line_chart_labels.append(date.strftime('%m/%d'))
@@ -82,7 +88,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
         # Bar chart: invoice status breakdown
         status_display = dict(PaymentStatus.choices)
-        status_counts = Invoice.objects.values('status').annotate(count=Count('id')).order_by('-count')
+        status_counts = own_invoices.values('status').annotate(count=Count('id')).order_by('-count')
         bar_chart_labels = [status_display.get(s['status'], s['status']) for s in status_counts]
         bar_chart_data = [s['count'] for s in status_counts]
 
@@ -98,6 +104,12 @@ class InvoiceDetailView(LoginRequiredMixin, DetailView):
     model = Invoice
     template_name = 'payments/invoice_detail.html'
     context_object_name = 'invoice'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(property__owner=self.request.user)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -123,6 +135,11 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
     form_class = InvoiceForm
     template_name = 'payments/invoice_form.html'
     success_url = reverse_lazy('invoice_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -151,8 +168,14 @@ class InvoiceUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         invoice = self.get_object()
-        # Allow staff or if invoice is not paid
-        return self.request.user.is_staff or invoice.status != 'paid'
+        return self.request.user.is_superuser or (
+            invoice.property.owner == self.request.user and invoice.status != 'paid'
+        )
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, f'Invoice {form.instance.invoice_number} has been updated successfully!')
@@ -173,8 +196,9 @@ class InvoiceDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         """Check if user has permission to delete"""
         invoice = self.get_object()
-        # Only staff can delete invoices, and only if not paid
-        return self.request.user.is_staff and invoice.status != 'paid'
+        return self.request.user.is_superuser or (
+            invoice.property.owner == self.request.user and invoice.status != 'paid'
+        )
 
     def delete(self, request, *args, **kwargs):
         """Add success message before deletion"""
@@ -198,6 +222,9 @@ class PaymentListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Payment.objects.all().select_related('invoice', 'client', 'processed_by')
+
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(invoice__property__owner=self.request.user)
 
         # Filter by status
         status = self.request.GET.get('status')
@@ -234,19 +261,21 @@ class PaymentListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filter_form'] = PaymentFilterForm(self.request.GET)
 
+        own_payments = Payment.objects.all() if self.request.user.is_superuser else Payment.objects.filter(invoice__property__owner=self.request.user)
+
         # Statistics
-        context['total_payments'] = Payment.objects.count()
-        context['total_amount'] = Payment.objects.filter(status='paid').aggregate(total=Sum('amount'))['total'] or 0
+        context['total_payments'] = own_payments.count()
+        context['total_amount'] = own_payments.filter(status='paid').aggregate(total=Sum('amount'))['total'] or 0
 
         # Payment method breakdown
-        context['payment_methods'] = Payment.objects.values('payment_method').annotate(
+        context['payment_methods'] = own_payments.values('payment_method').annotate(
             count=Count('id'),
             total=Sum('amount')
         )
 
         # Recent payments (last 30 days)
         thirty_days_ago = timezone.now().date() - timedelta(days=30)
-        context['recent_payments'] = Payment.objects.filter(
+        context['recent_payments'] = own_payments.filter(
             payment_date__gte=thirty_days_ago
         ).count()
 
@@ -256,7 +285,7 @@ class PaymentListView(LoginRequiredMixin, ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            daily_total = Payment.objects.filter(
+            daily_total = own_payments.filter(
                 status='paid', payment_date=date
             ).aggregate(total=Sum('amount'))['total'] or 0
             line_chart_labels.append(date.strftime('%m/%d'))
@@ -283,6 +312,12 @@ class PaymentDetailView(LoginRequiredMixin, DetailView):
     template_name = 'payments/payment_detail.html'
     context_object_name = 'payment'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(invoice__property__owner=self.request.user)
+        return queryset
+
 
 class PaymentCreateView(LoginRequiredMixin, CreateView):
     model = Payment
@@ -295,8 +330,15 @@ class PaymentCreateView(LoginRequiredMixin, CreateView):
         invoice_id = self.kwargs.get('invoice_id')
         if invoice_id:
             invoice = get_object_or_404(Invoice, pk=invoice_id)
+            if not self.request.user.is_superuser and invoice.property.owner != self.request.user:
+                raise Http404("Invoice not found")
             initial['invoice'] = invoice
         return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         # Get the invoice from the form
@@ -360,8 +402,13 @@ class PaymentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'payments/payment_form.html'
 
     def test_func(self):
-        # Only staff can edit payments
-        return self.request.user.is_staff
+        payment = self.get_object()
+        return self.request.user.is_superuser or payment.invoice.property.owner == self.request.user
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, f'Payment {form.instance.payment_id} has been updated successfully!')
@@ -382,8 +429,8 @@ class PaymentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = 'payments/payment_confirm_delete.html'
 
     def test_func(self):
-        # Only staff can delete payments
-        return self.request.user.is_staff
+        payment = self.get_object()
+        return self.request.user.is_superuser or payment.invoice.property.owner == self.request.user
 
     def delete(self, request, *args, **kwargs):
         payment = self.get_object()

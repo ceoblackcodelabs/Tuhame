@@ -89,6 +89,33 @@ class ContractForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        from properties.models import Property, Unit
+        from clients.models import Client
+        from django.db.models import Q as Qf
+
+        is_super = self.user.is_superuser if self.user else True
+
+        properties = Property.objects.filter(is_active=True)
+        units = Unit.objects.all()
+        clients = Client.objects.filter(is_active=True)
+
+        if not is_super:
+            properties = properties.filter(owner=self.user)
+            units = units.filter(property__owner=self.user)
+            clients = clients.filter(
+                Qf(invoices__property__owner=self.user) |
+                Qf(contracts__property__owner=self.user) |
+                Qf(bookings__property__owner=self.user)
+            ).distinct()
+
+        self.fields['property'].queryset = properties
+        self.fields['unit'].queryset = units
+        self.fields['client'].queryset = clients
+
     def clean(self):
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
@@ -96,5 +123,10 @@ class ContractForm(forms.ModelForm):
 
         if start_date and end_date and start_date >= end_date:
             raise forms.ValidationError("End date must be after start date")
+
+        # A non-superuser can't create/assign a contract to a property they don't own
+        property_obj = cleaned_data.get('property')
+        if property_obj and self.user and not self.user.is_superuser and property_obj.owner != self.user:
+            self.add_error('property', "You can only create contracts for properties you own.")
 
         return cleaned_data

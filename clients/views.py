@@ -14,6 +14,23 @@ from django.utils import timezone
 from datetime import timedelta
 
 
+def user_can_access_client(user, client):
+    """
+    True if the user is a superuser, created this client record, or the
+    client is tied (via a bill/contract/booking) to a property this user
+    owns. Used to gate edit/delete access to client records.
+    """
+    if user.is_superuser:
+        return True
+    if client.created_by_id == user.id:
+        return True
+    return Client.objects.filter(pk=client.pk).filter(
+        Q(invoices__property__owner=user) |
+        Q(contracts__property__owner=user) |
+        Q(bookings__property__owner=user)
+    ).exists()
+
+
 class ClientListView(LoginRequiredMixin, ListView):
     model = Client
     template_name = 'clients/client_list.html'
@@ -22,6 +39,14 @@ class ClientListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Client.objects.all()
+
+        if not self.request.user.is_superuser:
+            owner = self.request.user
+            queryset = queryset.filter(
+                Q(invoices__property__owner=owner) |
+                Q(contracts__property__owner=owner) |
+                Q(bookings__property__owner=owner)
+            ).distinct()
 
         # Filter by client type
         client_type = self.request.GET.get('type')
@@ -52,12 +77,22 @@ class ClientListView(LoginRequiredMixin, ListView):
         today = timezone.now().date()
         first_day_of_month = today.replace(day=1)
 
-        total_clients = Client.objects.count()
-        active_clients = Client.objects.filter(is_active=True).count()
-        inactive_clients = total_clients - active_clients
-        new_clients_month = Client.objects.filter(created_at__date__gte=first_day_of_month).count()
+        # Base set of clients this user is allowed to see (unfiltered by search/type)
+        base_clients = Client.objects.all()
+        if not self.request.user.is_superuser:
+            owner = self.request.user
+            base_clients = base_clients.filter(
+                Q(invoices__property__owner=owner) |
+                Q(contracts__property__owner=owner) |
+                Q(bookings__property__owner=owner)
+            ).distinct()
 
-        last_month_clients = Client.objects.filter(
+        total_clients = base_clients.count()
+        active_clients = base_clients.filter(is_active=True).count()
+        inactive_clients = total_clients - active_clients
+        new_clients_month = base_clients.filter(created_at__date__gte=first_day_of_month).count()
+
+        last_month_clients = base_clients.filter(
             created_at__date__gte=today - timedelta(days=30)
         ).count()
         client_growth = (last_month_clients / total_clients * 100) if total_clients > 0 else 0
@@ -67,13 +102,13 @@ class ClientListView(LoginRequiredMixin, ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            count = Client.objects.filter(created_at__date=date).count()
+            count = base_clients.filter(created_at__date=date).count()
             line_chart_labels.append(date.strftime('%m/%d'))
             line_chart_data.append(count)
 
         # Bar chart: clients by type
         type_display = dict(ClientType.choices)
-        type_counts = Client.objects.values('client_type').annotate(count=Count('id')).order_by('-count')
+        type_counts = base_clients.values('client_type').annotate(count=Count('id')).order_by('-count')
         bar_chart_labels = [type_display.get(t['client_type'], t['client_type']) for t in type_counts]
         bar_chart_data = [t['count'] for t in type_counts]
 
@@ -92,10 +127,13 @@ class ClientListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ClientDetailView(LoginRequiredMixin, DetailView):
+class ClientDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Client
     template_name = 'clients/client_detail.html'
     context_object_name = 'client'
+
+    def test_func(self):
+        return user_can_access_client(self.request.user, self.get_object())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -134,9 +172,8 @@ class ClientUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     success_url = reverse_lazy('client_list')
 
     def test_func(self):
-        # Allow staff or the user who created the client to edit
         client = self.get_object()
-        return self.request.user.is_staff or self.request.user == client.created_by
+        return user_can_access_client(self.request.user, client)
 
     def form_valid(self, form):
         messages.success(self.request, f'Client "{form.instance.name}" has been updated successfully!')
@@ -155,9 +192,8 @@ class ClientDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('client_list')
 
     def test_func(self):
-        # Allow staff or the user who created the client to delete
         client = self.get_object()
-        return self.request.user.is_staff or self.request.user == client.created_by
+        return user_can_access_client(self.request.user, client)
 
     def delete(self, request, *args, **kwargs):
         client = self.get_object()
@@ -172,6 +208,9 @@ class ClientDocumentCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         self.client = get_object_or_404(Client, pk=kwargs['client_pk'])
+        if not user_can_access_client(request.user, self.client):
+            messages.error(request, "You don't have permission to access this client.")
+            return redirect('client_list')
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -196,6 +235,9 @@ class WatchlistCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         self.client = get_object_or_404(Client, pk=kwargs['client_pk'])
+        if not user_can_access_client(request.user, self.client):
+            messages.error(request, "You don't have permission to access this client.")
+            return redirect('client_list')
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -213,9 +255,12 @@ class WatchlistCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class WatchlistDeleteView(LoginRequiredMixin, DeleteView):
+class WatchlistDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Watchlist
     template_name = 'clients/watchlist_confirm_delete.html'
+
+    def test_func(self):
+        return user_can_access_client(self.request.user, self.get_object().client)
 
     def get_success_url(self):
         return reverse_lazy('client_detail', kwargs={'pk': self.object.client.pk})
@@ -234,6 +279,9 @@ class ClientDocumentUploadView(LoginRequiredMixin, CreateView):
     def dispatch(self, request, *args, **kwargs):
         """Get the client before processing the request"""
         self.client = get_object_or_404(Client, pk=kwargs['client_pk'])
+        if not user_can_access_client(request.user, self.client):
+            messages.error(request, "You don't have permission to access this client.")
+            return redirect('client_list')
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -262,8 +310,8 @@ class ClientDocumentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVi
     template_name = 'clients/document_form.html'
 
     def test_func(self):
-        """Only staff can edit documents"""
-        return self.request.user.is_staff
+        """Only the client's own landlord (or superuser) can edit documents"""
+        return user_can_access_client(self.request.user, self.get_object().client)
 
     def form_valid(self, form):
         messages.success(self.request, f'Document "{form.instance.title}" has been updated successfully!')
@@ -286,8 +334,8 @@ class ClientDocumentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteVi
     template_name = 'clients/document_confirm_delete.html'
 
     def test_func(self):
-        """Only staff can delete documents"""
-        return self.request.user.is_staff
+        """Only the client's own landlord (or superuser) can delete documents"""
+        return user_can_access_client(self.request.user, self.get_object().client)
 
     def delete(self, request, *args, **kwargs):
         """Delete the document and show success message"""
@@ -308,7 +356,7 @@ class ClientDocumentDownloadView(LoginRequiredMixin, View):
         document = get_object_or_404(ClientDocument, pk=kwargs['pk'])
 
         # Check permissions
-        if not request.user.is_staff and request.user != document.client.user:
+        if not user_can_access_client(request.user, document.client) and request.user != document.client.user:
             messages.error(request, 'You do not have permission to download this document.')
             return redirect('client_detail', pk=document.client.pk)
 
@@ -343,8 +391,8 @@ class BillListView(LoginRequiredMixin, ListView):
                 Q(property__title__icontains=search)
             )
 
-        # For non-staff users, only show bills for their properties
-        if not self.request.user.is_staff:
+        # Non-superusers only see bills for properties they own
+        if not self.request.user.is_superuser:
             user_properties = Property.objects.filter(owner=self.request.user)
             queryset = queryset.filter(property__in=user_properties)
 
@@ -416,7 +464,7 @@ class BillListView(LoginRequiredMixin, ListView):
         context['total_due'] = bills.filter(status__in=['pending', 'overdue']).aggregate(Sum('amount'))['amount__sum'] or 0
 
         # For filters dropdown
-        context['properties'] = Property.objects.filter(is_active=True)
+        context['properties'] = Property.objects.filter(is_active=True) if self.request.user.is_superuser else Property.objects.filter(is_active=True, owner=self.request.user)
         context['bill_types'] = Bill.BILL_TYPES
         context['status_choices'] = Bill.BILL_STATUS
         context['categories'] = BillCategory.objects.filter(is_active=True)
@@ -474,7 +522,7 @@ class BillUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         bill = self.get_object()
-        return self.request.user.is_staff or self.request.user == bill.property.owner
+        return self.request.user.is_superuser or self.request.user == bill.property.owner
 
     def form_valid(self, form):
         messages.success(self.request, f'Bill "{form.instance.description}" has been updated successfully!')
@@ -495,7 +543,7 @@ class BillDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         bill = self.get_object()
-        return self.request.user.is_staff or self.request.user == bill.property.owner
+        return self.request.user.is_superuser or self.request.user == bill.property.owner
 
     def delete(self, request, *args, **kwargs):
         bill = self.get_object()
@@ -516,7 +564,7 @@ class BillMarkPaidView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         bill = self.get_object()
-        return self.request.user.is_staff or self.request.user == bill.property.owner
+        return self.request.user.is_superuser or self.request.user == bill.property.owner
 
     def form_valid(self, form):
         bill = self.get_object()

@@ -21,6 +21,9 @@ class ContractListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = Contract.objects.all().select_related('property', 'client', 'owner')
 
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(property__owner=self.request.user)
+
         status = self.request.GET.get('status')
         if status:
             queryset = queryset.filter(status=status)
@@ -44,10 +47,12 @@ class ContractListView(LoginRequiredMixin, ListView):
         context['status_choices'] = ContractStatus.choices
         context['type_choices'] = ContractType.choices
 
-        context['total_contracts'] = Contract.objects.count()
-        context['active_contracts'] = Contract.objects.filter(status=ContractStatus.ACTIVE).count()
-        context['pending_contracts'] = Contract.objects.filter(status=ContractStatus.PENDING).count()
-        context['expiring_soon'] = Contract.objects.filter(
+        own_contracts = Contract.objects.all() if self.request.user.is_superuser else Contract.objects.filter(property__owner=self.request.user)
+
+        context['total_contracts'] = own_contracts.count()
+        context['active_contracts'] = own_contracts.filter(status=ContractStatus.ACTIVE).count()
+        context['pending_contracts'] = own_contracts.filter(status=ContractStatus.PENDING).count()
+        context['expiring_soon'] = own_contracts.filter(
             status=ContractStatus.ACTIVE,
             end_date__gte=timezone.now().date(),
             end_date__lte=timezone.now().date() + timezone.timedelta(days=30)
@@ -65,6 +70,12 @@ class ContractDetailView(LoginRequiredMixin, DetailView):
     template_name = 'contracts/contract_detail.html'
     context_object_name = 'contract'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(property__owner=self.request.user)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['signatures'] = self.object.signatures.all()
@@ -78,8 +89,17 @@ class ContractCreateView(LoginRequiredMixin, CreateView):
     template_name = 'contracts/contract_form.html'
     success_url = reverse_lazy('contract_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+        # A non-superuser can only create contracts for properties they own
+        if not self.request.user.is_superuser and form.instance.property.owner != self.request.user:
+            messages.error(self.request, "You can only create contracts for properties you own.")
+            return self.form_invalid(form)
         messages.success(self.request, f'Contract for {form.instance.client} has been created successfully!')
         return super().form_valid(form)
 
@@ -98,10 +118,16 @@ class ContractUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         contract = self.get_object()
+        owns_it = self.request.user.is_superuser or contract.property.owner == self.request.user
         # Only staff can edit contracts, and only while they're not yet completed/terminated
-        return self.request.user.is_staff and contract.status not in [
+        return owns_it and contract.status not in [
             ContractStatus.COMPLETED, ContractStatus.TERMINATED
         ]
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, f'Contract {form.instance.contract_number} has been updated successfully!')
@@ -120,7 +146,8 @@ class ContractDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('contract_list')
 
     def test_func(self):
-        return self.request.user.is_staff
+        contract = self.get_object()
+        return self.request.user.is_superuser or contract.property.owner == self.request.user
 
     def delete(self, request, *args, **kwargs):
         contract = self.get_object()
@@ -133,7 +160,8 @@ class ActivateContractView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Move a contract from draft/pending to active"""
 
     def test_func(self):
-        return self.request.user.is_staff
+        contract = get_object_or_404(Contract, pk=self.kwargs['pk'])
+        return self.request.user.is_superuser or contract.property.owner == self.request.user
 
     def post(self, request, pk):
         contract = get_object_or_404(Contract, pk=pk)
@@ -152,7 +180,8 @@ class TerminateContractView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Terminate an active contract"""
 
     def test_func(self):
-        return self.request.user.is_staff
+        contract = get_object_or_404(Contract, pk=self.kwargs['pk'])
+        return self.request.user.is_superuser or contract.property.owner == self.request.user
 
     def post(self, request, pk):
         contract = get_object_or_404(Contract, pk=pk)

@@ -26,6 +26,9 @@ class ReportListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = Report.objects.all()
 
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(generated_by=self.request.user)
+
         # Filter by report type
         report_type = self.request.GET.get('type')
         if report_type:
@@ -54,14 +57,20 @@ class ReportListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['report_types'] = ReportType.choices
-        context['total_reports'] = Report.objects.count()
-        context['recent_reports'] = Report.objects.filter(
+
+        is_super = self.request.user.is_superuser
+        own_reports = Report.objects.all() if is_super else Report.objects.filter(generated_by=self.request.user)
+        own_properties = Property.objects.all() if is_super else Property.objects.filter(owner=self.request.user)
+        own_payments = Payment.objects.all() if is_super else Payment.objects.filter(invoice__property__owner=self.request.user)
+        own_invoices = Invoice.objects.all() if is_super else Invoice.objects.filter(property__owner=self.request.user)
+
+        context['total_reports'] = own_reports.count()
+        context['recent_reports'] = own_reports.filter(
             generated_at__date__gte=timezone.now().date() - timezone.timedelta(days=7)
         ).count()
 
-        # These were referenced in the template but never set - always rendered blank
-        context['pending_invoices'] = Invoice.objects.filter(status='pending').count()
-        context['overdue_invoices'] = Invoice.objects.filter(status='overdue').count()
+        context['pending_invoices'] = own_invoices.filter(status='pending').count()
+        context['overdue_invoices'] = own_invoices.filter(status='overdue').count()
 
         # Line chart: revenue trend, last 7 days
         today = timezone.now().date()
@@ -69,7 +78,7 @@ class ReportListView(LoginRequiredMixin, ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timezone.timedelta(days=i)
-            daily_total = Payment.objects.filter(
+            daily_total = own_payments.filter(
                 status='paid', payment_date=date
             ).aggregate(total=Sum('amount'))['total'] or 0
             line_chart_labels.append(date.strftime('%m/%d'))
@@ -78,7 +87,7 @@ class ReportListView(LoginRequiredMixin, ListView):
         # Bar chart: properties by type
         from properties.models import PropertyType
         type_display = dict(PropertyType.choices)
-        property_type_counts = Property.objects.filter(is_active=True).values('property_type').annotate(
+        property_type_counts = own_properties.filter(is_active=True).values('property_type').annotate(
             count=Count('id')
         ).order_by('-count')
         bar_chart_labels = [type_display.get(p['property_type'], p['property_type']) for p in property_type_counts]
@@ -97,6 +106,12 @@ class ReportDetailView(LoginRequiredMixin, DetailView):
     model = Report
     template_name = 'report/report_detail.html'
     context_object_name = 'report'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(generated_by=self.request.user)
+        return queryset
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
@@ -165,18 +180,29 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
         start_date = report.start_date
         end_date = report.end_date
 
+        is_super = report.generated_by.is_superuser if report.generated_by else False
+        owner_properties = Property.objects.all() if is_super else Property.objects.filter(owner=report.generated_by)
+        owner_clients = Client.objects.all() if is_super else Client.objects.filter(
+            Q(invoices__property__owner=report.generated_by) |
+            Q(contracts__property__owner=report.generated_by) |
+            Q(bookings__property__owner=report.generated_by)
+        ).distinct()
+        owner_contracts = Contract.objects.all() if is_super else Contract.objects.filter(property__owner=report.generated_by)
+        owner_payments = Payment.objects.all() if is_super else Payment.objects.filter(invoice__property__owner=report.generated_by)
+        owner_invoices = Invoice.objects.all() if is_super else Invoice.objects.filter(property__owner=report.generated_by)
+
         # Property statistics
-        total_properties = Property.objects.filter(
+        total_properties = owner_properties.filter(
             is_active=True,
             created_at__date__lte=end_date
         ).count()
 
-        new_properties = Property.objects.filter(
+        new_properties = owner_properties.filter(
             created_at__date__gte=start_date,
             created_at__date__lte=end_date
         ).count()
 
-        property_by_type = Property.objects.filter(
+        property_by_type = owner_properties.filter(
             created_at__date__lte=end_date
         ).values('property_type').annotate(
             count=Count('id')
@@ -191,17 +217,17 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
             })
 
         # Client statistics
-        total_clients = Client.objects.filter(
+        total_clients = owner_clients.filter(
             is_active=True,
             created_at__date__lte=end_date
         ).count()
 
-        new_clients = Client.objects.filter(
+        new_clients = owner_clients.filter(
             created_at__date__gte=start_date,
             created_at__date__lte=end_date
         ).count()
 
-        client_by_type = Client.objects.filter(
+        client_by_type = owner_clients.filter(
             created_at__date__lte=end_date
         ).values('client_type').annotate(
             count=Count('id')
@@ -215,24 +241,24 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
             })
 
         # Contract statistics
-        total_contracts = Contract.objects.filter(
+        total_contracts = owner_contracts.filter(
             start_date__lte=end_date
         ).count()
 
-        active_contracts = Contract.objects.filter(
+        active_contracts = owner_contracts.filter(
             status='active',
             start_date__lte=end_date,
             end_date__gte=start_date
         ).count()
 
-        expiring_contracts = Contract.objects.filter(
+        expiring_contracts = owner_contracts.filter(
             status='active',
             end_date__gte=start_date,
             end_date__lte=end_date + timezone.timedelta(days=30)
         ).count()
 
         # Financial statistics
-        payments = Payment.objects.filter(
+        payments = owner_payments.filter(
             status='paid',
             payment_date__gte=start_date,
             payment_date__lte=end_date
@@ -254,7 +280,7 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
             })
 
         # Invoice statistics
-        invoices = Invoice.objects.filter(
+        invoices = owner_invoices.filter(
             issue_date__gte=start_date,
             issue_date__lte=end_date
         )
@@ -265,7 +291,7 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
             total=Sum('total_amount')
         )['total'] or Decimal('0')
 
-        overdue_invoices = Invoice.objects.filter(
+        overdue_invoices = owner_invoices.filter(
             status='pending',
             due_date__lt=timezone.now().date(),
             due_date__gte=start_date
@@ -276,7 +302,7 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
         if report.report_type == ReportType.DAILY:
             current_date = start_date
             while current_date <= end_date:
-                day_payments = Payment.objects.filter(
+                day_payments = owner_payments.filter(
                     status='paid',
                     payment_date=current_date
                 ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
@@ -284,7 +310,7 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
                 daily_data.append({
                     'date': current_date.strftime('%Y-%m-%d'),
                     'revenue': float(day_payments),
-                    'transactions': Payment.objects.filter(payment_date=current_date).count()
+                    'transactions': owner_payments.filter(payment_date=current_date).count()
                 })
                 current_date += timezone.timedelta(days=1)
 
@@ -373,25 +399,35 @@ class DailyReportView(LoginRequiredMixin, FormView):
     def generate_daily_report_data(self, report, report_date):
         """Generate daily report data for a specific date"""
 
+        is_super = report.generated_by.is_superuser if report.generated_by else False
+        owner_properties = Property.objects.all() if is_super else Property.objects.filter(owner=report.generated_by)
+        owner_clients = Client.objects.all() if is_super else Client.objects.filter(
+            Q(invoices__property__owner=report.generated_by) |
+            Q(contracts__property__owner=report.generated_by) |
+            Q(bookings__property__owner=report.generated_by)
+        ).distinct()
+        owner_payments = Payment.objects.all() if is_super else Payment.objects.filter(invoice__property__owner=report.generated_by)
+        owner_invoices = Invoice.objects.all() if is_super else Invoice.objects.filter(property__owner=report.generated_by)
+
         # Daily property statistics
-        new_properties = Property.objects.filter(
+        new_properties = owner_properties.filter(
             created_at__date=report_date
         ).count()
 
         # Daily client statistics
-        new_clients = Client.objects.filter(
+        new_clients = owner_clients.filter(
             created_at__date=report_date
         ).count()
 
         # Daily financial statistics
-        daily_payments = Payment.objects.filter(
+        daily_payments = owner_payments.filter(
             status='paid',
             payment_date=report_date
         )
         daily_revenue = daily_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
         # Daily transactions
-        daily_invoices = Invoice.objects.filter(
+        daily_invoices = owner_invoices.filter(
             issue_date=report_date
         ).count()
 
@@ -427,8 +463,8 @@ class DailyReportView(LoginRequiredMixin, FormView):
             })
 
         # Update report statistics
-        report.total_properties = Property.objects.filter(is_active=True).count()
-        report.total_clients = Client.objects.filter(is_active=True).count()
+        report.total_properties = owner_properties.filter(is_active=True).count()
+        report.total_clients = owner_clients.filter(is_active=True).count()
         report.total_revenue = daily_revenue
         report.total_payments = daily_revenue
 
@@ -444,16 +480,17 @@ class DailyReportView(LoginRequiredMixin, FormView):
             },
             'payment_breakdown': payment_breakdown_list,
             'top_properties': top_properties_list,
-            'hourly_breakdown': self.get_hourly_breakdown(report_date),
+            'hourly_breakdown': self.get_hourly_breakdown(report_date, report.generated_by, is_super),
         }
 
         report.save()
 
-    def get_hourly_breakdown(self, report_date):
+    def get_hourly_breakdown(self, report_date, generated_by=None, is_super=False):
         """Get hourly payment breakdown for the day"""
+        owner_payments = Payment.objects.all() if is_super else Payment.objects.filter(invoice__property__owner=generated_by)
         hourly_data = []
         for hour in range(24):
-            payments = Payment.objects.filter(
+            payments = owner_payments.filter(
                 status='paid',
                 payment_date=report_date,
                 created_at__hour=hour
@@ -474,7 +511,7 @@ class ReportDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         report = self.get_object()
-        return self.request.user.is_staff or self.request.user == report.generated_by
+        return self.request.user.is_superuser or self.request.user == report.generated_by
 
     def delete(self, request, *args, **kwargs):
         report = self.get_object()

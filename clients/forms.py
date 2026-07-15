@@ -229,8 +229,8 @@ class BillForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # For staff users - show all properties and users
-        if self.user and self.user.is_staff:
+        # Superusers see every property and every user
+        if self.user and self.user.is_superuser:
             self.fields['property'].queryset = Property.objects.filter(is_active=True)
             self.fields['user'].queryset = User.objects.filter(is_active=True)
         else:
@@ -307,7 +307,7 @@ class BillForm(forms.ModelForm):
         property_obj = cleaned_data.get('property')
         user_obj = cleaned_data.get('user')
 
-        if property_obj and user_obj and not self.user.is_staff:
+        if property_obj and user_obj and not self.user.is_superuser:
             # Check if user is the owner
             if property_obj.owner == user_obj:
                 pass  # Owner is valid

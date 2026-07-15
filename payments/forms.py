@@ -61,18 +61,35 @@ class InvoiceForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        is_super = self.user.is_superuser if self.user else True
+
         # Filter contracts to only active ones
         from contracts.models import Contract
-        self.fields['contract'].queryset = Contract.objects.filter(status='active')
+        contracts = Contract.objects.filter(status='active')
+        if not is_super:
+            contracts = contracts.filter(property__owner=self.user)
+        self.fields['contract'].queryset = contracts
 
-        # Filter clients to only active ones
-        from clients.models import Client
-        self.fields['client'].queryset = Client.objects.filter(is_active=True)
-
-        # Filter properties to only active ones
+        # Filter properties to only active ones owned by this landlord
         from properties.models import Property
-        self.fields['property'].queryset = Property.objects.filter(is_active=True)
+        properties = Property.objects.filter(is_active=True)
+        if not is_super:
+            properties = properties.filter(owner=self.user)
+        self.fields['property'].queryset = properties
+
+        # Filter clients to only those tied to this landlord's properties
+        from clients.models import Client
+        from django.db.models import Q as Qf
+        clients = Client.objects.filter(is_active=True)
+        if not is_super:
+            clients = clients.filter(
+                Qf(invoices__property__owner=self.user) |
+                Qf(contracts__property__owner=self.user) |
+                Qf(bookings__property__owner=self.user)
+            ).distinct()
+        self.fields['client'].queryset = clients
 
     def clean(self):
         cleaned_data = super().clean()
@@ -129,10 +146,14 @@ class PaymentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        # Show all invoices but provide better error messages
+        # Only offer invoices belonging to this landlord's properties (superusers see all)
         from payments.models import Invoice
-        self.fields['invoice'].queryset = Invoice.objects.all()
+        invoices = Invoice.objects.all()
+        if self.user and not self.user.is_superuser:
+            invoices = invoices.filter(property__owner=self.user)
+        self.fields['invoice'].queryset = invoices
 
     def clean(self):
         cleaned_data = super().clean()
