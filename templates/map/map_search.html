@@ -132,21 +132,34 @@ L.control.zoom({ position: 'topright' }).addTo(map);
 // ── Markers ──
 const markers = {};
 
+// One small, crisp SVG glyph per real property type (matches PropertyType
+// choices on the backend) instead of relying on emoji, which render
+// inconsistently across devices/fonts.
+const PIN_ICONS = {
+  residential: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1v-9"/></svg>',
+  bnb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 19v-7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7"/><path d="M2 19h20"/><path d="M6 10V7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>',
+  hotel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 21v-4h6v4"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01"/></svg>',
+  commercial: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="1"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>',
+  land: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 9 8l4 6 3-4 5 10"/><path d="M3 20h18"/></svg>',
+  industrial: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4v-4l6 4v-4l6 4v7Z"/><path d="M3 21h18"/></svg>',
+  school: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 9 10-5 10 5-10 5-10-5Z"/><path d="M6 11.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-4.5"/><path d="M22 9v6"/></svg>',
+};
+
 function pinClass(type) {
-  if (type === 'villa') return 'pin-villa';
-  if (type === 'bnb') return 'pin-bnb';
-  if (type === 'commercial') return 'pin-commercial';
-  return '';
+  const known = ['bnb', 'hotel', 'commercial', 'land', 'industrial', 'school'];
+  return known.includes(type) ? `pin-${type}` : '';
 }
 
 function createMarkerIcon(p, active = false) {
   const cls = `tuHame-pin ${pinClass(p.type)} ${active ? 'pin-active' : ''}`;
-  const label = `${p.type === 'villa' ? '🏘' : p.type === 'bnb' ? '🛏' : p.type === 'commercial' ? '🏢' : '🏠'} KES ${Math.round(p.price)}`;
+  const icon = PIN_ICONS[p.type] || PIN_ICONS.residential;
+  const label = `<span class="pin-icon">${icon}</span> KES ${Math.round(p.price).toLocaleString()}`;
   return L.divIcon({
     className: '',
     html: `<div class="${cls}">${label}</div>`,
-    iconAnchor: [50, 32],
-    popupAnchor: [0, -36]
+    iconSize: null,
+    iconAnchor: [50, 34],
+    popupAnchor: [0, -38]
   });
 }
 

@@ -1,5 +1,5 @@
 # apps/dashboard/views.py
-from django.views.generic import FormView, TemplateView, DetailView, UpdateView, View, CreateView
+from django.views.generic import FormView, TemplateView, DetailView, UpdateView, View, CreateView, ListView
 from .models import Profile
 from django.http import JsonResponse, Http404
 import base64
@@ -13,8 +13,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.shortcuts import redirect
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import RedirectView
 from .forms import ProfileForm, UserRegistrationForm
 from django.db import models
@@ -223,8 +223,9 @@ class MyProfileView(LoginRequiredMixin, DetailView):
     context_object_name = "profile"
 
     def get_object(self, queryset=None):
-        """Get the profile of the currently logged-in user"""
-        return self.request.user.profile
+        """Get the profile of the currently logged-in user (creating it if missing)"""
+        profile, _ = Profile.objects.get_or_create(user=self.request.user)
+        return profile
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -271,7 +272,7 @@ class MyProfileView(LoginRequiredMixin, DetailView):
         ).order_by('preferred_date')[:5]
 
         # Get bills for user's current property
-        profile = self.request.user.profile
+        profile, _ = Profile.objects.get_or_create(user=self.request.user)
         if profile.current_property:
             # Get all bills for the current property
             context['bills'] = profile.current_property.bills.filter(
@@ -321,16 +322,31 @@ class MyProfileUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "auth/edit_profile.html"
 
     def get_object(self, queryset=None):
-        """Get the profile of the currently logged-in user"""
-        return self.request.user.profile
+        """Get the profile of the currently logged-in user (creating it if missing)"""
+        profile, _ = Profile.objects.get_or_create(user=self.request.user)
+        return profile
 
     def get_success_url(self):
         return reverse_lazy('my_profile')
 
     def form_valid(self, form):
         """Handle successful form submission"""
+        previous_role = Profile.objects.get(pk=form.instance.pk).role
+        response = super().form_valid(form)
+
+        # If they just switched to (or re-affirmed) the owner role and aren't
+        # verified yet, kick off the admin verification workflow
+        if form.instance.role == 'owner' and not form.instance.is_verified_owner:
+            if previous_role != 'owner' or form.instance.verification_status == 'none':
+                form.instance.request_owner_verification()
+                messages.info(
+                    self.request,
+                    "Your request to become a verified property owner has been submitted. "
+                    "Our team will review it shortly."
+                )
+
         messages.success(self.request, "Your profile has been updated successfully!")
-        return super().form_valid(form)
+        return response
 
     def form_invalid(self, form):
         """Handle invalid form submission"""
@@ -394,3 +410,66 @@ class RegenerateQRView(LoginRequiredMixin, View):
             messages.error(request, 'Failed to regenerate QR code. Please try again.')
 
         return redirect('my_profile')
+
+
+class RequestOwnerVerificationView(LoginRequiredMixin, View):
+    """Let a user (re)submit their profile for owner verification"""
+
+    def post(self, request):
+        profile = request.user.profile
+        profile.request_owner_verification()
+        messages.info(
+            request,
+            "Your request to become a verified property owner has been submitted. "
+            "Our team will review it shortly."
+        )
+        return redirect('my_profile')
+
+
+class OwnerVerificationQueueView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    """Admin-only queue of pending owner verification requests"""
+    model = Profile
+    template_name = 'auth/owner_verification_queue.html'
+    context_object_name = 'profiles'
+    paginate_by = 20
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def get_queryset(self):
+        return Profile.objects.filter(
+            role='owner', verification_status='pending'
+        ).select_related('user').order_by('verification_requested_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['pending_count'] = self.get_queryset().count()
+        context['recently_reviewed'] = Profile.objects.filter(
+            role='owner'
+        ).exclude(verification_status='pending').exclude(
+            verification_reviewed_at__isnull=True
+        ).select_related('user').order_by('-verification_reviewed_at')[:10]
+        return context
+
+
+class ApproveOwnerVerificationView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def post(self, request, pk):
+        profile = get_object_or_404(Profile, pk=pk)
+        profile.approve_owner_verification(reviewer=request.user)
+        messages.success(request, f"{profile.get_full_name()} is now a verified property owner.")
+        return redirect('owner_verification_queue')
+
+
+class RejectOwnerVerificationView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def post(self, request, pk):
+        profile = get_object_or_404(Profile, pk=pk)
+        notes = request.POST.get('notes', '')
+        profile.reject_owner_verification(reviewer=request.user, notes=notes)
+        messages.warning(request, f"{profile.get_full_name()}'s owner request was rejected.")
+        return redirect('owner_verification_queue')

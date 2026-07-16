@@ -1,7 +1,7 @@
 # apps/properties/forms.py
 from django import forms
 from django.utils import timezone
-from .models import ViewingSchedule
+from .models import ViewingSchedule, ContactMessage
 from properties.models import PropertyReview
 
 
@@ -65,3 +65,25 @@ class ReviewForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['rating'].required = True
         self.fields['comment'].required = False
+
+class ContactForm(forms.ModelForm):
+    """Form for the public Contact Us page"""
+
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'phone', 'subject', 'message']
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Your full name'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'you@example.com'}),
+            'phone': forms.TextInput(attrs={'placeholder': '+254 712 000 000 (optional)'}),
+            'message': forms.Textarea(attrs={
+                'rows': 6,
+                'placeholder': "Tell us how we can help…"
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.setdefault('class', 'form-input')
+        self.fields['phone'].required = False

@@ -9,6 +9,18 @@ from django.utils import timezone
 User = get_user_model()
 
 
+class UserRole(models.TextChoices):
+    HUNTER = 'hunter', 'House Hunter'
+    OWNER = 'owner', 'Property Owner'
+
+
+class VerificationStatus(models.TextChoices):
+    NONE = 'none', 'Not Requested'
+    PENDING = 'pending', 'Pending Review'
+    APPROVED = 'approved', 'Approved'
+    REJECTED = 'rejected', 'Rejected'
+
+
 class Profile(models.Model):
     """User profile model - one to one with User"""
 
@@ -102,6 +114,24 @@ class Profile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
 
+    # Role - hunter (looking for a place) or owner (listing properties)
+    role = models.CharField(max_length=10, choices=UserRole.choices, default=UserRole.HUNTER)
+
+    # Owner verification - a user switching to 'owner' needs to be approved
+    # by the main admin before they're treated as a verified property owner
+    verification_status = models.CharField(
+        max_length=10, choices=VerificationStatus.choices, default=VerificationStatus.NONE
+    )
+    is_verified_owner = models.BooleanField(default=False)
+    verification_requested_at = models.DateTimeField(blank=True, null=True)
+    verification_reviewed_at = models.DateTimeField(blank=True, null=True)
+    verification_reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, blank=True, null=True, related_name='verified_owner_profiles'
+    )
+    verification_notes = models.TextField(
+        blank=True, help_text="Internal admin notes, e.g. reason for rejection"
+    )
+
     class Meta:
         ordering = ['-created_at']
         indexes = [
@@ -126,6 +156,38 @@ class Profile(models.Model):
     def has_current_property(self):
         """Check if user has a current property"""
         return self.current_property is not None
+
+    def is_hunter(self):
+        return self.role == UserRole.HUNTER
+
+    def is_owner_role(self):
+        return self.role == UserRole.OWNER
+
+    def request_owner_verification(self):
+        """
+        Switch this profile to the owner role and (re)submit it for admin
+        review, unless it's already verified.
+        """
+        self.role = UserRole.OWNER
+        if not self.is_verified_owner:
+            self.verification_status = VerificationStatus.PENDING
+            self.verification_requested_at = timezone.now()
+        self.save()
+
+    def approve_owner_verification(self, reviewer):
+        self.is_verified_owner = True
+        self.verification_status = VerificationStatus.APPROVED
+        self.verification_reviewed_at = timezone.now()
+        self.verification_reviewed_by = reviewer
+        self.save()
+
+    def reject_owner_verification(self, reviewer, notes=''):
+        self.is_verified_owner = False
+        self.verification_status = VerificationStatus.REJECTED
+        self.verification_reviewed_at = timezone.now()
+        self.verification_reviewed_by = reviewer
+        self.verification_notes = notes
+        self.save()
 
     def move_to_property(self, property, moved_in_date=None):
         """Move user to a new property"""

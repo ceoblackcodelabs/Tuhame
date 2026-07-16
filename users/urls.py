@@ -25,6 +25,12 @@ urlpatterns = [
     # Regenerate QR
     path('regenerate-qr/', views.RegenerateQRView.as_view(), name='regenerate_qr'),
 
+    # Owner verification workflow
+    path('request-owner-verification/', views.RequestOwnerVerificationView.as_view(), name='request_owner_verification'),
+    path('owner-verification/', views.OwnerVerificationQueueView.as_view(), name='owner_verification_queue'),
+    path('owner-verification/<int:pk>/approve/', views.ApproveOwnerVerificationView.as_view(), name='approve_owner_verification'),
+    path('owner-verification/<int:pk>/reject/', views.RejectOwnerVerificationView.as_view(), name='reject_owner_verification'),
+
     # test
     path('test-qr/', tests.test_qr_url, name='test_qr'),
 ]

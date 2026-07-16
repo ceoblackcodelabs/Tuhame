@@ -3,7 +3,7 @@ from django.views.generic import TemplateView, ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from properties.models import Property, PropertyStatus, PropertyType, Amenity, PropertyReview
 from django.db import models
-from .forms import ViewingScheduleForm, ReviewForm
+from .forms import ViewingScheduleForm, ReviewForm, ContactForm
 from django.contrib import messages
 import json
 from django.http import JsonResponse
@@ -747,3 +747,53 @@ class ChecklistDeleteView(LoginRequiredMixin, View):
             'total': total,
             'percentage': percentage,
         })
+
+class ContactView(View):
+    """Public Contact Us page - anyone can submit, no login required"""
+    template_name = 'home/contact.html'
+
+    def get(self, request):
+        initial = {}
+        if request.user.is_authenticated:
+            initial['name'] = request.user.get_full_name() or request.user.username
+            initial['email'] = request.user.email
+            if hasattr(request.user, 'profile'):
+                initial['phone'] = request.user.profile.phone_number
+        form = ContactForm(initial=initial)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            contact_message = form.save(commit=False)
+            if request.user.is_authenticated:
+                contact_message.user = request.user
+            contact_message.save()
+
+            # Best-effort notification email - never blocks the user-facing
+            # success response if email sending fails (e.g. no SMTP configured yet)
+            try:
+                from django.core.mail import send_mail
+                from django.conf import settings
+                send_mail(
+                    subject=f"[2Hame Contact] {contact_message.get_subject_display()} from {contact_message.name}",
+                    message=(
+                        f"From: {contact_message.name} <{contact_message.email}>\n"
+                        f"Phone: {contact_message.phone or 'Not provided'}\n\n"
+                        f"{contact_message.message}"
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+            messages.success(
+                request,
+                "Thanks for reaching out! We've received your message and will get back to you shortly."
+            )
+            return redirect('home:contact')
+
+        messages.error(request, "Please correct the errors below.")
+        return render(request, self.template_name, {'form': form})

@@ -232,3 +232,35 @@ class MoveChecklistItem(models.Model):
         ]
         cls.objects.bulk_create(items)
         return cls.objects.filter(user=user).order_by('order', 'created_at')
+
+
+class ContactMessage(models.Model):
+    """A message submitted through the public Contact Us page"""
+
+    SUBJECT_CHOICES = [
+        ('general', 'General Inquiry'),
+        ('support', 'Support / Technical Issue'),
+        ('listing', 'Listing a Property'),
+        ('partnership', 'Partnership / Business'),
+        ('other', 'Other'),
+    ]
+
+    name = models.CharField(max_length=150)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    subject = models.CharField(max_length=20, choices=SUBJECT_CHOICES, default='general')
+    message = models.TextField()
+
+    # Optionally linked if the sender was logged in
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_messages'
+    )
+
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.get_subject_display()} ({self.created_at:%Y-%m-%d})"

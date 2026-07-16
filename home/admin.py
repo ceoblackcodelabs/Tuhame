@@ -10,7 +10,7 @@ from properties.models import (
     Amenity,
 )
 
-from .models import ViewingSchedule, SavedProperty, MoveChecklistItem
+from .models import ViewingSchedule, SavedProperty, MoveChecklistItem, ContactMessage
 
 
 @admin.register(ViewingSchedule)
@@ -278,3 +278,11 @@ class MoveChecklistItemAdmin(admin.ModelAdmin):
     list_display = ('text', 'user', 'done', 'order', 'created_at')
     list_filter = ('done',)
     search_fields = ('text', 'user__username')
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'subject', 'is_read', 'created_at')
+    list_filter = ('subject', 'is_read')
+    search_fields = ('name', 'email', 'message')
+    readonly_fields = ('name', 'email', 'phone', 'subject', 'message', 'user', 'created_at')

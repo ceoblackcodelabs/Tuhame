@@ -199,16 +199,43 @@ transition: color 0.15s;
 #leaflet-map { width: 100%; height: 100%; z-index: 1; }
 
 .tuHame-pin {
-background: transparent; color: #000000; padding: 5px 10px; border-radius: 50%;
-font-size: 12px; font-weight: 700; white-space: nowrap;
-box-shadow: 0 3px 12px rgba(37,99,235,0.45); font-family: var(--font-display);
-border: 2px solid #fff; cursor: pointer; transition: transform 0.15s;
+  position: relative;
+  background: var(--primary);
+  color: #fff;
+  padding: 7px 13px 7px 10px;
+  border-radius: 20px 20px 20px 4px;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.4), 0 1px 3px rgba(0,0,0,0.15);
+  border: 2px solid rgba(255,255,255,0.9);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.tuHame-pin:hover { transform: scale(1.08); }
-.tuHame-pin.pin-villa { background: #7C3AED; }
-.tuHame-pin.pin-bnb { background: #0891B2; }
-.tuHame-pin.pin-commercial { background: #374151; }
-.tuHame-pin.pin-active { background: transparent; transform: scale(1.1); border: 2px solid #09cf44;}
+.tuHame-pin:hover {
+  transform: scale(1.08) translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37,99,235,0.5), 0 2px 6px rgba(0,0,0,0.2);
+}
+.tuHame-pin .pin-icon { display: inline-flex; flex-shrink: 0; }
+.tuHame-pin .pin-icon svg { width: 15px; height: 15px; display: block; }
+.tuHame-pin.pin-bnb { background: #0891B2; box-shadow: 0 4px 14px rgba(8,145,178,0.4), 0 1px 3px rgba(0,0,0,0.15); }
+.tuHame-pin.pin-hotel { background: #7C3AED; box-shadow: 0 4px 14px rgba(124,58,237,0.4), 0 1px 3px rgba(0,0,0,0.15); }
+.tuHame-pin.pin-commercial { background: #374151; box-shadow: 0 4px 14px rgba(55,65,81,0.4), 0 1px 3px rgba(0,0,0,0.15); }
+.tuHame-pin.pin-land { background: #92400E; box-shadow: 0 4px 14px rgba(146,64,14,0.4), 0 1px 3px rgba(0,0,0,0.15); }
+.tuHame-pin.pin-industrial { background: #475569; box-shadow: 0 4px 14px rgba(71,85,105,0.4), 0 1px 3px rgba(0,0,0,0.15); }
+.tuHame-pin.pin-school { background: #4F46E5; box-shadow: 0 4px 14px rgba(79,70,229,0.4), 0 1px 3px rgba(0,0,0,0.15); }
+.tuHame-pin.pin-active {
+  background: var(--accent);
+  border-color: #fff;
+  transform: scale(1.16);
+  box-shadow: 0 6px 20px rgba(34,197,94,0.55), 0 2px 6px rgba(0,0,0,0.2);
+  z-index: 20;
+}
 
 .leaflet-popup-content-wrapper {
 border-radius: 14px !important; padding: 0 !important; overflow: hidden;

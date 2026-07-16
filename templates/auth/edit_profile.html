@@ -321,6 +321,31 @@
       <!-- Form Sections -->
       <div>
 
+        <!-- Account Role -->
+        <div class="edit-section-card">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">🎭</span> Account Role
+          </div>
+          <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1rem;">
+            Choose how you use 2Hame. <strong>House Hunter</strong> if you're looking for a place to move into.
+            <strong>Property Owner</strong> if you list and manage properties — this requires a quick review by our team.
+          </p>
+          <div class="edit-field full-width">
+            {{ form.role.label_tag }}
+            {{ form.role }}
+            {% if form.role.errors %}<div class="edit-field-error">{{ form.role.errors.0 }}</div>{% endif %}
+          </div>
+          {% if user.profile.role == 'owner' %}
+            {% if user.profile.is_verified_owner %}
+              <p style="font-size:0.8rem;color:var(--accent, #22C55E);margin-top:0.5rem;">✅ You're a verified property owner.</p>
+            {% elif user.profile.verification_status == 'pending' %}
+              <p style="font-size:0.8rem;color:#D97706;margin-top:0.5rem;">⏳ Your owner verification is pending review.</p>
+            {% elif user.profile.verification_status == 'rejected' %}
+              <p style="font-size:0.8rem;color:#DC2626;margin-top:0.5rem;">❌ Your previous owner request was rejected. Saving this form will not automatically resubmit it — use "Request Verification Again" on your profile page.</p>
+            {% endif %}
+          {% endif %}
+        </div>
+
         <!-- Personal Information -->
         <div class="edit-section-card">
           <div class="edit-section-title">
