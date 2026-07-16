@@ -58,6 +58,18 @@ class ProfileAdmin(admin.ModelAdmin):
         ('Preferences', {
             'fields': ('preferred_contact_method', 'preferred_language', 'email_notifications', 'sms_notifications')
         }),
+        ('Role & Verification', {
+            'fields': (
+                'role',
+                'verification_status',
+                'is_verified_owner',
+                'verification_requested_at',
+                'verification_reviewed_at',
+                'verification_reviewed_by',
+                'verification_notes'
+            ),
+            'description': 'User role and owner verification settings. Users switching to "owner" role must be verified by admin.'
+        }),
         ('Metadata', {
             'fields': ('is_active', 'created_at', 'updated_at', 'qr_code_image'),
             'classes': ('collapse',)
