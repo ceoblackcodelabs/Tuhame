@@ -1,0 +1,43 @@
+<!-- templates/clients/document_confirm_delete.html -->
+{% extends "AdminBase.html" %}
+
+{% block content %}
+<div class="main-panel">
+    <div class="content-wrapper">
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="mdi mdi-file-document-remove display-1 text-danger"></i>
+                        </div>
+
+                        <h4 class="card-title text-danger">Confirm Delete</h4>
+
+                        <p>Are you sure you want to delete the document <strong>"{{ object.title }}"</strong>?</p>
+                        <p class="text-muted">
+                            Client: {{ object.client.name }}<br>
+                            Document Type: {{ object.get_document_type_display }}<br>
+                            Uploaded: {{ object.uploaded_at|date:"F d, Y" }}
+                        </p>
+
+                        <div class="alert alert-warning">
+                            <i class="mdi mdi-alert"></i> This action cannot be undone. The file will be permanently deleted.
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="mdi mdi-delete"></i> Yes, Delete Document
+                            </button>
+                            <a href="{% url 'client_detail' object.client.pk %}" class="btn btn-secondary">
+                                <i class="mdi mdi-cancel"></i> Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

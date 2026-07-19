@@ -12,6 +12,7 @@ User = get_user_model()
 class UserRole(models.TextChoices):
     HUNTER = 'hunter', 'House Hunter'
     OWNER = 'owner', 'Property Owner'
+    MOVER = 'mover', 'Mover'
 
 
 class VerificationStatus(models.TextChoices):
@@ -132,6 +133,24 @@ class Profile(models.Model):
         blank=True, help_text="Internal admin notes, e.g. reason for rejection"
     )
 
+    # Mover portfolio - public profile a mover can edit once they hold the role
+    MOVER_VEHICLE_CHOICES = [
+        ('motorbike', 'Motorbike'),
+        ('pickup', 'Pickup Truck'),
+        ('van', 'Van'),
+        ('truck_small', 'Small Truck'),
+        ('truck_large', 'Large Truck'),
+    ]
+    mover_bio = models.TextField(blank=True, help_text="Public bio shown on your mover profile")
+    mover_vehicle_type = models.CharField(max_length=20, choices=MOVER_VEHICLE_CHOICES, blank=True)
+    mover_years_experience = models.PositiveIntegerField(default=0)
+    mover_service_areas = models.CharField(
+        max_length=255, blank=True, help_text="Comma-separated areas you serve, e.g. Kilimani, Westlands, Karen"
+    )
+    mover_base_lat = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    mover_base_lng = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    mover_base_label = models.CharField(max_length=255, blank=True, help_text="Human-readable base location")
+
     class Meta:
         ordering = ['-created_at']
         indexes = [
@@ -162,6 +181,33 @@ class Profile(models.Model):
 
     def is_owner_role(self):
         return self.role == UserRole.OWNER
+
+    def is_mover(self):
+        return self.role == UserRole.MOVER
+
+    def completed_moves_count(self):
+        return self.user.move_offers.filter(status='accepted', move_request__status='completed').count()
+
+    def active_moves_count(self):
+        return self.user.move_offers.filter(status='accepted', move_request__status='matched').count()
+
+    def get_trust_score(self):
+        """
+        Simple, transparent trust score for a mover's public portfolio.
+        Starts at a neutral 50 for a brand-new mover and grows with a track
+        record of completed moves and account tenure, capped at 100.
+        This is not a fake rating - it's derived entirely from real completed
+        moves in our own database.
+        """
+        completed = self.completed_moves_count()
+        if completed == 0:
+            return None  # "New Mover" - no score yet, shown distinctly in templates
+        tenure_days = (timezone.now() - self.created_at).days if self.created_at else 0
+        score = 50 + min(completed * 6, 42) + min(tenure_days // 30, 8)
+        return min(score, 100)
+
+    def get_mover_service_areas_list(self):
+        return [a.strip() for a in self.mover_service_areas.split(',') if a.strip()]
 
     def request_owner_verification(self):
         """

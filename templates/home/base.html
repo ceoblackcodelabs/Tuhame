@@ -34,6 +34,7 @@
       <li><a href="{% url "home:properties" %}" class="nav-link">Properties</a></li>
       <li><a href="{% url "home:property_map" %}" class="nav-link">Map Search</a></li>
       <li><a href="{% url "home:contact" %}" class="nav-link">Contact</a></li>
+      <li><a href="{% url "home:mover_map" %}" class="nav-link">🚚 Movers</a></li>
     </ul>
     <div class="nav-actions">
   <button class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
@@ -85,6 +86,7 @@
   <a href="{% url "home:properties" %}">🏘 Properties</a>
   <a href="{% url "home:property_map" %}">🗺 Map Search</a>
   <a href="{% url "home:contact" %}">✉️ Contact</a>
+  <a href="{% url "home:mover_map" %}">🚚 Movers Marketplace</a>
   <a href="{% url "my_profile" %}">👤 Profile</a>
   <div class="mobile-actions">
     {% if request.user.is_authenticated %}
@@ -124,6 +126,7 @@
           <li><a href="{% url "home:properties" %}">→ Properties</a></li>
           <li><a href="{% url "home:property_map" %}">→ Map Search</a></li>
           <li><a href="{% url "home:contact" %}">→ Contact Us</a></li>
+          <li><a href="{% url "home:mover_map" %}">→ Movers Marketplace</a></li>
           <li><a href="{% url "my_profile" %}">→ My Profile</a></li>
           <li><a href="#">→ Post a Property</a></li>
           <li><a href="#">→ Move Cost Calculator</a></li>
@@ -168,5 +171,45 @@
 
 <script src="{% static "assets/js/main.js" %}"></script>
 {% block inject_js %}{% endblock inject_js %}
+
+<!-- Toast notifications -->
+<div id="toast-container" style="position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:0.6rem;max-width:380px;pointer-events:none;"></div>
+{% if messages %}
+<div id="toast-queue" style="display:none;">
+  {% for message in messages %}
+    <div class="toast-item" data-type="{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+</div>
+<script>
+(function () {
+  var container = document.getElementById('toast-container');
+  var queue = document.getElementById('toast-queue');
+  if (!queue || !container) return;
+  var config = {
+    success: { bg: '#22C55E', icon: '&#9989;' },
+    error:   { bg: '#EF4444', icon: '&#10060;' },
+    warning: { bg: '#F59E0B', icon: '&#9888;&#65039;' },
+    info:    { bg: '#2563EB', icon: '&#8505;&#65039;' },
+    debug:   { bg: '#6B7280', icon: '&#128295;' }
+  };
+  queue.querySelectorAll('.toast-item').forEach(function (item, i) {
+    var cfg = config[item.dataset.type] || config.info;
+    var toast = document.createElement('div');
+    toast.style.cssText = 'pointer-events:auto;background:#fff;border-left:4px solid ' + cfg.bg + ';border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:0.9rem 1.1rem;display:flex;align-items:flex-start;gap:0.6rem;font-family:var(--font-body,sans-serif);font-size:0.9rem;color:#1f2937;opacity:0;transform:translateX(30px);transition:all 0.3s ease;';
+    toast.innerHTML = '<span style="font-size:1.05rem;flex-shrink:0;">' + cfg.icon + '</span>' +
+      '<span style="flex:1;line-height:1.4;"></span>' +
+      '<span style="cursor:pointer;color:#9ca3af;font-size:1rem;line-height:1;">&times;</span>';
+    toast.querySelector('span:nth-child(2)').textContent = item.textContent;
+    toast.querySelector('span:last-child').addEventListener('click', function () { toast.remove(); });
+    container.appendChild(toast);
+    setTimeout(function () { toast.style.opacity = 1; toast.style.transform = 'translateX(0)'; }, 50 + i * 120);
+    setTimeout(function () {
+      toast.style.opacity = 0; toast.style.transform = 'translateX(30px)';
+      setTimeout(function () { toast.remove(); }, 300);
+    }, 6000 + i * 120);
+  });
+})();
+</script>
+{% endif %}
 </body>
 </html>

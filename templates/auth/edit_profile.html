@@ -4,6 +4,7 @@
 {% block title %}Edit Profile{% endblock title %}
 
 {% block inject_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 <style>
   .edit-profile-layout {
     display: grid;
@@ -71,6 +72,17 @@
   .edit-avatar-upload-label:hover {
     background: var(--primary);
     color: #fff;
+  }
+
+  .edit-avatar-upload-label input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
   }
 
   .edit-avatar-hint {
@@ -300,9 +312,9 @@
 
         <label class="edit-avatar-upload-label" for="{{ form.profile_picture.id_for_label }}">
           📷 Change Photo
+          {{ form.profile_picture }}
         </label>
         <br>
-        {% comment %} <small style="font-size: 10px;">{{ form.profile_picture }}</small> {% endcomment %}
 
         {% if form.profile_picture.errors %}
           <div class="edit-field-error">{{ form.profile_picture.errors.0 }}</div>
@@ -329,6 +341,7 @@
           <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1rem;">
             Choose how you use 2Hame. <strong>House Hunter</strong> if you're looking for a place to move into.
             <strong>Property Owner</strong> if you list and manage properties — this requires a quick review by our team.
+            <strong>Mover</strong> if you help people move — you'll get a public portfolio hunters can browse.
           </p>
           <div class="edit-field full-width">
             {{ form.role.label_tag }}
@@ -344,6 +357,49 @@
               <p style="font-size:0.8rem;color:#DC2626;margin-top:0.5rem;">❌ Your previous owner request was rejected. Saving this form will not automatically resubmit it — use "Request Verification Again" on your profile page.</p>
             {% endif %}
           {% endif %}
+        </div>
+
+        <!-- Mover Portfolio (shown only for the Mover role) -->
+        <div class="edit-section-card" id="mover-portfolio-section" style="{% if user.profile.role != 'mover' %}display:none;{% endif %}">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">🚚</span> Mover Portfolio
+          </div>
+          <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1rem;">
+            This is your public profile — house hunters see this (and your trust score) when they browse movers on the map.
+          </p>
+
+          <div class="edit-grid">
+            <div class="edit-field full-width">
+              {{ form.mover_bio.label_tag }}
+              {{ form.mover_bio }}
+            </div>
+            <div class="edit-field">
+              {{ form.mover_vehicle_type.label_tag }}
+              {{ form.mover_vehicle_type }}
+            </div>
+            <div class="edit-field">
+              {{ form.mover_years_experience.label_tag }}
+              {{ form.mover_years_experience }}
+            </div>
+            <div class="edit-field full-width">
+              {{ form.mover_service_areas.label_tag }}
+              {{ form.mover_service_areas }}
+            </div>
+          </div>
+
+          <div style="margin-top:1rem;">
+            <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.35rem;">
+              📍 Your Base Location <span style="font-weight:400;color:var(--gray-400);">(shown to hunters browsing the map)</span>
+            </label>
+            <div style="display:flex;gap:0.6rem;margin-bottom:0.6rem;">
+              {{ form.mover_base_label }}
+              <button type="button" class="btn btn-sm" style="background:var(--gray-100);border:1px solid var(--gray-300);white-space:nowrap;" onclick="useMoverCurrentLocation()">📡 Use Current Location</button>
+            </div>
+            <div id="mover-base-map" style="height:260px;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
+            <div style="font-size:0.75rem;color:var(--gray-400);margin-top:0.35rem;">Click the map to set your base — hunters will see roughly this location.</div>
+            {{ form.mover_base_lat }}
+            {{ form.mover_base_lng }}
+          </div>
         </div>
 
         <!-- Personal Information -->
@@ -499,6 +555,7 @@
 {% endblock content %}
 
 {% block inject_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const fileInput = document.querySelector('.edit-avatar-upload-label input[type="file"]');
@@ -518,6 +575,76 @@
         reader.readAsDataURL(file);
       });
     }
+  });
+
+  // ── Mover portfolio: toggle visibility based on selected role ──
+  let moverMap = null;
+  let moverMarker = null;
+
+  function initMoverMap() {
+    if (moverMap) {
+      setTimeout(() => moverMap.invalidateSize(), 150);
+      return;
+    }
+    const latInput = document.getElementById('id_mover_base_lat');
+    const lngInput = document.getElementById('id_mover_base_lng');
+    const startLat = parseFloat(latInput.value) || -1.2921;
+    const startLng = parseFloat(lngInput.value) || 36.8219;
+
+    moverMap = L.map('mover-base-map', { center: [startLat, startLng], zoom: latInput.value ? 14 : 11 });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(moverMap);
+
+    if (latInput.value && lngInput.value) {
+      moverMarker = L.marker([startLat, startLng]).addTo(moverMap);
+    }
+
+    moverMap.on('click', function (e) { setMoverLocation(e.latlng.lat, e.latlng.lng, true); });
+    setTimeout(() => moverMap.invalidateSize(), 150);
+  }
+
+  function setMoverLocation(lat, lng, reverseGeocode) {
+    document.getElementById('id_mover_base_lat').value = lat.toFixed(6);
+    document.getElementById('id_mover_base_lng').value = lng.toFixed(6);
+
+    if (moverMarker) {
+      moverMarker.setLatLng([lat, lng]);
+    } else {
+      moverMarker = L.marker([lat, lng]).addTo(moverMap);
+    }
+    moverMap.setView([lat, lng], 14);
+
+    if (reverseGeocode) {
+      fetch(`/properties/reverse-geocode/?lat=${lat}&lon=${lng}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.display_name) document.getElementById('id_mover_base_label').value = data.display_name;
+        })
+        .catch(() => {});
+    }
+  }
+
+  function useMoverCurrentLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      setMoverLocation(pos.coords.latitude, pos.coords.longitude, true);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const roleField = document.getElementById('id_role');
+    const portfolioSection = document.getElementById('mover-portfolio-section');
+    if (!roleField || !portfolioSection) return;
+
+    function toggleMoverSection() {
+      const isMover = roleField.value === 'mover';
+      portfolioSection.style.display = isMover ? 'block' : 'none';
+      if (isMover) initMoverMap();
+    }
+    roleField.addEventListener('change', toggleMoverSection);
+    if (roleField.value === 'mover') initMoverMap();
   });
 </script>
 {% endblock inject_js %}

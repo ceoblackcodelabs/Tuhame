@@ -1,0 +1,283 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Delete Property - {{ property.title }}{% endblock title %}
+
+{% block content %}
+
+<div class="main-panel">
+    <div class="content-wrapper">
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="mdi mdi-home-remove display-1 text-danger"></i>
+                        </div>
+
+                        <h4 class="card-title text-danger mb-3">Confirm Delete Property</h4>
+
+                        <p class="mb-3">
+                            Are you sure you want to delete the property <strong>"{{ property.title }}"</strong>?
+                        </p>
+
+                        <div class="alert alert-warning">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small><strong>Property Title:</strong></small>
+                                    <p>{{ property.title }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Property Type:</strong></small>
+                                    <p>{{ property.get_property_type_display }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Status:</strong></small>
+                                    <p>
+                                        {% if property.status == 'available' %}
+                                            <span class="badge badge-success">Available</span>
+                                        {% elif property.status == 'rented' %}
+                                            <span class="badge badge-warning">Rented</span>
+                                        {% elif property.status == 'sold' %}
+                                            <span class="badge badge-danger">Sold</span>
+                                        {% elif property.status == 'maintenance' %}
+                                            <span class="badge badge-info">Maintenance</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ property.get_status_display }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Price:</strong></small>
+                                    <p class="text-danger">${{ property.price|floatformat:2|intcomma }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Location:</strong></small>
+                                    <p>{{ property.city }}, {{ property.state }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Address:</strong></small>
+                                    <p>{{ property.address|truncatechars:30 }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Bedrooms:</strong></small>
+                                    <p>{{ property.bedrooms }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Bathrooms:</strong></small>
+                                    <p>{{ property.bathrooms }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Area:</strong></small>
+                                    <p>{{ property.area_sqft|floatformat:0|intcomma }} sq ft</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Year Built:</strong></small>
+                                    <p>{{ property.year_built|default:"N/A" }}</p>
+                                </div>
+                                <div class="col-md-12 mt-2">
+                                    <small><strong>Owner:</strong></small>
+                                    <p>{{ property.owner.get_full_name|default:property.owner.username }}</p>
+                                </div>
+                                {% if property.agent %}
+                                <div class="col-md-12 mt-2">
+                                    <small><strong>Agent:</strong></small>
+                                    <p>{{ property.agent.get_full_name|default:property.agent.username }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Warning about units -->
+                        {% if property.units.exists %}
+                        <div class="alert alert-danger">
+                            <i class="mdi mdi-alert-octagon"></i>
+                            <strong>Warning: Units Exist!</strong>
+                            <p class="mb-2 mt-2">
+                                This property has <strong>{{ property.units.count }} unit(s)</strong> associated with it.
+                                Deleting this property will also delete all associated units.
+                            </p>
+                            <div class="mt-2">
+                                <small><strong>Units:</strong></small>
+                                <ul class="mb-0 mt-1">
+                                    {% for unit in property.units.all|slice:":3" %}
+                                    <li>
+                                        Unit {{ unit.unit_number }} -
+                                        {{ unit.bedrooms }} bed, {{ unit.bathrooms }} bath
+                                        {% if not unit.is_available %}
+                                        <span class="badge badge-danger">Occupied</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                    {% if property.units.count > 3 %}
+                                    <li class="text-muted">... and {{ property.units.count|add:"-3" }} more unit(s)</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Warning about bookings -->
+                        {% if property.bookings.exists %}
+                        <div class="alert alert-warning">
+                            <i class="mdi mdi-calendar-alert"></i>
+                            <strong>Bookings Exist!</strong>
+                            <p class="mb-0 mt-2">
+                                This property has <strong>{{ property.bookings.count }} booking(s)</strong>.
+                                Deleting this property will also delete all associated bookings.
+                            </p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Warning about contracts -->
+                        {% if property.contracts.exists %}
+                        <div class="alert alert-warning">
+                            <i class="mdi mdi-file-document"></i>
+                            <strong>Contracts Exist!</strong>
+                            <p class="mb-0 mt-2">
+                                This property has <strong>{{ property.contracts.count }} contract(s)</strong>.
+                                Deleting this property will also delete all associated contracts.
+                            </p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Warning about invoices -->
+                        {% if property.invoices.exists %}
+                        <div class="alert alert-warning">
+                            <i class="mdi mdi-file-document"></i>
+                            <strong>Invoices Exist!</strong>
+                            <p class="mb-0 mt-2">
+                                This property has <strong>{{ property.invoices.count }} invoice(s)</strong>.
+                                Deleting this property will also delete all associated invoices.
+                            </p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Property Summary -->
+                        <div class="alert alert-info">
+                            <i class="mdi mdi-chart-line"></i>
+                            <strong>Property Summary:</strong>
+                            <div class="row mt-2">
+                                <div class="col-4">
+                                    <small>Images:</small>
+                                    <p class="mb-0">{{ property.images.count }}</p>
+                                </div>
+                                <div class="col-4">
+                                    <small>Amenities:</small>
+                                    <p class="mb-0">{{ property.amenities.count }}</p>
+                                </div>
+                                <div class="col-4">
+                                    <small>Watchlist:</small>
+                                    <p class="mb-0">{{ property.watched_by.count }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-danger">
+                            <i class="mdi mdi-alert"></i>
+                            <strong>Warning!</strong>
+                            <p class="mb-0 mt-2">This action cannot be undone. The property and all associated records will be permanently deleted.</p>
+                        </div>
+
+                        <form method="post" class="mt-4">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger me-2">
+                                <i class="mdi mdi-delete"></i> Yes, Delete Property
+                            </button>
+                            <a href="{% url 'property_detail' property.pk %}" class="btn btn-secondary">
+                                <i class="mdi mdi-cancel"></i> Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- content-wrapper ends -->
+
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+        <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+            <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+        </div>
+    </footer>
+    <!-- partial -->
+</div>
+
+<style>
+    @media print {
+        .btn, .navbar, .footer, .card-header {
+            display: none;
+        }
+        .card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+        body {
+            background: white;
+            padding: 20px;
+        }
+    }
+
+    .alert {
+        text-align: left;
+        border-radius: 8px;
+    }
+
+    .alert ul {
+        padding-left: 20px;
+        margin-bottom: 0;
+    }
+
+    .alert ul li {
+        margin: 5px 0;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .btn {
+        padding: 8px 20px;
+        border-radius: 5px;
+    }
+
+    .display-1 {
+        font-size: 4rem;
+    }
+
+    .badge {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    code {
+        background-color: #f4f4f4;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+    .font-weight-bold {
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .col-md-6 {
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn.me-2 {
+            margin-right: 0 !important;
+        }
+    }
+</style>
+
+{% endblock content %}

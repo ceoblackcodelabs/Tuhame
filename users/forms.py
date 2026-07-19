@@ -36,8 +36,28 @@ class ProfileForm(forms.ModelForm):
             'preferred_language',
             'email_notifications',
             'sms_notifications',
+            'mover_bio',
+            'mover_vehicle_type',
+            'mover_years_experience',
+            'mover_service_areas',
+            'mover_base_lat',
+            'mover_base_lng',
+            'mover_base_label',
         ]
         widgets = {
+            'mover_bio': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Tell hunters about your moving experience, what you specialize in, and why they should pick you…'
+            }),
+            'mover_service_areas': forms.TextInput(attrs={
+                'placeholder': 'e.g. Kilimani, Westlands, Karen'
+            }),
+            'mover_base_lat': forms.HiddenInput(),
+            'mover_base_lng': forms.HiddenInput(),
+            'mover_base_label': forms.TextInput(attrs={
+                'placeholder': 'Set on the map below',
+                'readonly': 'readonly'
+            }),
             'bio': forms.Textarea(attrs={
                 'rows': 4,
                 'placeholder': 'Tell us about yourself...'
@@ -162,6 +182,18 @@ class UserRegistrationForm(forms.ModelForm):
         })
     )
 
+    role = forms.ChoiceField(
+        choices=[
+            ('hunter', '🔎 House Hunter - I\'m looking for a place'),
+            ('owner', '🏠 Property Owner - I list properties'),
+            ('mover', '🚚 Mover - I help people move'),
+        ],
+        initial='hunter',
+        required=True,
+        widget=forms.RadioSelect,
+        label='I am a...'
+    )
+
     agree_terms = forms.BooleanField(
         required=True,
         widget=forms.CheckboxInput(attrs={
@@ -268,20 +300,27 @@ class UserRegistrationForm(forms.ModelForm):
             user.save()
             # Profile is automatically created by the signal
             # We just need to update the profile with the additional data
+            role = self.cleaned_data.get('role', 'hunter')
             try:
                 profile = user.profile
                 profile.full_name = f"{user.first_name} {user.last_name}".strip()
                 profile.phone_number = self.cleaned_data.get('phone_number', '')
                 profile.city = self.cleaned_data.get('city', '')
+                profile.role = role
                 profile.save()
+                if role == 'owner':
+                    profile.request_owner_verification()
             except Profile.DoesNotExist:
                 # If signal didn't create it (shouldn't happen), create it now
-                Profile.objects.create(
+                profile = Profile.objects.create(
                     user=user,
                     full_name=f"{user.first_name} {user.last_name}".strip(),
                     phone_number=self.cleaned_data.get('phone_number', ''),
-                    city=self.cleaned_data.get('city', '')
+                    city=self.cleaned_data.get('city', ''),
+                    role=role,
                 )
+                if role == 'owner':
+                    profile.request_owner_verification()
 
         return user
 

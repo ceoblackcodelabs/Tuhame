@@ -1,0 +1,64 @@
+<!-- templates/payments/payment_receipt.html -->
+{% extends "base_print.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="receipt-container">
+    <div class="text-center mb-4">
+        <h2>PAYMENT RECEIPT</h2>
+        <p><strong>Payment ID:</strong> {{ payment.payment_id }}</p>
+        <p><strong>Date:</strong> {{ payment.payment_date|date:"F d, Y" }}</p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-6">
+            <h5>Received From:</h5>
+            <p>
+                <strong>{{ payment.client.name }}</strong><br>
+                {{ payment.client.email }}<br>
+                {{ payment.client.phone }}
+            </p>
+        </div>
+        <div class="col-6 text-right">
+            <h5>Payment To:</h5>
+            <p>
+                <strong>Real Estate Management System</strong><br>
+                Payment Reference: {{ payment.payment_id }}
+            </p>
+        </div>
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Payment for Invoice #{{ payment.invoice.invoice_number }}<br>
+                    <small>{{ payment.invoice.description }}</small>
+                </td>
+                <td class="text-right">${{ payment.amount|floatformat:2|intcomma }}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <th class="text-right">Total Paid:</th>
+                <th class="text-right">${{ payment.amount|floatformat:2|intcomma }}</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <p><strong>Payment Method:</strong> {{ payment.get_payment_method_display }}</p>
+            {% if payment.reference_number %}
+                <p><strong>Reference Number:</strong> {{ payment.reference_number }}</p>
+            {% endif %}
+            <p>Thank you for your payment!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

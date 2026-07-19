@@ -8,11 +8,6 @@
   <title>Sign In – 2Hame</title>
   <link rel="stylesheet" href="{% static "assets/css/style.css" %}" />
   <style>
-    .auth-left {
-      background-image: url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1000&auto=format&fit=crop&q=80');
-      background-size: cover;
-      background-position: center;
-    }
     .feature-pill {
       display: inline-flex; align-items: center; gap: 0.5rem;
       background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
@@ -36,18 +31,26 @@
 
 <div class="auth-layout">
 
-  <!-- Left: Image + Brand -->
+  <!-- Left: Image Carousel + Brand -->
   <div class="auth-left">
-    <div class="auth-left-overlay">
+    <div class="auth-slide active" data-title="Find Your Perfect Home In Kenya" data-subtitle="Join 8,200+ happy tenants who found their home on 2Hame" style="background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1000&auto=format&fit=crop&q=80');"></div>
+    <div class="auth-slide" data-title="Stunning Villas &amp; Family Homes" data-subtitle="Spacious living with gated security, ready to move into" style="background-image:url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1000&auto=format&fit=crop&q=80');"></div>
+    <div class="auth-slide" data-title="Modern Apartments, Prime Locations" data-subtitle="Live closer to work, school and the city's best spots" style="background-image:url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1000&auto=format&fit=crop&q=80');"></div>
+    <div class="auth-slide" data-title="Cozy BnBs, Ready When You Are" data-subtitle="Flexible, fully-furnished stays booked in minutes" style="background-image:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1000&auto=format&fit=crop&q=80');"></div>
+
+    <div class="auth-left-overlay" style="position:absolute;">
       <div style="margin-bottom:auto;padding-top:2rem;">
         <a href="{% url 'home:home' %}" style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;text-decoration:none;">
-          <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
-          2Hame
+          <span class="auth-logo-mark"><img src="{% static "assets/images/favicon.svg" %}" alt="Tuhame" /></span>
+          Tuhame
         </a>
       </div>
       <div>
-        <h2>Find your perfect home in Kenya</h2>
-        <p>Join 8,200+ happy tenants who found their home on 2Hame</p>
+        <div class="auth-slide-copy">
+          <h2 id="auth-slide-title">Find Your Perfect Home In Kenya</h2>
+          <p id="auth-slide-subtitle">Join 8,200+ happy tenants who found their home on 2Hame</p>
+        </div>
+        <div class="auth-carousel-dots" id="auth-carousel-dots"></div>
         <div style="margin-top:1.5rem;">
           <span class="feature-pill">✅ Verified Listings</span>
           <span class="feature-pill">📍 Interactive Maps</span>
@@ -55,17 +58,60 @@
           <span class="feature-pill">💳 Rent Tracking</span>
           <span class="feature-pill">📱 Digital QR ID</span>
         </div>
-        <!-- Testimonial -->
-        <div style="margin-top:2rem;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:var(--radius-lg);padding:1.25rem;border:1px solid rgba(255,255,255,0.2);">
-          <div style="display:flex;gap:0.75rem;align-items:center;margin-bottom:0.75rem;">
-            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" alt="" />
-            <div>
-              <div style="font-weight:700;color:#fff;font-size:0.9rem;">Wanjiru Njoroge</div>
-              <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);">Found her Kilimani home via 2Hame</div>
+
+        <!-- Infinitely scrolling testimonials -->
+        <div class="auth-testimonial-viewport">
+          <div class="auth-testimonial-track" id="auth-testimonial-track">
+            <div class="auth-testimonial-card">
+              <div class="t-head">
+                <div class="t-avatar">W</div>
+                <div><div class="t-name">Wanjiru Njoroge</div><div class="t-role">Found her Kilimani home</div></div>
+              </div>
+              <p>"2Hame made moving so much easier. I found my apartment in 3 days, everything was transparent!"</p>
+              <div class="t-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <div class="auth-testimonial-card">
+              <div class="t-head">
+                <div class="t-avatar">O</div>
+                <div><div class="t-name">Otieno Mwangi</div><div class="t-role">Landlord, Westlands</div></div>
+              </div>
+              <p>"Listing my property and talking directly to tenants saved me so much time vs the usual agent back-and-forth."</p>
+              <div class="t-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <div class="auth-testimonial-card">
+              <div class="t-head">
+                <div class="t-avatar">A</div>
+                <div><div class="t-name">Amina Hassan</div><div class="t-role">New tenant, Lavington</div></div>
+              </div>
+              <p>"The interactive map showed me schools and matatu stops nearby before I even booked a viewing."</p>
+              <div class="t-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <!-- duplicated for seamless infinite loop -->
+            <div class="auth-testimonial-card" aria-hidden="true">
+              <div class="t-head">
+                <div class="t-avatar">W</div>
+                <div><div class="t-name">Wanjiru Njoroge</div><div class="t-role">Found her Kilimani home</div></div>
+              </div>
+              <p>"2Hame made moving so much easier. I found my apartment in 3 days, everything was transparent!"</p>
+              <div class="t-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <div class="auth-testimonial-card" aria-hidden="true">
+              <div class="t-head">
+                <div class="t-avatar">O</div>
+                <div><div class="t-name">Otieno Mwangi</div><div class="t-role">Landlord, Westlands</div></div>
+              </div>
+              <p>"Listing my property and talking directly to tenants saved me so much time vs the usual agent back-and-forth."</p>
+              <div class="t-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <div class="auth-testimonial-card" aria-hidden="true">
+              <div class="t-head">
+                <div class="t-avatar">A</div>
+                <div><div class="t-name">Amina Hassan</div><div class="t-role">New tenant, Lavington</div></div>
+              </div>
+              <p>"The interactive map showed me schools and matatu stops nearby before I even booked a viewing."</p>
+              <div class="t-stars">⭐⭐⭐⭐⭐</div>
             </div>
           </div>
-          <p style="font-size:0.875rem;color:rgba(255,255,255,0.85);line-height:1.6;">"2Hame made moving so much easier. I found my apartment in 3 days, everything was transparent, and the QR ID feature is genius!"</p>
-          <div style="color:var(--warning);margin-top:0.5rem;">⭐⭐⭐⭐⭐</div>
         </div>
       </div>
     </div>
@@ -75,25 +121,19 @@
   <div class="auth-right">
     <div class="auth-form-wrap">
       <div class="auth-logo">
-        <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🏠</div>
-        2Hame
+        <span class="auth-logo-mark"><img src="{% static "assets/images/favicon.svg" %}" alt="Tuhame" /></span>
+        Tuhame
       </div>
 
       <h1 class="auth-title">Welcome back</h1>
       <p class="auth-subtitle">Sign in to your 2Hame account</p>
 
-      <!-- Display Messages -->
+      <!-- Toast notifications -->
+      <div id="toast-container" style="position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:0.6rem;max-width:380px;pointer-events:none;"></div>
       {% if messages %}
-        <div style="margin-bottom:1rem;">
+        <div id="toast-queue" style="display:none;">
           {% for message in messages %}
-            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}"
-                 style="padding:0.75rem 1rem;border-radius:var(--radius);margin-bottom:0.5rem;
-                        {% if message.tags == 'success' %}background:#d4edda;color:#155724;border:1px solid #c3e6cb;
-                        {% elif message.tags == 'error' %}background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;
-                        {% elif message.tags == 'warning' %}background:#fff3cd;color:#856404;border:1px solid #ffeeba;
-                        {% else %}background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb;{% endif %}">
-              {{ message }}
-            </div>
+            <div class="toast-item" data-type="{{ message.tags }}">{{ message }}</div>
           {% endfor %}
         </div>
       {% endif %}
@@ -218,19 +258,70 @@
     }
   }
 
-  // Auto-dismiss messages after 5 seconds
-  document.addEventListener('DOMContentLoaded', function() {
-    const messages = document.querySelectorAll('.alert');
-    messages.forEach(function(msg) {
-      setTimeout(function() {
-        msg.style.transition = 'opacity 0.5s ease';
-        msg.style.opacity = '0';
-        setTimeout(function() {
-          msg.remove();
-        }, 500);
-      }, 5000);
+  // ── Auth left-panel image carousel with changing headline ──
+  (function () {
+    const slides = document.querySelectorAll('.auth-slide');
+    const dotsWrap = document.getElementById('auth-carousel-dots');
+    const titleEl = document.getElementById('auth-slide-title');
+    const subtitleEl = document.getElementById('auth-slide-subtitle');
+    if (!slides.length) return;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'auth-carousel-dot' + (i === 0 ? ' active' : '');
+      dot.addEventListener('click', () => goToAuthSlide(i));
+      dotsWrap.appendChild(dot);
     });
-  });
+
+    let current = 0;
+    function goToAuthSlide(n) {
+      slides[current].classList.remove('active');
+      dotsWrap.children[current].classList.remove('active');
+      current = (n + slides.length) % slides.length;
+      slides[current].classList.add('active');
+      dotsWrap.children[current].classList.add('active');
+
+      if (titleEl && subtitleEl) {
+        titleEl.style.opacity = 0;
+        subtitleEl.style.opacity = 0;
+        setTimeout(() => {
+          titleEl.textContent = slides[current].dataset.title;
+          subtitleEl.textContent = slides[current].dataset.subtitle;
+          titleEl.style.opacity = 1;
+          subtitleEl.style.opacity = 1;
+        }, 300);
+      }
+    }
+    setInterval(() => goToAuthSlide(current + 1), 5000);
+  })();
+
+  // ── Toast notifications ──
+  (function () {
+    const container = document.getElementById('toast-container');
+    const queue = document.getElementById('toast-queue');
+    if (!queue || !container) return;
+    const config = {
+      success: { bg: '#22C55E', icon: '✅' },
+      error:   { bg: '#EF4444', icon: '❌' },
+      warning: { bg: '#F59E0B', icon: '⚠️' },
+      info:    { bg: '#2563EB', icon: 'ℹ️' },
+      debug:   { bg: '#6B7280', icon: '🔧' }
+    };
+    queue.querySelectorAll('.toast-item').forEach((item, i) => {
+      const cfg = config[item.dataset.type] || config.info;
+      const toast = document.createElement('div');
+      toast.style.cssText = 'pointer-events:auto;background:#fff;border-left:4px solid ' + cfg.bg + ';border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:0.9rem 1.1rem;display:flex;align-items:flex-start;gap:0.6rem;font-family:var(--font-body,sans-serif);font-size:0.9rem;color:#1f2937;opacity:0;transform:translateX(30px);transition:all 0.3s ease;';
+      toast.innerHTML = '<span style="font-size:1.05rem;flex-shrink:0;">' + cfg.icon + '</span><span style="flex:1;line-height:1.4;"></span><span style="cursor:pointer;color:#9ca3af;font-size:1rem;line-height:1;">&times;</span>';
+      toast.querySelector('span:nth-child(2)').textContent = item.textContent;
+      toast.querySelector('span:last-child').addEventListener('click', () => toast.remove());
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = 1; toast.style.transform = 'translateX(0)'; }, 50 + i * 120);
+      setTimeout(() => {
+        toast.style.opacity = 0; toast.style.transform = 'translateX(30px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 6000 + i * 120);
+    });
+  })();
 </script>
 
 </body>

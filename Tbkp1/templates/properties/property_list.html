@@ -1,0 +1,616 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Properties{% endblock title %}
+
+{% block content %}
+
+<div class="main-panel">
+    <div class="content-wrapper">
+
+    {% comment %} stats {% endcomment %}
+    <div class="row">
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">${{ total_revenue|floatformat:2|default:"0.00" }}</h3>
+                        <p class="text-success ms-2 mb-0 font-weight-medium">+{{ revenue_growth }}%</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-success ">
+                        <span class="mdi mdi-arrow-top-right icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Total Revenue</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                    <h3 class="mb-0">${{ monthly_revenue|floatformat:2|default:"0.00" }}</h3>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+{{ monthly_growth }}%</p>
+                </div>
+                </div>
+                <div class="col-3">
+                <div class="icon icon-box-success">
+                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                </div>
+                </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Monthly Revenue</h6>
+            </div>
+        </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                    <h3 class="mb-0">{{ total_properties }}</h3>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+{{ property_growth }}%</p>
+                </div>
+                </div>
+                <div class="col-3">
+                <div class="icon icon-box-success">
+                    <span class="mdi mdi-domain icon-item"></span>
+                </div>
+                </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Total Properties</h6>
+            </div>
+        </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                    <h3 class="mb-0">{{ active_clients }}</h3>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+{{ client_growth }}%</p>
+                </div>
+                </div>
+                <div class="col-3">
+                <div class="icon icon-box-success ">
+                    <span class="mdi mdi-account-group icon-item"></span>
+                </div>
+                </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Active Clients</h6>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {% comment %} chart {% endcomment %}
+    <div class="row">
+        <div class="col-lg-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <h4 class="card-title">Revenue Trend</h4>
+            <canvas id="lineChart" style="height:250px"></canvas>
+            </div>
+        </div>
+        </div>
+        <div class="col-lg-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <h4 class="card-title">Properties by Type</h4>
+            <canvas id="barChart" style="height:230px"></canvas>
+            </div>
+        </div>
+        </div>
+    </div>
+    {% comment %} end chart {% endcomment %}
+
+    {% comment %} Filter Section {% endcomment %}
+    <div class="row">
+        <div class="col-lg-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Filter Properties</h4>
+                    <form method="get" class="row">
+                        <div class="col-md-3 mb-3">
+                            <input type="text" name="search" class="form-control" placeholder="Search by title, description or address" value="{{ request.GET.search|default:'' }}">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <select name="type" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="bnb" {% if request.GET.type == 'bnb' %}selected{% endif %}>Bed & Breakfast</option>
+                                <option value="hotel" {% if request.GET.type == 'hotel' %}selected{% endif %}>Hotel</option>
+                                <option value="school" {% if request.GET.type == 'school' %}selected{% endif %}>School</option>
+                                <option value="residential" {% if request.GET.type == 'residential' %}selected{% endif %}>Residential</option>
+                                <option value="commercial" {% if request.GET.type == 'commercial' %}selected{% endif %}>Commercial</option>
+                                <option value="land" {% if request.GET.type == 'land' %}selected{% endif %}>Land</option>
+                                <option value="industrial" {% if request.GET.type == 'industrial' %}selected{% endif %}>Industrial</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="available" {% if request.GET.status == 'available' %}selected{% endif %}>Available</option>
+                                <option value="rented" {% if request.GET.status == 'rented' %}selected{% endif %}>Rented</option>
+                                <option value="sold" {% if request.GET.status == 'sold' %}selected{% endif %}>Sold</option>
+                                <option value="maintenance" {% if request.GET.status == 'maintenance' %}selected{% endif %}>Under Maintenance</option>
+                                <option value="reserved" {% if request.GET.status == 'reserved' %}selected{% endif %}>Reserved</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="text" name="city" class="form-control" placeholder="City" value="{{ request.GET.city|default:'' }}">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="number" name="min_price" class="form-control" placeholder="Min Price" value="{{ request.GET.min_price|default:'' }}">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="number" name="max_price" class="form-control" placeholder="Max Price" value="{{ request.GET.max_price|default:'' }}">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="number" name="bedrooms" class="form-control" placeholder="Min Bedrooms" value="{{ request.GET.bedrooms|default:'' }}">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            <a href="{% url 'property_list' %}" class="btn btn-secondary">Clear Filters</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} table {% endcomment %}
+    <div class="row">
+        <div class="col-lg-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <h4 class="card-title">All Properties Listing</h4>
+                <p class="card-description">Add <a href="{% url 'add_property' %}">New Property</a></p>
+                <div class="table-responsive">
+                    <table class="table">
+                    <thead>
+                        <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Property Type</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Price</th>
+                        <th>Bedrooms</th>
+                        <th>Floor</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for property in properties %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                            <td>{{ property.title|truncatechars:30 }}</td>
+                            <td>{{ property.get_property_type_display }}</td>
+                            <td>{{ property.city }}</td>
+                            <td>{{ property.state }}</td>
+                            <td>${{ property.price|floatformat:2|intcomma }}</td>
+                            <td>{{ property.bedrooms }}</td>
+                            <td>{{ property.floor_number }}</td>
+                            <td>
+                                {% if property.status == 'available' %}
+                                    <label class="badge badge-success">Available</label>
+                                {% elif property.status == 'rented' %}
+                                    <label class="badge badge-warning">Rented</label>
+                                {% elif property.status == 'sold' %}
+                                    <label class="badge badge-danger">Sold</label>
+                                {% elif property.status == 'maintenance' %}
+                                    <label class="badge badge-info">Maintenance</label>
+                                {% else %}
+                                    <label class="badge badge-secondary">{{ property.get_status_display }}</label>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'property_detail' property.pk %}" class="btn btn-sm btn-info">View</a>
+                                <a href="{% url 'property_edit' property.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                                <a href="{% url 'property_delete' property.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center">No properties found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+
+                {% comment %} Pagination {% endcomment %}
+                {% if is_paginated %}
+                <div class="pagination-wrapper mt-4">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page=1" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&laquo;&laquo;</span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link">&laquo;</span>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&raquo;</span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link">&raquo;&raquo;</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <div class="text-center text-muted mt-2">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} properties
+                    </div>
+                </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% comment %} end table {% endcomment %}
+
+    <div class="row">
+        <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <h4 class="card-title">Transaction History</h4>
+            <div class="position-relative">
+                <div class="daoughnutchart-wrapper">
+                <canvas id="transaction-history" class="transaction-chart"></canvas>
+                </div>
+                <div class="custom-value">${{ total_transactions|floatformat:2|default:"0" }} <span>Total</span>
+                </div>
+            </div>
+            {% for transaction in recent_transactions %}
+            <div class="bg-gray-dark d-flex d-md-block d-xl-flex flex-row py-3 px-4 px-md-3 px-xl-4 rounded mt-3">
+                <div class="text-md-center text-xl-left">
+                <h6 class="mb-1">{{ transaction.payment_method|title }}</h6>
+                <p class="text-muted mb-0">{{ transaction.payment_date|date:"M d, Y" }}</p>
+                </div>
+                <div class="align-self-center flex-grow text-end text-md-center text-xl-right py-md-2 py-xl-0">
+                <h6 class="font-weight-bold mb-0">${{ transaction.amount|floatformat:2 }}</h6>
+                </div>
+            </div>
+            {% empty %}
+            <div class="bg-gray-dark d-flex flex-row py-3 px-4 rounded mt-3">
+                <div class="text-center w-100">
+                    <p class="mb-0">No recent transactions</p>
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+        </div>
+        </div>
+        <div class="col-md-8 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+            <div class="d-flex flex-row justify-content-between">
+                <h4 class="card-title mb-1">Recent Properties</h4>
+                <p class="text-muted mb-1">Latest listings</p>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                <div class="preview-list">
+                    {% for property in recent_properties %}
+                    <div class="preview-item border-bottom">
+                        <div class="preview-thumbnail">
+                            <div class="preview-icon bg-{% cycle 'primary' 'success' 'info' 'danger' 'warning' %}">
+                                <i class="mdi mdi-home"></i>
+                            </div>
+                        </div>
+                        <div class="preview-item-content d-sm-flex flex-grow">
+                            <div class="flex-grow">
+                                <h6 class="preview-subject">{{ property.title|truncatechars:40 }}</h6>
+                                <p class="text-muted mb-0">{{ property.city }}, {{ property.state }}</p>
+                            </div>
+                            <div class="mr-auto text-sm-right pt-2 pt-sm-0">
+                                <p class="text-muted">${{ property.price|floatformat:2|intcomma }}</p>
+                                <p class="text-muted mb-0">{{ property.get_property_type_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="preview-item">
+                        <div class="text-center w-100 py-3">
+                            <p class="mb-0">No properties found</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    {% comment %} stats {% endcomment %}
+    <div class="row">
+        <div class="col-sm-4 grid-margin">
+        <div class="card">
+            <div class="card-body">
+            <h5>Total Revenue</h5>
+            <div class="row">
+                <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                <div class="d-flex d-sm-block d-md-flex align-items-center">
+                    <h2 class="mb-0">${{ total_revenue|floatformat:2|default:"0"|intcomma }}</h2>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+{{ revenue_growth }}%</p>
+                </div>
+                <h6 class="text-muted font-weight-normal">{{ revenue_percentage }}% Since last month</h6>
+                </div>
+                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                <i class="icon-lg mdi mdi-codepen text-primary ml-auto"></i>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+        <div class="col-sm-4 grid-margin">
+        <div class="card">
+            <div class="card-body">
+            <h5>Active Properties</h5>
+            <div class="row">
+                <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                <div class="d-flex d-sm-block d-md-flex align-items-center">
+                    <h2 class="mb-0">{{ active_properties_count }}</h2>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+{{ property_growth }}%</p>
+                </div>
+                <h6 class="text-muted font-weight-normal">{{ active_percentage }}% of total properties</h6>
+                </div>
+                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                <i class="icon-lg mdi mdi-domain text-danger ml-auto"></i>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+        <div class="col-sm-4 grid-margin">
+        <div class="card">
+            <div class="card-body">
+            <h5>Total Clients</h5>
+            <div class="row">
+                <div class="col-8 col-sm-12 col-xl-8 my-auto">
+                <div class="d-flex d-sm-block d-md-flex align-items-center">
+                    <h2 class="mb-0">{{ total_clients }}</h2>
+                    <p class="text-success ms-2 mb-0 font-weight-medium">+{{ client_growth }}%</p>
+                </div>
+                <h6 class="text-muted font-weight-normal">{{ new_clients_month }} new this month</h6>
+                </div>
+                <div class="col-4 col-sm-12 col-xl-4 text-center text-xl-right">
+                <i class="icon-lg mdi mdi-account-multiple text-success ml-auto"></i>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+    {% comment %} end stats {% endcomment %}
+    </div>
+    <!-- content-wrapper ends -->
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+        <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center"> <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span> <i class="mdi mdi-heart text-danger"></i></span>
+    </div>
+    </footer>
+    <!-- partial -->
+</div>
+
+<script>
+window.addEventListener('load', function () {
+    // The theme's own demo script (chart.js) also targets #barChart/#lineChart
+    // with placeholder data. Wait for full page load, then take over the
+    // canvas cleanly so our real, dynamic data renders instead.
+    function freshChart(canvasId, config) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || typeof Chart === 'undefined') return null;
+        var existing = Chart.getChart(canvas);
+        if (existing) existing.destroy();
+        return new Chart(canvas.getContext('2d'), config);
+    }
+
+    // Line Chart - Revenue Trend
+    freshChart('lineChart', {
+        type: 'line',
+        data: {
+            labels: {{ line_chart_labels|safe }},
+            datasets: [{
+                label: "Revenue (KES)",
+                data: {{ line_chart_data|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) { return 'KES ' + value.toLocaleString(); }
+                    }
+                }
+            }
+        }
+    });
+
+    // Bar Chart - Properties by Type
+    freshChart('barChart', {
+        type: 'bar',
+        data: {
+            labels: {{ bar_chart_labels|safe }},
+            datasets: [{
+                label: 'Number of Properties',
+                data: {{ bar_chart_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    // Doughnut Chart - Transaction History by Payment Method
+    freshChart('transaction-history', {
+        type: 'doughnut',
+        data: {
+            labels: {{ doughnut_labels|safe }},
+            datasets: [{
+                data: {{ doughnut_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)', 'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+/* Pagination Styles */
+.pagination-wrapper {
+    margin-top: 20px;
+}
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.page-item {
+    margin: 0 2px;
+}
+
+.page-link {
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: auto;
+}
+
+.pagination .page-link:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .page-link {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+}
+
+/* Filter form styling */
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+</style>
+
+
+
+{% endblock content %}

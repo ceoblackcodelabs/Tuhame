@@ -1,0 +1,534 @@
+<!-- apps/profiles/templates/profiles/edit_profile.html -->
+{% extends "home/base.html" %}
+
+{% block title %}Edit Profile{% endblock title %}
+
+{% block inject_css %}
+<style>
+  .edit-profile-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .edit-avatar-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 1.25rem;
+    text-align: center;
+    position: sticky;
+    top: calc(var(--nav-height) + 1rem);
+  }
+
+  .edit-avatar-preview {
+    width: 110px;
+    height: 110px;
+    border-radius: var(--radius-full);
+    margin: 0 auto 1rem;
+    object-fit: cover;
+    border: 3px solid var(--gray-100);
+    display: block;
+  }
+
+  .edit-avatar-fallback {
+    width: 110px;
+    height: 110px;
+    border-radius: var(--radius-full);
+    margin: 0 auto 1rem;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2.25rem;
+    font-weight: 700;
+  }
+
+  /* Hide Django's default file input + "Currently/Clear" markup, we build our own UI */
+  .edit-avatar-card input[type="file"] {
+    display: none;
+  }
+  .edit-avatar-card .file-clear-row {
+    display: none; /* we re-show a clean version of this via JS-free CSS trick below */
+  }
+
+  .edit-avatar-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    padding: 0.55rem 1.1rem;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-full);
+    transition: var(--transition-fast);
+  }
+
+  .edit-avatar-upload-label:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .edit-avatar-upload-label input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .edit-avatar-hint {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    margin-top: 0.6rem;
+  }
+
+  .edit-avatar-remove {
+    display: block;
+    margin: 0.6rem auto 0;
+    font-size: 0.78rem;
+    color: var(--gray-400);
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+  }
+  .edit-avatar-remove:hover { color: var(--danger); }
+
+  .edit-section-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .edit-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--gray-900);
+    margin-bottom: 1.25rem;
+  }
+
+  .edit-section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius);
+    background: rgba(37,99,235,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .edit-grid .full-width { grid-column: 1 / -1; }
+
+  .edit-field { display: flex; flex-direction: column; }
+
+  .edit-field label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-bottom: 0.5rem;
+  }
+
+  /* THE ACTUAL FIX: target real widget classes/tags, not a nonexistent .form-input class */
+  .edit-field input.form-control,
+  .edit-field select.form-control,
+  .edit-field textarea.form-control,
+  .edit-field input[type="text"],
+  .edit-field input[type="email"],
+  .edit-field input[type="tel"],
+  .edit-field input[type="date"],
+  .edit-field select,
+  .edit-field textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    color: var(--gray-800);
+    background: var(--gray-50);
+    outline: none;
+    transition: var(--transition);
+    font-family: inherit;
+    appearance: none;
+  }
+
+  .edit-field input:focus,
+  .edit-field select:focus,
+  .edit-field textarea:focus {
+    border-color: var(--primary);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  }
+
+  .edit-field select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 16px;
+    cursor: pointer;
+    padding-right: 2.5rem;
+  }
+
+  .edit-field textarea { resize: vertical; min-height: 90px; }
+
+  .edit-field-error {
+    color: var(--danger);
+    font-size: 0.78rem;
+    margin-top: 0.35rem;
+  }
+
+  .edit-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    background: var(--gray-50);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--gray-200);
+  }
+
+  .edit-checkbox-row input { accent-color: var(--primary); width: 17px; height: 17px; flex-shrink: 0; }
+
+  .edit-checkbox-row label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+
+  .edit-actions-bar {
+    display: flex;
+    gap: 0.875rem;
+    position: sticky;
+    bottom: 1rem;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .edit-actions-bar .btn { flex: 1; justify-content: center; }
+
+  [data-theme="dark"] .edit-avatar-card,
+  [data-theme="dark"] .edit-section-card,
+  [data-theme="dark"] .edit-actions-bar {
+    background: #242526;
+    border-color: #3A3B3C;
+  }
+
+  [data-theme="dark"] .edit-field input,
+  [data-theme="dark"] .edit-field select,
+  [data-theme="dark"] .edit-field textarea,
+  [data-theme="dark"] .edit-checkbox-row {
+    background: #2D2E30;
+    border-color: #3A3B3C;
+    color: #E4E6EB;
+  }
+
+  [data-theme="dark"] .edit-field label,
+  [data-theme="dark"] .edit-section-title {
+    color: #E4E6EB;
+  }
+
+  @media (max-width: 900px) {
+    .edit-profile-layout { grid-template-columns: 1fr; }
+    .edit-avatar-card { position: static; }
+  }
+
+  @media (max-width: 640px) {
+    .edit-grid { grid-template-columns: 1fr; }
+    .edit-section-card { padding: 1.25rem; }
+    .edit-actions-bar { flex-direction: column; position: static; }
+  }
+</style>
+{% endblock inject_css %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>✏️ Edit Profile</h1>
+    <p>Update your personal information</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top:2rem;padding-bottom:3rem;">
+
+  <!-- Breadcrumb -->
+  <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-400);margin-bottom:1.5rem;">
+    <a href="{% url 'my_profile' %}" style="color:var(--primary);">Profile</a>
+    <span>›</span>
+    <span>Edit Profile</span>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="edit-profile-form">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--danger);padding:0.875rem 1.125rem;border-radius:var(--radius);margin-bottom:1.5rem;font-size:0.875rem;">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="edit-profile-layout">
+
+      <!-- Avatar Sidebar -->
+      <div class="edit-avatar-card">
+        {% if user.profile.profile_picture %}
+          <img id="avatar-preview-img" class="edit-avatar-preview" src="{{ user.profile.profile_picture.url }}" alt="{{ user.get_full_name }}" />
+        {% else %}
+          <div id="avatar-fallback" class="edit-avatar-fallback">{{ user.get_full_name|slice:":1"|default:user.username|slice:":1"|upper }}</div>
+          <img id="avatar-preview-img" class="edit-avatar-preview" style="display:none;" alt="" />
+        {% endif %}
+
+        <div style="font-weight:700;font-size:0.95rem;color:var(--gray-900);margin-bottom:0.25rem;">
+          {{ user.get_full_name|default:user.username }}
+        </div>
+        <div style="font-size:0.8rem;color:var(--gray-400);margin-bottom:1.25rem;">{{ user.email }}</div>
+
+        <label class="edit-avatar-upload-label" for="{{ form.profile_picture.id_for_label }}">
+          📷 Change Photo
+          {{ form.profile_picture }}
+        </label>
+        <br>
+
+        {% if form.profile_picture.errors %}
+          <div class="edit-field-error">{{ form.profile_picture.errors.0 }}</div>
+        {% endif %}
+
+        {% if user.profile.profile_picture %}
+          <label class="edit-avatar-remove">
+            <input type="checkbox" name="profile_picture-clear" id="profile_picture-clear_id" style="margin-right:4px;">
+            Remove current photo
+          </label>
+        {% endif %}
+
+        <div class="edit-avatar-hint">JPG or PNG, max 5MB</div>
+      </div>
+
+      <!-- Form Sections -->
+      <div>
+
+        <!-- Account Role -->
+        <div class="edit-section-card">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">🎭</span> Account Role
+          </div>
+          <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1rem;">
+            Choose how you use 2Hame. <strong>House Hunter</strong> if you're looking for a place to move into.
+            <strong>Property Owner</strong> if you list and manage properties — this requires a quick review by our team.
+          </p>
+          <div class="edit-field full-width">
+            {{ form.role.label_tag }}
+            {{ form.role }}
+            {% if form.role.errors %}<div class="edit-field-error">{{ form.role.errors.0 }}</div>{% endif %}
+          </div>
+          {% if user.profile.role == 'owner' %}
+            {% if user.profile.is_verified_owner %}
+              <p style="font-size:0.8rem;color:var(--accent, #22C55E);margin-top:0.5rem;">✅ You're a verified property owner.</p>
+            {% elif user.profile.verification_status == 'pending' %}
+              <p style="font-size:0.8rem;color:#D97706;margin-top:0.5rem;">⏳ Your owner verification is pending review.</p>
+            {% elif user.profile.verification_status == 'rejected' %}
+              <p style="font-size:0.8rem;color:#DC2626;margin-top:0.5rem;">❌ Your previous owner request was rejected. Saving this form will not automatically resubmit it — use "Request Verification Again" on your profile page.</p>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <!-- Personal Information -->
+        <div class="edit-section-card">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">👤</span> Personal Information
+          </div>
+          <div class="edit-grid">
+            <div class="edit-field full-width">
+              {{ form.full_name.label_tag }}
+              {{ form.full_name }}
+              {% if form.full_name.errors %}<div class="edit-field-error">{{ form.full_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field full-width">
+              {{ form.bio.label_tag }}
+              {{ form.bio }}
+              {% if form.bio.errors %}<div class="edit-field-error">{{ form.bio.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.date_of_birth.label_tag }}
+              {{ form.date_of_birth }}
+              {% if form.date_of_birth.errors %}<div class="edit-field-error">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="edit-section-card">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">📞</span> Contact Information
+          </div>
+          <div class="edit-grid">
+            <div class="edit-field">
+              {{ form.phone_number.label_tag }}
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}<div class="edit-field-error">{{ form.phone_number.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.alternative_phone.label_tag }}
+              {{ form.alternative_phone }}
+              {% if form.alternative_phone.errors %}<div class="edit-field-error">{{ form.alternative_phone.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field full-width">
+              {{ form.address.label_tag }}
+              {{ form.address }}
+              {% if form.address.errors %}<div class="edit-field-error">{{ form.address.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.city.label_tag }}
+              {{ form.city }}
+              {% if form.city.errors %}<div class="edit-field-error">{{ form.city.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.state.label_tag }}
+              {{ form.state }}
+              {% if form.state.errors %}<div class="edit-field-error">{{ form.state.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.country.label_tag }}
+              {{ form.country }}
+              {% if form.country.errors %}<div class="edit-field-error">{{ form.country.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.zip_code.label_tag }}
+              {{ form.zip_code }}
+              {% if form.zip_code.errors %}<div class="edit-field-error">{{ form.zip_code.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Professional Information -->
+        <div class="edit-section-card">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">💼</span> Professional Information
+          </div>
+          <div class="edit-grid">
+            <div class="edit-field">
+              {{ form.occupation.label_tag }}
+              {{ form.occupation }}
+              {% if form.occupation.errors %}<div class="edit-field-error">{{ form.occupation.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.employer.label_tag }}
+              {{ form.employer }}
+              {% if form.employer.errors %}<div class="edit-field-error">{{ form.employer.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="edit-section-card">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">🚨</span> Emergency Contact
+          </div>
+          <div class="edit-grid">
+            <div class="edit-field">
+              {{ form.emergency_contact_name.label_tag }}
+              {{ form.emergency_contact_name }}
+              {% if form.emergency_contact_name.errors %}<div class="edit-field-error">{{ form.emergency_contact_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.emergency_contact_phone.label_tag }}
+              {{ form.emergency_contact_phone }}
+              {% if form.emergency_contact_phone.errors %}<div class="edit-field-error">{{ form.emergency_contact_phone.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field full-width">
+              {{ form.emergency_contact_relationship.label_tag }}
+              {{ form.emergency_contact_relationship }}
+              {% if form.emergency_contact_relationship.errors %}<div class="edit-field-error">{{ form.emergency_contact_relationship.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="edit-section-card">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">⚙️</span> Preferences
+          </div>
+          <div class="edit-grid">
+            <div class="edit-field">
+              {{ form.preferred_contact_method.label_tag }}
+              {{ form.preferred_contact_method }}
+              {% if form.preferred_contact_method.errors %}<div class="edit-field-error">{{ form.preferred_contact_method.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-field">
+              {{ form.preferred_language.label_tag }}
+              {{ form.preferred_language }}
+              {% if form.preferred_language.errors %}<div class="edit-field-error">{{ form.preferred_language.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="edit-checkbox-row">
+              {{ form.email_notifications }}
+              {{ form.email_notifications.label_tag }}
+            </div>
+            <div class="edit-checkbox-row">
+              {{ form.sms_notifications }}
+              {{ form.sms_notifications.label_tag }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="edit-actions-bar">
+          <a href="{% url 'my_profile' %}" class="btn btn-outline-dark">Cancel</a>
+          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+        </div>
+
+      </div>
+    </div>
+  </form>
+
+</div>
+
+{% endblock content %}
+
+{% block inject_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const fileInput = document.querySelector('.edit-avatar-upload-label input[type="file"]');
+    const previewImg = document.getElementById('avatar-preview-img');
+    const fallback = document.getElementById('avatar-fallback');
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          previewImg.src = ev.target.result;
+          previewImg.style.display = 'block';
+          if (fallback) fallback.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  });
+</script>
+{% endblock inject_js %}

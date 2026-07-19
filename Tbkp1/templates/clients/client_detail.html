@@ -1,0 +1,632 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Client Details - {{ client.name }}{% endblock title %}
+
+{% block content %}
+<div class="main-panel">
+    <div class="content-wrapper">
+
+        {% comment %} stats - Client Metadata {% endcomment %}
+        <div class="row">
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">{{ client.name|truncatechars:20 }}</h3>
+                                    <p class="text-success ms-2 mb-0 font-weight-medium"></p>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-success">
+                                    <span class="mdi mdi-account icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">Client Name</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">{{ client.get_client_type_display }}</h3>
+                                    <p class="text-success ms-2 mb-0 font-weight-medium"></p>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-success">
+                                    <span class="mdi mdi-badge-account icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">Client Type</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">{{ client.joined_date|date:"F d, Y" }}</h3>
+                                    <p class="text-success ms-2 mb-0 font-weight-medium"></p>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-success">
+                                    <span class="mdi mdi-calendar icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">Joined Date</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">
+                                        {% if client.is_active %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Inactive</span>
+                                        {% endif %}
+                                    </h3>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-success">
+                                    <span class="mdi mdi-check-circle icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">Status</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end stats {% endcomment %}
+
+        {% comment %} Contact Information Cards {% endcomment %}
+        <div class="row">
+            <div class="col-xl-6 col-sm-6 grid-margin stretch-card">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">Email Address</h3>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-success">
+                                    <span class="mdi mdi-email icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="font-weight-normal">{{ client.email }}</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6 col-sm-6 grid-margin stretch-card">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">Phone Number</h3>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-success">
+                                    <span class="mdi mdi-phone icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="font-weight-normal">{{ client.phone }}</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end Contact Information Cards {% endcomment %}
+
+        {% comment %} Personal & Address Information {% endcomment %}
+        <div class="row">
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex flex-row justify-content-between">
+                            <h4 class="card-title mb-1">Personal Information</h4>
+                            <a href="{% url 'client_edit' client.pk %}" class="btn btn-sm btn-primary">
+                                <i class="mdi mdi-pencil"></i> Edit Client
+                            </a>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="preview-list">
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-primary">
+                                                <i class="mdi mdi-account"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">Full Name</h6>
+                                                <p class="text-muted mb-0">{{ client.name }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-success">
+                                                <i class="mdi mdi-badge-account"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">Client Type</h6>
+                                                <p class="text-muted mb-0">{{ client.get_client_type_display }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-info">
+                                                <i class="mdi mdi-phone"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">Alternate Phone</h6>
+                                                <p class="text-muted mb-0">{{ client.alternate_phone|default:"Not provided" }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-warning">
+                                                <i class="mdi mdi-calendar"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">Member Since</h6>
+                                                <p class="text-muted mb-0">{{ client.joined_date|date:"F d, Y" }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex flex-row justify-content-between">
+                            <h4 class="card-title mb-1">Address & Location</h4>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="preview-list">
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-danger">
+                                                <i class="mdi mdi-map-marker"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">Street Address</h6>
+                                                <p class="text-muted mb-0">{{ client.address|default:"Not provided" }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-info">
+                                                <i class="mdi mdi-city"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">City</h6>
+                                                <p class="text-muted mb-0">{{ client.city|default:"Not provided" }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item border-bottom">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-success">
+                                                <i class="mdi mdi-map"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">State / Province</h6>
+                                                <p class="text-muted mb-0">{{ client.state|default:"Not provided" }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item">
+                                        <div class="preview-thumbnail">
+                                            <div class="preview-icon bg-primary">
+                                                <i class="mdi mdi-mailbox"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-content d-sm-flex flex-grow">
+                                            <div class="flex-grow">
+                                                <h6 class="preview-subject">ZIP / Postal Code</h6>
+                                                <p class="text-muted mb-0">{{ client.zip_code|default:"Not provided" }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end Personal & Address Information {% endcomment %}
+
+        {% comment %} Professional & Preferences Information {% endcomment %}
+        <div class="row">
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Professional Information</h4>
+                        <div class="preview-list">
+                            <div class="preview-item border-bottom">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-primary">
+                                        <i class="mdi mdi-briefcase"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content d-sm-flex flex-grow">
+                                    <div class="flex-grow">
+                                        <h6 class="preview-subject">Occupation</h6>
+                                        <p class="text-muted mb-0">{{ client.occupation|default:"Not provided" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="preview-item border-bottom">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-success">
+                                        <i class="mdi mdi-domain"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content d-sm-flex flex-grow">
+                                    <div class="flex-grow">
+                                        <h6 class="preview-subject">Employer</h6>
+                                        <p class="text-muted mb-0">{{ client.employer|default:"Not provided" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="preview-item">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-info">
+                                        <i class="mdi mdi-currency-usd"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content d-sm-flex flex-grow">
+                                    <div class="flex-grow">
+                                        <h6 class="preview-subject">Annual Income</h6>
+                                        <p class="text-muted mb-0">
+                                            {% if client.annual_income %}
+                                                ${{ client.annual_income|floatformat:2|intcomma }}
+                                            {% else %}
+                                                Not provided
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Property Preferences</h4>
+                        <div class="preview-list">
+                            <div class="preview-item border-bottom">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-warning">
+                                        <i class="mdi mdi-home"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content d-sm-flex flex-grow">
+                                    <div class="flex-grow">
+                                        <h6 class="preview-subject">Preferred Property Types</h6>
+                                        <p class="text-muted mb-0">{{ client.preferred_property_types|default:"Not specified" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="preview-item border-bottom">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-danger">
+                                        <i class="mdi mdi-currency-usd"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content d-sm-flex flex-grow">
+                                    <div class="flex-grow">
+                                        <h6 class="preview-subject">Budget Range</h6>
+                                        <p class="text-muted mb-0">
+                                            {% if client.budget_min and client.budget_max %}
+                                                ${{ client.budget_min|floatformat:2|intcomma }} - ${{ client.budget_max|floatformat:2|intcomma }}
+                                            {% elif client.budget_min %}
+                                                From ${{ client.budget_min|floatformat:2|intcomma }}
+                                            {% elif client.budget_max %}
+                                                Up to ${{ client.budget_max|floatformat:2|intcomma }}
+                                            {% else %}
+                                                Not specified
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="preview-item">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-info">
+                                        <i class="mdi mdi-map-marker"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content d-sm-flex flex-grow">
+                                    <div class="flex-grow">
+                                        <h6 class="preview-subject">Preferred Locations</h6>
+                                        <p class="text-muted mb-0">{{ client.preferred_locations|default:"Not specified"|linebreaks }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end Professional & Preferences Information {% endcomment %}
+
+        {% comment %} Documents Section {% endcomment %}
+        <div class="row">
+            <div class="col-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="card-title mb-0">
+                                <i class="mdi mdi-folder-documents"></i> Client Documents
+                            </h4>
+                            <a href="{% url 'document_add' client.pk %}" class="btn btn-primary btn-sm">
+                                <i class="mdi mdi-upload"></i> Upload Document
+                            </a>
+                        </div>
+                        <hr>
+                        {% if documents %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Type</th>
+                                            <th>Uploaded</th>
+                                            <th>Expires</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for doc in documents %}
+                                        <tr>
+                                            <td>{{ doc.title }}</td>
+                                            <td><span class="badge badge-info">{{ doc.get_document_type_display }}</span></td>
+                                            <td>{{ doc.uploaded_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                {{ doc.expires_at|date:"M d, Y"|default:"Never" }}
+                                                {% if doc.expires_at and doc.expires_at < today %}
+                                                    <span class="badge badge-danger">Expired</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if doc.expires_at and doc.expires_at < today %}
+                                                    <span class="badge badge-danger">Expired</span>
+                                                {% elif doc.expires_at and doc.expires_at < today|add:30 %}
+                                                    <span class="badge badge-warning">Expiring Soon</span>
+                                                {% else %}
+                                                    <span class="badge badge-success">Valid</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ doc.file.url }}" class="btn btn-sm btn-info" target="_blank">
+                                                        <i class="mdi mdi-eye"></i> View
+                                                    </a>
+                                                    <a href="{% url 'document_delete' doc.pk %}" class="btn btn-sm btn-danger"
+                                                       onclick="return confirm('Delete this document?')">
+                                                        <i class="mdi mdi-delete"></i> Delete
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="mdi mdi-folder-documents display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No documents uploaded yet.</p>
+                                <a href="{% url 'document_add' client.pk %}" class="btn btn-sm btn-primary">
+                                    Upload First Document
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end Documents Section {% endcomment %}
+
+        {% comment %} Watchlist Section {% endcomment %}
+        <div class="row">
+            <div class="col-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="card-title mb-0">
+                                <i class="mdi mdi-heart"></i> Property Watchlist
+                            </h4>
+                            <a href="{% url 'watchlist_add' client.pk %}" class="btn btn-primary btn-sm">
+                                <i class="mdi mdi-plus"></i> Add Property
+                            </a>
+                        </div>
+                        <hr>
+                        {% if watchlist %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Property</th>
+                                            <th>Location</th>
+                                            <th>Added On</th>
+                                            <th>Notes</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in watchlist %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'property_detail' item.property.pk %}" class="text-primary">
+                                                    {{ item.property.title }}
+                                                </a>
+                                            </td>
+                                            <td>{{ item.property.city }}, {{ item.property.state }}</td>
+                                            <td>{{ item.added_at|date:"M d, Y" }}</td>
+                                            <td>{{ item.notes|truncatechars:50|default:"-" }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{% url 'property_detail' item.property.pk %}" class="btn btn-sm btn-info">
+                                                        <i class="mdi mdi-eye"></i> View Property
+                                                    </a>
+                                                    <a href="{% url 'watchlist_delete' item.pk %}" class="btn btn-sm btn-danger"
+                                                       onclick="return confirm('Remove from watchlist?')">
+                                                        <i class="mdi mdi-delete"></i> Remove
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="mdi mdi-heart-outline display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No properties in watchlist.</p>
+                                <a href="{% url 'watchlist_add' client.pk %}" class="btn btn-sm btn-primary">
+                                    Add Properties to Watchlist
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end Watchlist Section {% endcomment %}
+
+        {% comment %} Action Buttons {% endcomment %}
+        <div class="row">
+            <div class="col-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <a href="{% url 'client_edit' client.pk %}" class="btn btn-primary">
+                            <i class="mdi mdi-pencil"></i> Edit Client
+                        </a>
+                        <a href="{% url 'client_list' %}" class="btn btn-secondary">
+                            <i class="mdi mdi-arrow-left"></i> Back to Clients
+                        </a>
+                        {% if user.is_staff %}
+                        <button onclick="window.print();" class="btn btn-info">
+                            <i class="mdi mdi-printer"></i> Print Profile
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} end Action Buttons {% endcomment %}
+
+    </div>
+    <!-- content-wrapper ends -->
+
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+        <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2024 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+            <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+        </div>
+    </footer>
+    <!-- partial -->
+</div>
+
+<style>
+    @media print {
+        .btn, .navbar, .footer, .card-header, .grid-margin {
+            display: none;
+        }
+        .card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .content-wrapper {
+            padding: 0;
+            margin: 0;
+        }
+    }
+
+    .badge {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    .preview-list .preview-item {
+        padding: 10px 0;
+    }
+
+    .preview-item .preview-thumbnail {
+        width: 40px;
+    }
+
+    .bg-primary, .bg-success, .bg-info, .bg-warning, .bg-danger {
+        transition: transform 0.2s;
+    }
+
+    .bg-primary:hover, .bg-success:hover, .bg-info:hover, .bg-warning:hover, .bg-danger:hover {
+        transform: translateY(-5px);
+    }
+
+    a.text-primary:hover {
+        text-decoration: underline;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+</style>
+
+{% endblock content %}

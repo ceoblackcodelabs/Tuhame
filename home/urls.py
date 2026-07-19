@@ -30,4 +30,14 @@ urlpatterns = [
     path('api/checklist/add/', ChecklistAddView.as_view(), name='checklist_add'),
     path('api/checklist/<int:pk>/toggle/', ChecklistToggleView.as_view(), name='checklist_toggle'),
     path('api/checklist/<int:pk>/delete/', ChecklistDeleteView.as_view(), name='checklist_delete'),
+
+    # movers marketplace
+    path('movers/map/', MoverMapView.as_view(), name='mover_map'),
+    path('movers/<str:username>/', MoverDetailView.as_view(), name='mover_detail'),
+    path('api/movers/map-data/', MoverMapDataView.as_view(), name='mover_map_data'),
+    path('api/movers/nearby/', MoversNearbyDataView.as_view(), name='movers_nearby_data'),
+    path('api/move-requests/<int:pk>/commit/', CommitMoveOfferView.as_view(), name='commit_move_offer'),
+    path('api/move-requests/<int:pk>/offers/', MoveRequestOffersView.as_view(), name='move_request_offers'),
+    path('api/move-offers/<int:pk>/withdraw/', WithdrawMoveOfferView.as_view(), name='withdraw_move_offer'),
+    path('api/move-offers/<int:pk>/accept/', AcceptMoveOfferView.as_view(), name='accept_move_offer'),
 ]

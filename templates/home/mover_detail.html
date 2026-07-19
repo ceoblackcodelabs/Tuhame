@@ -1,0 +1,91 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}{{ mover_profile.get_full_name }} - Mover Profile -{% endblock title %}
+
+{% block content %}
+<section class="section" style="padding-top:7rem;background:linear-gradient(180deg,#EFF6FF 0%,#fff 100%);">
+  <div class="container">
+    <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;">
+      <div style="width:96px;height:96px;border-radius:50%;overflow:hidden;flex-shrink:0;border:4px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
+        {% if mover_profile.profile_picture %}
+          <img src="{{ mover_profile.profile_picture.url }}" alt="{{ mover_profile.get_full_name }}" style="width:100%;height:100%;object-fit:cover;" />
+        {% else %}
+          <div style="width:100%;height:100%;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:800;font-family:var(--font-display);">
+            {{ mover_profile.get_full_name|first|upper }}
+          </div>
+        {% endif %}
+      </div>
+      <div>
+        <h1 style="font-family:var(--font-display);font-size:1.75rem;margin-bottom:0.25rem;">🚚 {{ mover_profile.get_full_name }}</h1>
+        <p style="color:var(--gray-500);">Mover on Tuhame since {{ mover_profile.created_at|date:"F Y" }}</p>
+        <div style="margin-top:0.5rem;">
+          {% if trust_score %}
+            <span class="badge" style="background:rgba(34,197,94,0.12);color:#16A34A;font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">⭐ Trust Score: {{ trust_score }}/100</span>
+          {% else %}
+            <span class="badge" style="background:rgba(37,99,235,0.1);color:var(--primary);font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">🆕 New Mover</span>
+          {% endif %}
+          <span class="badge" style="background:var(--gray-100);color:var(--gray-600);font-weight:600;padding:0.4rem 0.75rem;border-radius:999px;margin-left:0.4rem;">✅ {{ completed_moves }} move{{ completed_moves|pluralize }} completed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:2rem;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:2.5rem;" class="move-score-section-grid">
+      <div>
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.75rem;margin-bottom:1.5rem;">
+          <h3 style="font-family:var(--font-display);font-size:1.05rem;margin-bottom:0.75rem;">About</h3>
+          {% if mover_profile.mover_bio %}
+            <p style="color:var(--gray-600);line-height:1.7;">{{ mover_profile.mover_bio }}</p>
+          {% else %}
+            <p style="color:var(--gray-400);font-style:italic;">This mover hasn't added a bio yet.</p>
+          {% endif %}
+        </div>
+
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.75rem;">
+          <h3 style="font-family:var(--font-display);font-size:1.05rem;margin-bottom:1rem;">Details</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+            <div>
+              <div style="font-size:0.78rem;color:var(--gray-400);">Vehicle</div>
+              <div style="font-weight:600;">
+                {% if mover_profile.mover_vehicle_type %}
+                  {{ mover_profile.get_mover_vehicle_type_display }}
+                {% else %}Not specified{% endif %}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.78rem;color:var(--gray-400);">Experience</div>
+              <div style="font-weight:600;">{{ mover_profile.mover_years_experience }} year{{ mover_profile.mover_years_experience|pluralize }}</div>
+            </div>
+            <div style="grid-column:1/-1;">
+              <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.4rem;">Service Areas</div>
+              {% if service_areas %}
+                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+                  {% for area in service_areas %}
+                    <span style="background:var(--gray-100);padding:0.25rem 0.65rem;border-radius:999px;font-size:0.8rem;">{{ area }}</span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div style="color:var(--gray-400);">Not specified</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="background:var(--primary);border-radius:var(--radius-lg);padding:1.75rem;color:#fff;">
+          <h4 style="font-family:var(--font-display);margin-bottom:0.5rem;">Need a hand moving?</h4>
+          <p style="font-size:0.85rem;color:rgba(255,255,255,0.85);margin-bottom:1rem;">
+            Create a move request and movers like {{ mover_profile.get_full_name }} can commit with their price.
+          </p>
+          <a href="{% url 'my_profile' %}#planner" class="btn btn-accent btn-sm">Request a Move →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

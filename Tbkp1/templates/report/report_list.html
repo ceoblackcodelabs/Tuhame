@@ -1,0 +1,322 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="main-panel">
+    <div class="content-wrapper">
+        {% comment %} stats {% endcomment %}
+        <div class="row">
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                    <div class="row">
+                        <div class="col-9">
+                        <div class="d-flex align-items-center align-self-start">
+                            <h3 class="mb-0">{{ total_reports }}</h3>
+                            <p class="text-success ms-2 mb-0 font-weight-medium"></p>
+                        </div>
+                        </div>
+                        <div class="col-3">
+                        <div class="icon icon-box-success ">
+                            <span class="mdi mdi-arrow-top-right icon-item"></span>
+                        </div>
+                        </div>
+                    </div>
+                    <h6 class="text-muted font-weight-normal">Total Reports</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">{{ recent_reports }}</h3>
+                        <p class="text-success ms-2 mb-0 font-weight-medium">Last 7 days</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-success">
+                        <span class="mdi mdi-arrow-top-right icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Recent Reports</h6>
+                </div>
+            </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">{{ pending_invoices }}</h3>
+                        <p class="text-success ms-2 mb-0 font-weight-medium">${{ pending_amount|floatformat:2|intcomma }}</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-success">
+                        <span class="mdi mdi-domain icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Pending Invoices</h6>
+                </div>
+            </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-9">
+                    <div class="d-flex align-items-center align-self-start">
+                        <h3 class="mb-0">{{ overdue_invoices }}</h3>
+                        <p class="text-success ms-2 mb-0 font-weight-medium">${{ overdue_amount|floatformat:2|intcomma }}</p>
+                    </div>
+                    </div>
+                    <div class="col-3">
+                    <div class="icon icon-box-success ">
+                        <span class="mdi mdi-account-group icon-item"></span>
+                    </div>
+                    </div>
+                </div>
+                <h6 class="text-muted font-weight-normal">Overdue Invoices</h6>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        {% comment %} chart {% endcomment %}
+        <div class="row">
+            <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <h4 class="card-title">Revenue Trend</h4>
+                <canvas id="lineChart" style="height:250px"></canvas>
+                </div>
+            </div>
+            </div>
+            <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                <h4 class="card-title">Properties by Type</h4>
+                <canvas id="barChart" style="height:230px"></canvas>
+                </div>
+            </div>
+            </div>
+        </div>
+        {% comment %} end chart {% endcomment %}
+
+        {% comment %} table {% endcomment %}
+        <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h4 class="card-title">Report Management</h4>
+                            </div>
+                            <div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="mdi mdi-plus"></i> Generate Report
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'report_generate' %}">Custom Report</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'daily_report' %}">Daily Report</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Form -->
+                        <form method="get" class="row mb-4">
+                            <div class="col-md-3">
+                                <input type="text" name="search" class="form-control"
+                                       placeholder="Search by title, ID..."
+                                       value="{{ request.GET.search|default:'' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="type" class="form-select">
+                                    <option value="">All Types</option>
+                                    {% for type_value, type_label in report_types %}
+                                        <option value="{{ type_value }}" {% if request.GET.type == type_value %}selected{% endif %}>
+                                            {{ type_label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="date_from" class="form-control"
+                                       placeholder="From Date" value="{{ request.GET.date_from|default:'' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="date_to" class="form-control"
+                                       placeholder="To Date" value="{{ request.GET.date_to|default:'' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary">Filter</button>
+                                <a href="{% url 'report_list' %}" class="btn btn-secondary">Clear</a>
+                            </div>
+                        </form>
+
+                        <!-- Reports Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Report ID</th>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Period</th>
+                                        <th>Generated By</th>
+                                        <th>Generated At</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in reports %}
+                                    <tr>
+                                        <td>
+                                            <code>{{ report.report_id }}</code>
+                                        </td>
+                                        <td>
+                                            <strong>{{ report.title }}</strong><br>
+                                            <small class="text-muted">{{ report.description|truncatechars:50 }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-info">{{ report.get_report_type_display }}</span>
+                                        </td>
+                                        <td>
+                                            {{ report.start_date|date }} to {{ report.end_date|date }}
+                                        </td>
+                                        <td>{{ report.generated_by.username|default:"System" }}</td>
+                                        <td>{{ report.generated_at|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            {% if report.status == 'completed' %}
+                                                <span class="badge badge-success">Completed</span>
+                                            {% elif report.status == 'generating' %}
+                                                <span class="badge badge-warning">Generating</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Failed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'report_detail' report.pk %}" class="btn btn-sm btn-info">View</a>
+                                            <a href="{% url 'report_delete' report.pk %}" class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Delete this report?')">Delete</a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No reports found. Generate your first report!</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <div class="pagination-wrapper mt-4">
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                                        </li>
+                                    {% endif %}
+                                    {% for num in page_obj.paginator.page_range %}
+                                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endfor %}
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.addEventListener('load', function () {
+    function freshChart(canvasId, config) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || typeof Chart === 'undefined') return null;
+        var existing = Chart.getChart(canvas);
+        if (existing) existing.destroy();
+        return new Chart(canvas.getContext('2d'), config);
+    }
+
+    freshChart('lineChart', {
+        type: 'line',
+        data: {
+            labels: {{ line_chart_labels|safe }},
+            datasets: [{
+                label: 'Revenue (KES)',
+                data: {{ line_chart_data|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: function(value) { return 'KES ' + value.toLocaleString(); } }
+                }
+            }
+        }
+    });
+
+    freshChart('barChart', {
+        type: 'bar',
+        data: {
+            labels: {{ bar_chart_labels|safe }},
+            datasets: [{
+                label: 'Number of Properties',
+                data: {{ bar_chart_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+});
+</script>
+{% endblock %}

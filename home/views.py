@@ -599,7 +599,10 @@ class PropertyMapDataView(View):
 
 
 # move
-from .models import MoveRequest, MoveChecklistItem
+from .models import MoveRequest, MoveChecklistItem, MoveOffer, MoveOfferStatus
+from .utils import haversine_km, estimate_eta_minutes
+from django.contrib.auth.mixins import UserPassesTestMixin
+from decimal import Decimal, InvalidOperation
 class SubmitMoveRequestView(LoginRequiredMixin, View):
     """View for submitting a move request"""
 
@@ -619,7 +622,7 @@ class SubmitMoveRequestView(LoginRequiredMixin, View):
         move_date = request.POST.get('move_date')
         move_time = request.POST.get('move_time')
         items = request.POST.getlist('items')
-        special_instructions = request.POST.get('special_instructions')
+        special_instructions = request.POST.get('special_instructions', '')
         request_mover = request.POST.get('request_mover') == 'on'
         movers_count = request.POST.get('movers_count', 2)
         estimated_hours = request.POST.get('estimated_hours', 4)
@@ -797,3 +800,203 @@ class ContactView(View):
 
         messages.error(request, "Please correct the errors below.")
         return render(request, self.template_name, {'form': form})
+
+
+class MoverDetailView(LoginRequiredMixin, DetailView):
+    """Public mover portfolio page - trust score, bio, service areas"""
+    model = Profile
+    template_name = 'home/mover_detail.html'
+    context_object_name = 'mover_profile'
+    slug_field = 'user__username'
+    slug_url_kwarg = 'username'
+
+    def get_queryset(self):
+        return Profile.objects.filter(role='mover', is_active=True, user__is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile = self.object
+        context['trust_score'] = profile.get_trust_score()
+        context['completed_moves'] = profile.completed_moves_count()
+        context['service_areas'] = profile.get_mover_service_areas_list()
+        return context
+
+
+class MoversNearbyDataView(LoginRequiredMixin, View):
+    """JSON feed of movers with a set base location, for the property map search"""
+
+    def get(self, request):
+        movers = Profile.objects.filter(
+            role='mover', is_active=True, user__is_active=True,
+            mover_base_lat__isnull=False, mover_base_lng__isnull=False,
+        ).select_related('user')
+
+        data = []
+        for m in movers:
+            data.append({
+                'username': m.user.username,
+                'name': m.get_full_name(),
+                'lat': float(m.mover_base_lat),
+                'lng': float(m.mover_base_lng),
+                'label': m.mover_base_label or m.city,
+                'vehicle': m.get_mover_vehicle_type_display() if m.mover_vehicle_type else 'Mover',
+                'trust_score': m.get_trust_score(),
+                'completed_moves': m.completed_moves_count(),
+            })
+        return JsonResponse({'movers': data})
+
+
+class MoverMapView(LoginRequiredMixin, TemplateView):
+    """
+    Uber-style map for movers: shows open move requests (house hunters who
+    need help moving) as pins so a mover can browse and commit to one.
+    """
+    template_name = 'map/mover_map.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_mover'] = hasattr(self.request.user, 'profile') and self.request.user.profile.is_mover()
+        return context
+
+
+class MoverMapDataView(LoginRequiredMixin, View):
+    """JSON feed of open move requests (pending, wants a mover, not yet matched)"""
+
+    def get(self, request):
+        requests = MoveRequest.objects.filter(
+            request_mover=True,
+            status='pending',
+            moving_from_lat__isnull=False,
+            moving_from_lng__isnull=False,
+        ).exclude(user=request.user).select_related('user', 'moving_to_property')
+
+        data = []
+        for mr in requests:
+            already_committed = mr.offers.filter(mover=request.user).exclude(status=MoveOfferStatus.WITHDRAWN).exists()
+            data.append({
+                'id': mr.id,
+                'from_lat': float(mr.moving_from_lat),
+                'from_lng': float(mr.moving_from_lng),
+                'to_lat': float(mr.moving_to_lat) if mr.moving_to_lat else None,
+                'to_lng': float(mr.moving_to_lng) if mr.moving_to_lng else None,
+                'moving_from': mr.moving_from,
+                'moving_to': mr.moving_to_property.title if mr.moving_to_property else mr.moving_to_manual,
+                'move_date': mr.move_date.strftime('%b %d, %Y'),
+                'move_time': mr.get_move_time_display(),
+                'movers_count': mr.movers_count,
+                'estimated_hours': mr.estimated_hours,
+                'items': mr.get_items_display(),
+                'mover_notes': mr.mover_notes,
+                'offers_count': mr.open_offers_count(),
+                'already_committed': already_committed,
+            })
+        return JsonResponse({'requests': data})
+
+
+class CommitMoveOfferView(LoginRequiredMixin, View):
+    """A mover commits (bids) on a move request with their price and live location"""
+
+    def post(self, request, pk):
+        profile = getattr(request.user, 'profile', None)
+        if not profile or not profile.is_mover():
+            return JsonResponse({'success': False, 'error': 'Only users with the Mover role can commit to a move.'}, status=403)
+
+        move_request = get_object_or_404(MoveRequest, pk=pk, request_mover=True)
+        if move_request.status != 'pending':
+            return JsonResponse({'success': False, 'error': 'This move request is no longer open.'}, status=400)
+        if move_request.user_id == request.user.id:
+            return JsonResponse({'success': False, 'error': "You can't commit to your own move request."}, status=400)
+
+        price_raw = request.POST.get('price')
+        lat = request.POST.get('lat')
+        lng = request.POST.get('lng')
+
+        try:
+            price = Decimal(price_raw)
+            if price <= 0:
+                raise InvalidOperation
+        except (InvalidOperation, TypeError):
+            return JsonResponse({'success': False, 'error': 'Enter a valid price.'}, status=400)
+
+        distance_km = None
+        eta_minutes = None
+        if lat and lng and move_request.moving_from_lat and move_request.moving_from_lng:
+            try:
+                distance_km = round(haversine_km(lat, lng, move_request.moving_from_lat, move_request.moving_from_lng), 2)
+                eta_minutes = estimate_eta_minutes(distance_km)
+            except (ValueError, TypeError):
+                pass
+
+        offer, created = MoveOffer.objects.update_or_create(
+            move_request=move_request,
+            mover=request.user,
+            defaults={
+                'price': price,
+                'status': MoveOfferStatus.PENDING,
+                'mover_lat': lat or None,
+                'mover_lng': lng or None,
+                'distance_km': distance_km,
+                'eta_minutes': eta_minutes,
+            }
+        )
+
+        return JsonResponse({
+            'success': True,
+            'offer_id': offer.pk,
+            'distance_km': float(distance_km) if distance_km is not None else None,
+            'eta_minutes': eta_minutes,
+        })
+
+
+class WithdrawMoveOfferView(LoginRequiredMixin, View):
+    """A mover withdraws their own pending offer"""
+
+    def post(self, request, pk):
+        offer = get_object_or_404(MoveOffer, pk=pk, mover=request.user)
+        if offer.status == MoveOfferStatus.PENDING:
+            offer.status = MoveOfferStatus.WITHDRAWN
+            offer.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'This offer can no longer be withdrawn.'}, status=400)
+
+
+class MoveRequestOffersView(LoginRequiredMixin, View):
+    """
+    Polling endpoint: the house hunter's page calls this periodically to get
+    a live-ish view of who has committed to their move request.
+    """
+
+    def get(self, request, pk):
+        move_request = get_object_or_404(MoveRequest, pk=pk, user=request.user)
+        offers = move_request.offers.exclude(status=MoveOfferStatus.WITHDRAWN).select_related('mover', 'mover__profile')
+
+        data = []
+        for offer in offers:
+            mover_profile = getattr(offer.mover, 'profile', None)
+            data.append({
+                'id': offer.pk,
+                'mover_name': mover_profile.get_full_name() if mover_profile else offer.mover.username,
+                'price': float(offer.price),
+                'distance_km': float(offer.distance_km) if offer.distance_km is not None else None,
+                'eta_minutes': offer.eta_minutes,
+                'status': offer.status,
+                'created_at': offer.created_at.strftime('%H:%M'),
+            })
+
+        return JsonResponse({
+            'move_request_status': move_request.status,
+            'offers': data,
+        })
+
+
+class AcceptMoveOfferView(LoginRequiredMixin, View):
+    """The house hunter accepts one mover's offer, dropping all the others"""
+
+    def post(self, request, pk):
+        offer = get_object_or_404(MoveOffer, pk=pk, move_request__user=request.user)
+        if offer.status != MoveOfferStatus.PENDING:
+            return JsonResponse({'success': False, 'error': 'This offer is no longer available.'}, status=400)
+
+        offer.accept()
+        messages.success(request, f"You've matched with {offer.mover.get_full_name() or offer.mover.username} for your move!")
+        return JsonResponse({'success': True})
