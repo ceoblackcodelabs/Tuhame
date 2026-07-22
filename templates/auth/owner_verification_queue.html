@@ -39,6 +39,7 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
+                                        <th>Role</th>
                                         <th>Username</th>
                                         <th>Email</th>
                                         <th>Phone</th>
@@ -50,6 +51,13 @@
                                     {% for profile in profiles %}
                                     <tr>
                                         <td><strong>{{ profile.get_full_name }}</strong></td>
+                                        <td>
+                                            {% if profile.role == 'owner' %}
+                                                <label class="badge badge-info">🏠 Owner</label>
+                                            {% else %}
+                                                <label class="badge badge-warning">🚚 Mover</label>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ profile.user.username }}</td>
                                         <td>{{ profile.user.email|default:"-" }}</td>
                                         <td>{{ profile.phone_number|default:"-" }}</td>
@@ -95,7 +103,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="6" class="text-center">No pending owner verification requests.</td>
+                                        <td colspan="7" class="text-center">No pending verification requests.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -117,6 +125,7 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
+                                        <th>Role</th>
                                         <th>Status</th>
                                         <th>Reviewed By</th>
                                         <th>Reviewed At</th>
@@ -126,6 +135,7 @@
                                     {% for profile in recently_reviewed %}
                                     <tr>
                                         <td>{{ profile.get_full_name }}</td>
+                                        <td>{% if profile.role == 'owner' %}🏠 Owner{% else %}🚚 Mover{% endif %}</td>
                                         <td>
                                             {% if profile.verification_status == 'approved' %}
                                                 <label class="badge badge-success">Approved</label>

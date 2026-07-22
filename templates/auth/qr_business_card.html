@@ -1,0 +1,52 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}My {{ card_title }} QR Card -{% endblock title %}
+
+{% block content %}
+<section class="section" style="padding-top:7rem;min-height:80vh;display:flex;align-items:center;">
+  <div class="container" style="max-width:520px;">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <h1 style="font-family:var(--font-display);font-size:1.5rem;">{{ card_icon }} My {{ card_title }} Card</h1>
+      <p style="color:var(--gray-500);font-size:0.9rem;">Share this QR code — anyone who scans it sees your public portfolio.</p>
+    </div>
+
+    <div class="dashboard-card" style="padding:0;overflow:hidden;">
+      <div style="background:linear-gradient(135deg, {% if card_type == 'owner' %}#1E3A8A 0%, #2563EB{% else %}#D97706 0%, #F59E0B{% endif %} 100%);padding:2rem;color:#fff;">
+        <div style="text-align:center;margin-bottom:1.25rem;">
+          <div style="display:inline-flex;align-items:center;gap:0.5rem;font-family:var(--font-display);font-weight:800;font-size:1.15rem;">
+            <img src="{% static 'assets/images/favicon.svg' %}" alt="Tuhame" style="width:28px;height:28px;border-radius:6px;" />
+            Tuhame
+          </div>
+          <div style="font-size:0.8rem;opacity:0.85;margin-top:0.25rem;">{{ card_icon }} {{ card_title }}</div>
+        </div>
+
+        <div style="background:#fff;border-radius:var(--radius-lg);padding:1rem;width:fit-content;margin:0 auto;">
+          {% if qr_code %}
+            <img src="{{ qr_code }}" alt="QR Code" width="220" height="220" style="display:block;max-width:100%;height:auto;image-rendering:pixelated;" />
+          {% else %}
+            <div style="width:220px;height:220px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;">
+              <span style="color:#999;">QR unavailable</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div style="text-align:center;margin-top:1.25rem;">
+          <div style="font-weight:800;font-size:1.1rem;">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div style="font-size:0.78rem;opacity:0.75;margin-top:0.15rem;word-break:break-all;">{{ portfolio_url }}</div>
+        </div>
+      </div>
+
+      <div style="padding:1.5rem;">
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+          {% if qr_code %}
+            <a href="{{ qr_code }}" download="{{ card_type }}-qr-card.png" class="btn btn-primary btn-sm">⬇️ Download QR</a>
+          {% endif %}
+          <a href="{{ portfolio_url }}" target="_blank" class="btn btn-outline-dark btn-sm">🔗 View My Public Page</a>
+          <a href="{% url 'my_profile' %}" class="btn btn-outline-dark btn-sm">← Back to Profile</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

@@ -25,6 +25,10 @@ urlpatterns = [
     # Regenerate QR
     path('regenerate-qr/', views.RegenerateQRView.as_view(), name='regenerate_qr'),
 
+    # Owner/Mover QR business cards
+    path('owner-qr-card/', views.OwnerQRCardView.as_view(), name='owner_qr_card'),
+    path('mover-qr-card/', views.MoverQRCardView.as_view(), name='mover_qr_card'),
+
     # Owner verification workflow
     path('request-owner-verification/', views.RequestOwnerVerificationView.as_view(), name='request_owner_verification'),
     path('owner-verification/', views.OwnerVerificationQueueView.as_view(), name='owner_verification_queue'),

@@ -310,6 +310,8 @@ class UserRegistrationForm(forms.ModelForm):
                 profile.save()
                 if role == 'owner':
                     profile.request_owner_verification()
+                elif role == 'mover':
+                    profile.request_mover_verification()
             except Profile.DoesNotExist:
                 # If signal didn't create it (shouldn't happen), create it now
                 profile = Profile.objects.create(
@@ -321,6 +323,8 @@ class UserRegistrationForm(forms.ModelForm):
                 )
                 if role == 'owner':
                     profile.request_owner_verification()
+                elif role == 'mover':
+                    profile.request_mover_verification()
 
         return user
 

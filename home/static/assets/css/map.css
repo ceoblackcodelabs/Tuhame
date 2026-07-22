@@ -248,6 +248,71 @@ box-shadow: 0 12px 32px rgba(0,0,0,0.18) !important; border: none !important;
 .popup-img { width: 100%; height: 110px; object-fit: cover; display: block; }
 .popup-body { padding: 0.875rem; }
 .popup-name { font-weight: 700; font-size: 0.875rem; color: #111; margin-bottom: 0.2rem; }
+
+/* ── Mover popup card (separate from property popup sizing) ── */
+.mover-popup .leaflet-popup-content-wrapper {
+  border-radius: 16px !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.mover-popup .leaflet-popup-content {
+  width: 250px !important;
+  margin: 0 !important;
+}
+.mover-popup-card {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}
+.mover-popup-card .mp-header {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  padding: 1rem 1.1rem 0.85rem;
+  color: #fff;
+}
+.mover-popup-card .mp-name {
+  font-weight: 800;
+  font-size: 0.98rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.mover-popup-card .mp-vehicle {
+  font-size: 0.78rem;
+  opacity: 0.9;
+  margin-top: 0.15rem;
+}
+.mover-popup-card .mp-body {
+  padding: 0.85rem 1.1rem 1rem;
+}
+.mover-popup-card .mp-stats {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.mover-popup-card .mp-stat {
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+}
+.mover-popup-card .mp-stat.trust {
+  background: rgba(34,197,94,0.14);
+  color: #15803D;
+}
+.mover-popup-card .mp-cta {
+  display: block;
+  text-align: center;
+  background: #111827;
+  color: #fff;
+  padding: 0.55rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.mover-popup-card .mp-cta:hover { background: #1F2937; }
 .popup-loc { font-size: 0.72rem; color: #9CA3AF; margin-bottom: 0.4rem; }
 .popup-price { font-weight: 800; font-size: 1rem; color: #2563EB; margin-bottom: 0.7rem; }
 .popup-meta { display: flex; gap: 0.6rem; font-size: 0.72rem; color: #6B7280; margin-bottom: 0.75rem; }

@@ -13,7 +13,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import RedirectView
 from .forms import ProfileForm, UserRegistrationForm
@@ -32,12 +32,24 @@ class LoginView(FormView):
     """
     template_name = 'auth/login.html'
     form_class = AuthenticationForm
-    success_url = reverse_lazy('home:home')
+
+    def get_success_url(self, user=None):
+        """
+        Respects a 'next' redirect target (e.g. from a login-required page),
+        otherwise sends verified property owners to their dashboard and
+        everyone else to the home page.
+        """
+        next_url = self.request.GET.get('next') or self.request.POST.get('next')
+        if next_url and next_url.startswith('/'):
+            return next_url
+        if user and hasattr(user, 'profile') and user.profile.role == 'owner' and user.profile.is_verified_owner:
+            return reverse_lazy('dashboard')
+        return reverse_lazy('home:home')
 
     def dispatch(self, request, *args, **kwargs):
-        """Redirect authenticated users to dashboard"""
+        """Redirect already-authenticated users straight through"""
         if request.user.is_authenticated:
-            return redirect(self.success_url)
+            return redirect(self.get_success_url(request.user))
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -49,7 +61,7 @@ class LoginView(FormView):
         if user is not None:
             login(self.request, user)
             messages.success(self.request, f'Welcome back, {user.get_full_name() or user.username}!')
-            return super().form_valid(form)
+            return redirect(self.get_success_url(user))
         else:
             messages.error(self.request, 'Invalid username or password.')
             return self.form_invalid(form)
@@ -334,14 +346,15 @@ class MyProfileUpdateView(LoginRequiredMixin, UpdateView):
         previous_role = Profile.objects.get(pk=form.instance.pk).role
         response = super().form_valid(form)
 
-        # If they just switched to (or re-affirmed) the owner role and aren't
+        # If they just switched to (or re-affirmed) an elevated role and aren't
         # verified yet, kick off the admin verification workflow
-        if form.instance.role == 'owner' and not form.instance.is_verified_owner:
-            if previous_role != 'owner' or form.instance.verification_status == 'none':
-                form.instance.request_owner_verification()
+        if form.instance.role in ('owner', 'mover') and not form.instance.is_verified_for_role():
+            if previous_role != form.instance.role or form.instance.verification_status == 'none':
+                form.instance.request_role_verification()
+                role_label = 'property owner' if form.instance.role == 'owner' else 'mover'
                 messages.info(
                     self.request,
-                    "Your request to become a verified property owner has been submitted. "
+                    f"Your request to become a verified {role_label} has been submitted. "
                     "Our team will review it shortly."
                 )
 
@@ -395,6 +408,56 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
 
         return context
 
+class OwnerQRCardView(LoginRequiredMixin, View):
+    """QR business card for a verified property owner, linking to their public portfolio"""
+
+    def get(self, request):
+        profile = request.user.profile
+        if profile.role != 'owner' or not profile.is_verified_owner:
+            messages.error(request, "You need to be a verified property owner to get an Owner QR card.")
+            return redirect('my_profile')
+
+        from django.conf import settings
+        from django.urls import reverse
+        from users.utils import generate_qr_code_for_url
+
+        portfolio_url = settings.SITE_URL.rstrip('/') + reverse('home:owner_portfolio', kwargs={'username': request.user.username})
+        qr_code = generate_qr_code_for_url(portfolio_url, fill_color="#1E3A8A")
+
+        return render(request, 'auth/qr_business_card.html', {
+            'card_type': 'owner',
+            'card_title': 'Verified Property Owner',
+            'card_icon': '🏠',
+            'portfolio_url': portfolio_url,
+            'qr_code': qr_code,
+        })
+
+
+class MoverQRCardView(LoginRequiredMixin, View):
+    """QR business card for a verified mover, linking to their public portfolio"""
+
+    def get(self, request):
+        profile = request.user.profile
+        if profile.role != 'mover' or not profile.is_verified_mover:
+            messages.error(request, "You need to be a verified mover to get a Mover QR card.")
+            return redirect('my_profile')
+
+        from django.conf import settings
+        from django.urls import reverse
+        from users.utils import generate_qr_code_for_url
+
+        portfolio_url = settings.SITE_URL.rstrip('/') + reverse('home:mover_detail', kwargs={'username': request.user.username})
+        qr_code = generate_qr_code_for_url(portfolio_url, fill_color="#D97706")
+
+        return render(request, 'auth/qr_business_card.html', {
+            'card_type': 'mover',
+            'card_title': 'Verified Mover',
+            'card_icon': '🚚',
+            'portfolio_url': portfolio_url,
+            'qr_code': qr_code,
+        })
+
+
 class RegenerateQRView(LoginRequiredMixin, View):
     """View to regenerate QR code for the current user"""
 
@@ -413,21 +476,22 @@ class RegenerateQRView(LoginRequiredMixin, View):
 
 
 class RequestOwnerVerificationView(LoginRequiredMixin, View):
-    """Let a user (re)submit their profile for owner verification"""
+    """Let a user (re)submit their profile for owner/mover verification"""
 
     def post(self, request):
         profile = request.user.profile
-        profile.request_owner_verification()
+        profile.request_role_verification()
+        role_label = 'property owner' if profile.role == 'owner' else 'mover'
         messages.info(
             request,
-            "Your request to become a verified property owner has been submitted. "
+            f"Your request to become a verified {role_label} has been submitted. "
             "Our team will review it shortly."
         )
         return redirect('my_profile')
 
 
 class OwnerVerificationQueueView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    """Admin-only queue of pending owner verification requests"""
+    """Admin-only queue of pending owner/mover verification requests"""
     model = Profile
     template_name = 'auth/owner_verification_queue.html'
     context_object_name = 'profiles'
@@ -438,14 +502,14 @@ class OwnerVerificationQueueView(LoginRequiredMixin, UserPassesTestMixin, ListVi
 
     def get_queryset(self):
         return Profile.objects.filter(
-            role='owner', verification_status='pending'
+            role__in=['owner', 'mover'], verification_status='pending'
         ).select_related('user').order_by('verification_requested_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['pending_count'] = self.get_queryset().count()
         context['recently_reviewed'] = Profile.objects.filter(
-            role='owner'
+            role__in=['owner', 'mover']
         ).exclude(verification_status='pending').exclude(
             verification_reviewed_at__isnull=True
         ).select_related('user').order_by('-verification_reviewed_at')[:10]
@@ -458,8 +522,9 @@ class ApproveOwnerVerificationView(LoginRequiredMixin, UserPassesTestMixin, View
 
     def post(self, request, pk):
         profile = get_object_or_404(Profile, pk=pk)
-        profile.approve_owner_verification(reviewer=request.user)
-        messages.success(request, f"{profile.get_full_name()} is now a verified property owner.")
+        profile.approve_role_verification(reviewer=request.user)
+        role_label = 'property owner' if profile.role == 'owner' else 'mover'
+        messages.success(request, f"{profile.get_full_name()} is now a verified {role_label}.")
         return redirect('owner_verification_queue')
 
 
@@ -470,6 +535,6 @@ class RejectOwnerVerificationView(LoginRequiredMixin, UserPassesTestMixin, View)
     def post(self, request, pk):
         profile = get_object_or_404(Profile, pk=pk)
         notes = request.POST.get('notes', '')
-        profile.reject_owner_verification(reviewer=request.user, notes=notes)
-        messages.warning(request, f"{profile.get_full_name()}'s owner request was rejected.")
+        profile.reject_role_verification(reviewer=request.user, notes=notes)
+        messages.warning(request, f"{profile.get_full_name()}'s verification request was rejected.")
         return redirect('owner_verification_queue')

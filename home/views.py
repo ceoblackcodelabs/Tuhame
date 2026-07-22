@@ -802,8 +802,8 @@ class ContactView(View):
         return render(request, self.template_name, {'form': form})
 
 
-class MoverDetailView(LoginRequiredMixin, DetailView):
-    """Public mover portfolio page - trust score, bio, service areas"""
+class MoverDetailView(DetailView):
+    """Public mover portfolio page - trust score, bio, service areas. No login required (QR scannable)."""
     model = Profile
     template_name = 'home/mover_detail.html'
     context_object_name = 'mover_profile'
@@ -822,14 +822,44 @@ class MoverDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class OwnerPortfolioView(DetailView):
+    """Public property-owner portfolio page - their verified listings. No login required (QR scannable)."""
+    model = Profile
+    template_name = 'home/owner_portfolio.html'
+    context_object_name = 'owner_profile'
+    slug_field = 'user__username'
+    slug_url_kwarg = 'username'
+
+    def get_queryset(self):
+        return Profile.objects.filter(role='owner', is_active=True, user__is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile = self.object
+        context['properties'] = Property.objects.filter(
+            owner=profile.user, is_active=True
+        ).order_by('-created_at')
+        context['total_properties'] = context['properties'].count()
+        return context
+
+
 class MoversNearbyDataView(LoginRequiredMixin, View):
-    """JSON feed of movers with a set base location, for the property map search"""
+    """JSON feed of movers with a set base location, for the property map search
+    and the mover map's peer-visibility tab. Supports optional vehicle filtering."""
 
     def get(self, request):
         movers = Profile.objects.filter(
             role='mover', is_active=True, user__is_active=True,
             mover_base_lat__isnull=False, mover_base_lng__isnull=False,
         ).select_related('user')
+
+        vehicle = request.GET.get('vehicle')
+        if vehicle:
+            movers = movers.filter(mover_vehicle_type=vehicle)
+
+        # Optionally exclude the requesting user themself (useful on the mover map)
+        if request.GET.get('exclude_self') == '1':
+            movers = movers.exclude(user=request.user)
 
         data = []
         for m in movers:
@@ -840,6 +870,7 @@ class MoversNearbyDataView(LoginRequiredMixin, View):
                 'lng': float(m.mover_base_lng),
                 'label': m.mover_base_label or m.city,
                 'vehicle': m.get_mover_vehicle_type_display() if m.mover_vehicle_type else 'Mover',
+                'vehicle_code': m.mover_vehicle_type,
                 'trust_score': m.get_trust_score(),
                 'completed_moves': m.completed_moves_count(),
             })

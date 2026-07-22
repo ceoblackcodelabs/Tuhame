@@ -7,7 +7,11 @@
 <div class="page-hero">
   <div class="container">
     <h1>👤 Public Profile <b>{{ user.get_full_name|default:user.username }}</b></h1>
-    <p>Verified Tenant • TuHame Member</p>
+    <p>
+      {% if profile.role == 'owner' %}Property Owner
+      {% elif profile.role == 'mover' %}Mover
+      {% else %}House Hunter{% endif %} • TuHame Member
+    </p>
   </div>
 </div>
 
@@ -30,7 +34,11 @@
           <div class="profile-name">{{ user.get_full_name|default:user.username }}</div>
           <div class="profile-email">{{ user.email }}</div>
           <div>📞 {{ profile.phone_number|default:"No phone set" }}</div>
-          <div class="profile-verified">✅ Verified Tenant</div>
+          <div class="profile-verified">
+            {% if profile.role == 'owner' %}🏠 Property Owner
+            {% elif profile.role == 'mover' %}🚚 Mover
+            {% else %}🔎 House Hunter{% endif %}
+          </div>
           {% if is_public %}
             <div style="margin-top:0.75rem;font-size:0.78rem;color:var(--gray-400);">🔓 Public Profile</div>
           {% endif %}
@@ -150,19 +158,18 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Contact -->
-      <div class="dashboard-card">
-        <div class="dashboard-card-title">📞 Contact</div>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-          {% if profile.phone_number %}
-            <a href="tel:{{ profile.phone_number }}" class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);">📞 Call</a>
-            <a href="https://wa.me/{{ profile.phone_number|cut:' '|cut:'+' }}" target="_blank" class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);">💬 WhatsApp</a>
-          {% endif %}
-          <a href="mailto:{{ user.email }}" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">✉️ Email</a>
+        <!-- Contact -->
+        <div class="dashboard-card">
+          <div class="dashboard-card-title">📞 Contact</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            {% if profile.phone_number %}
+              <a href="tel:{{ profile.phone_number }}" class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);">📞 Call</a>
+              <a href="https://wa.me/{{ profile.phone_number|cut:' '|cut:'+' }}" target="_blank" class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);">💬 WhatsApp</a>
+            {% endif %}
+            <a href="mailto:{{ user.email }}" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">✉️ Email</a>
+          </div>
+          <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--gray-400);">🔒 Contact info is public</div>
         </div>
-        <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--gray-400);">🔒 Contact info is public</div>
       </div>
 
       <!-- RESIDENCE -->

@@ -36,21 +36,32 @@
   .btn-commit { width: 100%; background: var(--accent, #22C55E); color: #fff; border: none; padding: 0.6rem; border-radius: var(--radius, 8px); font-weight: 700; cursor: pointer; font-size: 0.85rem; }
   .btn-commit:disabled { background: var(--gray-300, #d1d5db); cursor: not-allowed; }
   .committed-badge { background: rgba(34,197,94,0.12); color: #16A34A; font-size: 0.78rem; font-weight: 700; padding: 0.4rem 0.6rem; border-radius: var(--radius, 8px); text-align: center; }
-  .role-gate { position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1.5rem; }
-  .role-gate-card { background: #fff; border-radius: 16px; padding: 2rem; max-width: 380px; text-align: center; }
+  .role-banner {
+    background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2);
+    border-radius: var(--radius, 8px); padding: 0.75rem 0.9rem; margin-bottom: 0.85rem;
+    font-size: 0.8rem; color: #1E3A8A; position: relative;
+  }
+  .role-banner a { color: #2563EB; font-weight: 700; text-decoration: none; }
+  .role-banner .dismiss { position: absolute; top: 0.5rem; right: 0.6rem; cursor: pointer; color: #6b7280; font-size: 0.9rem; }
+  .marketplace-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.85rem; background: var(--gray-100, #f3f4f6); padding: 0.25rem; border-radius: var(--radius, 8px); }
+  .marketplace-tab { flex: 1; text-align: center; padding: 0.5rem; border-radius: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer; color: var(--gray-500, #6b7280); border: none; background: none; }
+  .marketplace-tab.active { background: #fff; color: var(--primary, #2563EB); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .mover-filter-row { margin-bottom: 0.75rem; }
+  .mover-filter-row select {
+    width: 100%; padding: 0.5rem 0.65rem; border: 1.5px solid var(--gray-200, #e5e7eb);
+    border-radius: var(--radius, 8px); font-size: 0.82rem; background: #fff;
+  }
+  .peer-mover-card { background: var(--white, #fff); border: 1px solid var(--gray-200, #e5e7eb); border-radius: var(--radius-lg, 12px); padding: 0.9rem; margin-bottom: 0.7rem; display: flex; gap: 0.7rem; align-items: center; cursor: pointer; transition: all 0.15s ease; }
+  .peer-mover-card:hover { border-color: #F59E0B; box-shadow: 0 4px 14px rgba(245,158,11,0.12); }
+  .peer-mover-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#F59E0B,#D97706); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
 </style>
 </head>
 <body>
 
 {% if not is_mover %}
-<div class="role-gate">
-  <div class="role-gate-card">
-    <div style="font-size:2.5rem;margin-bottom:0.75rem;">🚚</div>
-    <h3 style="font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:0.5rem;">Movers Only</h3>
-    <p style="color:#6b7280;font-size:0.9rem;margin-bottom:1.25rem;">You need the Mover role to commit to move requests. You can still browse the map, or switch your role from your profile.</p>
-    <a href="{% url 'edit_profile' %}" style="display:inline-block;background:#2563EB;color:#fff;padding:0.6rem 1.25rem;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85rem;">Switch to Mover Role</a>
-    <div style="margin-top:0.75rem;"><a href="#" onclick="document.querySelector('.role-gate').remove();return false;" style="color:#6b7280;font-size:0.82rem;">Just browse for now →</a></div>
-  </div>
+<div class="role-banner" id="role-banner">
+  <span class="dismiss" onclick="document.getElementById('role-banner').remove();">&times;</span>
+  🚚 You're browsing as a guest. <a href="{% url 'edit_profile' %}">Switch to the Mover role</a> to commit to move requests.
 </div>
 {% endif %}
 
@@ -68,7 +79,23 @@
             </a>
           </div>
           <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.1rem;margin:0.75rem 0 0.25rem;">🚚 Movers Marketplace</h2>
-          <p style="font-size:0.8rem;color:var(--gray-400,#9ca3af);margin-bottom:0.75rem;">Browse people who need help moving, and commit with your price.</p>
+          <p style="font-size:0.8rem;color:var(--gray-400,#9ca3af);margin-bottom:0.75rem;">Browse move requests, or see other movers on the map.</p>
+
+          <div class="marketplace-tabs">
+            <button class="marketplace-tab active" id="tab-requests" onclick="switchTab('requests')">📦 Move Requests</button>
+            <button class="marketplace-tab" id="tab-movers" onclick="switchTab('movers')">🚚 Movers Nearby</button>
+          </div>
+
+          <div class="mover-filter-row" id="movers-filter-row" style="display:none;">
+            <select id="vehicle-filter" onchange="refreshMovers()">
+              <option value="">All Vehicle Types</option>
+              <option value="motorbike">Motorbike</option>
+              <option value="pickup">Pickup Truck</option>
+              <option value="van">Van</option>
+              <option value="truck_small">Small Truck</option>
+              <option value="truck_large">Large Truck</option>
+            </select>
+          </div>
 
           <div class="map-results-bar">
             <span style="font-size:0.8rem;color:var(--gray-400);" id="results-count">Loading requests…</span>
@@ -269,11 +296,116 @@ function refreshRequests() {
     .then(data => {
       requestsData = data.requests;
       renderMarkers();
-      renderList();
+      if (activeTab === 'requests') renderList();
     });
 }
 
+// ── Movers Nearby tab (peer visibility) ──
+const moverMarkers = {};
+let moversData = [];
+let activeTab = 'requests';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-requests').classList.toggle('active', tab === 'requests');
+  document.getElementById('tab-movers').classList.toggle('active', tab === 'movers');
+  document.getElementById('movers-filter-row').style.display = tab === 'movers' ? 'block' : 'none';
+  document.getElementById('map-info-banner').textContent = tab === 'requests'
+    ? '🚚 Open move requests near you'
+    : '🚚 Movers near you';
+
+  Object.values(fromMarkers).forEach(m => m.setOpacity(tab === 'requests' ? 1 : 0));
+  Object.values(moverMarkers).forEach(m => m.setOpacity(tab === 'movers' ? 1 : 0));
+
+  if (tab === 'requests') {
+    renderList();
+  } else {
+    refreshMovers();
+  }
+}
+
+function moverPinHtml() {
+  return `<div class="mover-pin-wrap">
+            <div class="mover-pin-glow"></div>
+            <div class="mover-pin-circle">🚚</div>
+          </div>`;
+}
+
+function renderMoverMarkers() {
+  Object.values(moverMarkers).forEach(m => map.removeLayer(m));
+  for (const key in moverMarkers) delete moverMarkers[key];
+
+  moversData.forEach(m => {
+    const icon = L.divIcon({ className: '', html: moverPinHtml(), iconSize: [44, 44], iconAnchor: [22, 22] });
+    const marker = L.marker([m.lat, m.lng], { icon, zIndexOffset: 500 }).addTo(map);
+    const scoreLabel = m.trust_score ? `⭐ Trust Score: ${m.trust_score}/100` : '🆕 New Mover';
+    const scoreClass = m.trust_score ? 'trust' : '';
+    marker.bindPopup(`
+      <div class="mover-popup-card">
+        <div class="mp-header">
+          <div class="mp-name">🚚 ${m.name}</div>
+          <div class="mp-vehicle">${m.vehicle}${m.label ? ' · ' + m.label : ''}</div>
+        </div>
+        <div class="mp-body">
+          <div class="mp-stats">
+            <span class="mp-stat ${scoreClass}">${scoreLabel}</span>
+            <span class="mp-stat">✅ ${m.completed_moves} move${m.completed_moves === 1 ? '' : 's'}</span>
+          </div>
+          <a href="/movers/${m.username}/" class="mp-cta">View Full Profile →</a>
+        </div>
+      </div>
+    `, { className: 'mover-popup', maxWidth: 260, minWidth: 250 });
+    marker.on('click', () => focusMoverCard(m.username));
+    moverMarkers[m.username] = marker;
+  });
+}
+
+function renderMoversList() {
+  const wrap = document.getElementById('mover-listings');
+  document.getElementById('results-count').textContent = `${moversData.length} mover${moversData.length === 1 ? '' : 's'} nearby`;
+
+  if (!moversData.length) {
+    wrap.innerHTML = '<p style="color:var(--gray-400);font-size:0.85rem;padding:1rem 0;">No movers found for this filter.</p>';
+    return;
+  }
+
+  wrap.innerHTML = moversData.map(m => `
+    <div class="peer-mover-card" id="peer-card-${m.username}" onclick="window.location.href='/movers/${m.username}/'">
+      <div class="peer-mover-avatar">${m.name.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:0.85rem;">${m.name}</div>
+        <div style="font-size:0.75rem;color:var(--gray-400);">${m.vehicle} · ${m.trust_score ? '⭐ ' + m.trust_score + '/100' : '🆕 New'}</div>
+      </div>
+      <div style="color:var(--primary);font-size:0.78rem;font-weight:700;">View →</div>
+    </div>
+  `).join('');
+}
+
+function focusMoverCard(username) {
+  const marker = moverMarkers[username];
+  if (marker) {
+    map.setView(marker.getLatLng(), 14);
+    marker.openPopup();
+  }
+}
+
+function refreshMovers() {
+  const vehicle = document.getElementById('vehicle-filter').value;
+  const params = new URLSearchParams({ exclude_self: '1' });
+  if (vehicle) params.append('vehicle', vehicle);
+
+  fetch('{% url "home:movers_nearby_data" %}?' + params.toString())
+    .then(res => res.json())
+    .then(data => {
+      moversData = data.movers;
+      renderMoverMarkers();
+      if (activeTab === 'movers') renderMoversList();
+    })
+    .catch(() => {});
+}
+
 refreshRequests();
+refreshMovers();
 locateMe();
 setInterval(refreshRequests, 15000); // keep the feed reasonably fresh
 </script>

@@ -76,6 +76,9 @@
               <a href="{% url 'dashboard' %}" class="btn btn-sm" style="margin-top:0.75rem;width:100%;justify-content:center;background:var(--primary);color:#fff;">
                 📊 Go to Owner Dashboard
               </a>
+              <a href="{% url 'owner_qr_card' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.5rem;width:100%;justify-content:center;">
+                🏠 My Owner QR Card
+              </a>
             {% elif profile.verification_status == 'pending' %}
               <div class="profile-verified" style="color:#D97706;">⏳ Verification Pending</div>
               <p style="font-size:0.78rem;color:var(--gray-400);margin-top:0.35rem;">
@@ -92,6 +95,34 @@
               </form>
             {% else %}
               <div class="profile-verified" style="color:var(--gray-400);">🏠 Property Owner</div>
+            {% endif %}
+          {% elif profile.role == 'mover' %}
+            {% if profile.is_verified_mover %}
+              <div class="profile-verified" style="color:var(--accent, #22C55E);">✅ Verified Mover</div>
+              <a href="{% url 'home:mover_detail' request.user.username %}" class="btn btn-sm" style="margin-top:0.75rem;width:100%;justify-content:center;background:var(--primary);color:#fff;">
+                🚚 View My Public Profile
+              </a>
+              <a href="{% url 'mover_qr_card' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.5rem;width:100%;justify-content:center;">
+                🚚 My Mover QR Card
+              </a>
+            {% elif profile.verification_status == 'pending' %}
+              <div class="profile-verified" style="color:#D97706;">⏳ Verification Pending</div>
+              <p style="font-size:0.78rem;color:var(--gray-400);margin-top:0.35rem;">
+                We're reviewing your request to become a mover. This usually takes 1-2 business days.
+              </p>
+            {% elif profile.verification_status == 'rejected' %}
+              <div class="profile-verified" style="color:#DC2626;">❌ Verification Rejected</div>
+              {% if profile.verification_notes %}
+                <p style="font-size:0.78rem;color:var(--gray-400);margin-top:0.35rem;">{{ profile.verification_notes }}</p>
+              {% endif %}
+              <form method="post" action="{% url 'request_owner_verification' %}" style="margin-top:0.5rem;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-dark btn-sm" style="width:100%;justify-content:center;">🔄 Request Verification Again</button>
+              </form>
+            {% else %}
+              <div class="profile-verified" style="color:var(--gray-400);">🚚 Mover</div>
+              <a href="{% url 'request_owner_verification' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.5rem;width:100%;justify-content:center;" onclick="event.preventDefault();document.getElementById('mover-verify-form').submit();">🔄 Get Verified</a>
+              <form method="post" action="{% url 'request_owner_verification' %}" id="mover-verify-form" style="display:none;">{% csrf_token %}</form>
             {% endif %}
           {% else %}
             <div class="profile-verified">🔎 House Hunter</div>

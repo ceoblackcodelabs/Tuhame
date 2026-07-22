@@ -124,6 +124,7 @@ class Profile(models.Model):
         max_length=10, choices=VerificationStatus.choices, default=VerificationStatus.NONE
     )
     is_verified_owner = models.BooleanField(default=False)
+    is_verified_mover = models.BooleanField(default=False)
     verification_requested_at = models.DateTimeField(blank=True, null=True)
     verification_reviewed_at = models.DateTimeField(blank=True, null=True)
     verification_reviewed_by = models.ForeignKey(
@@ -215,10 +216,30 @@ class Profile(models.Model):
         review, unless it's already verified.
         """
         self.role = UserRole.OWNER
-        if not self.is_verified_owner:
+        self.save()
+        self.request_role_verification()
+
+    def request_mover_verification(self):
+        """Switch to the mover role and (re)submit it for admin review"""
+        self.role = UserRole.MOVER
+        self.save()
+        self.request_role_verification()
+
+    def request_role_verification(self):
+        """Submit the current role (owner/mover) for admin verification, unless already verified"""
+        if self.role not in (UserRole.OWNER, UserRole.MOVER):
+            return
+        if not self.is_verified_for_role():
             self.verification_status = VerificationStatus.PENDING
             self.verification_requested_at = timezone.now()
-        self.save()
+            self.save()
+
+    def is_verified_for_role(self):
+        if self.role == UserRole.OWNER:
+            return self.is_verified_owner
+        if self.role == UserRole.MOVER:
+            return self.is_verified_mover
+        return True
 
     def approve_owner_verification(self, reviewer):
         self.is_verified_owner = True
@@ -229,6 +250,28 @@ class Profile(models.Model):
 
     def reject_owner_verification(self, reviewer, notes=''):
         self.is_verified_owner = False
+        self.verification_status = VerificationStatus.REJECTED
+        self.verification_reviewed_at = timezone.now()
+        self.verification_reviewed_by = reviewer
+        self.verification_notes = notes
+        self.save()
+
+    def approve_role_verification(self, reviewer):
+        """Approve verification for whichever elevated role (owner/mover) this profile currently has"""
+        if self.role == UserRole.OWNER:
+            self.is_verified_owner = True
+        elif self.role == UserRole.MOVER:
+            self.is_verified_mover = True
+        self.verification_status = VerificationStatus.APPROVED
+        self.verification_reviewed_at = timezone.now()
+        self.verification_reviewed_by = reviewer
+        self.save()
+
+    def reject_role_verification(self, reviewer, notes=''):
+        if self.role == UserRole.OWNER:
+            self.is_verified_owner = False
+        elif self.role == UserRole.MOVER:
+            self.is_verified_mover = False
         self.verification_status = VerificationStatus.REJECTED
         self.verification_reviewed_at = timezone.now()
         self.verification_reviewed_by = reviewer
