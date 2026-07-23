@@ -43,7 +43,7 @@ class LoginView(FormView):
         if next_url and next_url.startswith('/'):
             return next_url
         if user and hasattr(user, 'profile') and user.profile.role == 'owner' and user.profile.is_verified_owner:
-            return reverse_lazy('dashboard')
+            return reverse_lazy('home:home')
         return reverse_lazy('home:home')
 
     def dispatch(self, request, *args, **kwargs):
@@ -83,7 +83,7 @@ class RegisterView(CreateView):
     """
     template_name = 'auth/register.html'
     form_class = UserRegistrationForm
-    success_url = reverse_lazy('dashboard')
+    success_url = reverse_lazy('home:home')
 
     def dispatch(self, request, *args, **kwargs):
         """Redirect authenticated users to dashboard"""

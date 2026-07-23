@@ -128,7 +128,7 @@
             <div class="profile-verified">🔎 House Hunter</div>
           {% endif %}
 
-          <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">✏️ Edit Profile</a>
+          {% comment %} <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">✏️ Edit Profile</a> {% endcomment %}
         </div>
       </div>
 
@@ -143,9 +143,9 @@
         <div class="profile-nav-item" data-section="qr" onclick="switchTab('qr')">
           <span class="icon">📱</span> Digital ID & QR
         </div>
-        <div class="profile-nav-item" data-section="rent" onclick="switchTab('rent')">
+        {% comment %} <div class="profile-nav-item" data-section="rent" onclick="switchTab('rent')">
           <span class="icon">💳</span> Rent & Bills
-        </div>
+        </div> {% endcomment %}
         <div class="profile-nav-item" data-section="saved" onclick="switchTab('saved')">
           <span class="icon">❤️</span> Saved Properties
         </div>
@@ -369,7 +369,7 @@
       </div>
 
       <!-- RENT & BILLS -->
-      <div id="rent" class="profile-section" style="display:none;">
+      {% comment %} <div id="rent" class="profile-section" style="display:none;">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">💳 Rent & Bills</h2>
 
         <!-- Summary -->
@@ -561,7 +561,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> {% endcomment %}
 
       <!-- SAVED PROPERTIES -->
       <div id="saved" class="profile-section" style="display:none;">
