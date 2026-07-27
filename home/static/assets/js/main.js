@@ -10,7 +10,16 @@ function setTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   localStorage.setItem('2Hame-theme', dark ? 'dark' : 'light');
   darkToggleBtns.forEach(btn => {
-    btn.innerHTML = dark ? '☀️' : '🌙';
+    const icon = btn.querySelector('.dark-toggle-icon');
+    const label = btn.querySelector('.dark-toggle-label');
+    if (icon) {
+      icon.textContent = dark ? '☀️' : '🌙';
+    } else {
+      btn.innerHTML = dark ? '☀️' : '🌙';
+    }
+    if (label) {
+      label.textContent = dark ? 'Light Mode' : 'Dark Mode';
+    }
   });
 }
 
@@ -63,6 +72,22 @@ if (hamburger && mobileMenu) {
     });
   });
 }
+
+// ─── Generic carousel prev/next controls ───
+// Works with any .tuhame-carousel-wrap containing a .tuhame-carousel-track
+// and .tuhame-carousel-nav.prev / .tuhame-carousel-nav.next buttons.
+document.querySelectorAll('.tuhame-carousel-nav').forEach(navBtn => {
+  navBtn.addEventListener('click', () => {
+    const wrap = navBtn.closest('.tuhame-carousel-wrap');
+    const track = wrap ? wrap.querySelector('.tuhame-carousel-track') : null;
+    if (!track) return;
+    const scrollAmount = track.clientWidth * 0.85;
+    track.scrollBy({
+      left: navBtn.classList.contains('prev') ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    });
+  });
+});
 
 // ─── Hero Carousel ───
 const heroSlides = document.querySelectorAll('.hero-slide');

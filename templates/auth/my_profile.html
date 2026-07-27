@@ -128,7 +128,7 @@
             <div class="profile-verified">🔎 House Hunter</div>
           {% endif %}
 
-          {% comment %} <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">✏️ Edit Profile</a> {% endcomment %}
+          <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">✏️ Edit Profile</a>
         </div>
       </div>
 
@@ -143,9 +143,9 @@
         <div class="profile-nav-item" data-section="qr" onclick="switchTab('qr')">
           <span class="icon">📱</span> Digital ID & QR
         </div>
-        {% comment %} <div class="profile-nav-item" data-section="rent" onclick="switchTab('rent')">
+        <div class="profile-nav-item" data-section="rent" onclick="switchTab('rent')">
           <span class="icon">💳</span> Rent & Bills
-        </div> {% endcomment %}
+        </div>
         <div class="profile-nav-item" data-section="saved" onclick="switchTab('saved')">
           <span class="icon">❤️</span> Saved Properties
         </div>
@@ -208,7 +208,7 @@
             </div>
           </div>
           <hr class="divider" />
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+          <div class="residence-meta-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Landlord</div>
               {% if profile.current_property and profile.current_property.owner %}
@@ -233,7 +233,7 @@
         <!-- Quick Actions -->
         <div class="dashboard-card">
           <div class="dashboard-card-title">⚡ Quick Actions</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.875rem;">
+          <div class="quick-actions-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.875rem;">
             <button class="btn btn-outline-dark btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);" onclick="switchTab('rent')">
               <span style="font-size:1.3rem;">💳</span>Pay Rent
             </button>
@@ -369,22 +369,22 @@
       </div>
 
       <!-- RENT & BILLS -->
-      {% comment %} <div id="rent" class="profile-section" style="display:none;">
+      <div id="rent" class="profile-section" style="display:none;">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">💳 Rent & Bills</h2>
 
         <!-- Summary -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;">
+        <div class="rent-summary-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;">
           <div class="dashboard-card" style="text-align:center;padding:1.25rem;">
-            <div style="font-size:1.5rem;font-weight:800;color:var(--primary);font-family:var(--font-display);">KES {% if profile.current_property %}{{ profile.current_property.price }}{% else %}0{% endif %}</div>
-            <div style="font-size:0.78rem;color:var(--gray-400);">Current Rent</div>
+            <div class="rent-summary-amount" style="font-size:1.5rem;font-weight:800;color:var(--primary);font-family:var(--font-display);">KES {% if profile.current_property %}{{ profile.current_property.price }}{% else %}0{% endif %}</div>
+            <div class="rent-summary-label" style="font-size:0.78rem;color:var(--gray-400);">Current Rent</div>
           </div>
           <div class="dashboard-card" style="text-align:center;padding:1.25rem;">
-            <div style="font-size:1.5rem;font-weight:800;color:var(--warning);font-family:var(--font-display);">KES 8,500</div>
-            <div style="font-size:0.78rem;color:var(--gray-400);">Pending Bills</div>
+            <div class="rent-summary-amount" style="font-size:1.5rem;font-weight:800;color:var(--warning);font-family:var(--font-display);">KES 8,500</div>
+            <div class="rent-summary-label" style="font-size:0.78rem;color:var(--gray-400);">Pending Bills</div>
           </div>
           <div class="dashboard-card" style="text-align:center;padding:1.25rem;">
-            <div style="font-size:1.5rem;font-weight:800;color:var(--accent);font-family:var(--font-display);">KES {% if profile.current_property %}{{ profile.current_property.price|add:8500 }}{% else %}0{% endif %}</div>
-            <div style="font-size:0.78rem;color:var(--gray-400);">Total Due July 1</div>
+            <div class="rent-summary-amount" style="font-size:1.5rem;font-weight:800;color:var(--accent);font-family:var(--font-display);">KES {% if profile.current_property %}{{ profile.current_property.price|add:8500 }}{% else %}0{% endif %}</div>
+            <div class="rent-summary-label" style="font-size:0.78rem;color:var(--gray-400);">Total Due July 1</div>
           </div>
         </div>
 
@@ -394,22 +394,22 @@
 
           <!-- Bill Statistics Summary -->
           {% if bills %}
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.5rem;padding:1rem;background:var(--gray-50);border-radius:var(--radius);">
+            <div class="bill-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.5rem;padding:1rem;background:var(--gray-50);border-radius:var(--radius);">
               <div style="text-align:center;">
-                <div style="font-size:1.2rem;font-weight:700;color:var(--primary);">{{ total_bills }}</div>
-                <div style="font-size:0.75rem;color:var(--gray-400);">Total Bills</div>
+                <div class="bill-stat-num" style="font-size:1.2rem;font-weight:700;color:var(--primary);">{{ total_bills }}</div>
+                <div class="bill-stat-label" style="font-size:0.75rem;color:var(--gray-400);">Total Bills</div>
               </div>
               <div style="text-align:center;">
-                <div style="font-size:1.2rem;font-weight:700;color:var(--success);">{{ paid_bills }}</div>
-                <div style="font-size:0.75rem;color:var(--gray-400);">Paid</div>
+                <div class="bill-stat-num" style="font-size:1.2rem;font-weight:700;color:var(--success);">{{ paid_bills }}</div>
+                <div class="bill-stat-label" style="font-size:0.75rem;color:var(--gray-400);">Paid</div>
               </div>
               <div style="text-align:center;">
-                <div style="font-size:1.2rem;font-weight:700;color:var(--warning);">{{ pending_bills }}</div>
-                <div style="font-size:0.75rem;color:var(--gray-400);">Pending</div>
+                <div class="bill-stat-num" style="font-size:1.2rem;font-weight:700;color:var(--warning);">{{ pending_bills }}</div>
+                <div class="bill-stat-label" style="font-size:0.75rem;color:var(--gray-400);">Pending</div>
               </div>
               <div style="text-align:center;">
-                <div style="font-size:1.2rem;font-weight:700;color:var(--danger);">{{ overdue_bills }}</div>
-                <div style="font-size:0.75rem;color:var(--gray-400);">Overdue</div>
+                <div class="bill-stat-num" style="font-size:1.2rem;font-weight:700;color:var(--danger);">{{ overdue_bills }}</div>
+                <div class="bill-stat-label" style="font-size:0.75rem;color:var(--gray-400);">Overdue</div>
               </div>
             </div>
           {% endif %}
@@ -428,7 +428,7 @@
               {% if bills %}
                 {% for bill in bills %}
                   <tr>
-                    <td>
+                    <td data-label="Description">
                       {% if bill.category and bill.category.icon %}
                         {{ bill.category.icon }}
                       {% else %}
@@ -448,8 +448,8 @@
                         <span style="font-size:0.7rem;color:var(--gray-400);display:block;">Ref: {{ bill.reference_number }}</span>
                       {% endif %}
                     </td>
-                    <td style="font-weight:700;">KES {{ bill.amount|floatformat:2 }}</td>
-                    <td>
+                    <td data-label="Amount" style="font-weight:700;">KES {{ bill.amount|floatformat:2 }}</td>
+                    <td data-label="Due Date">
                       {{ bill.due_date|date:"M d, Y" }}
                       {% if bill.status != 'paid' %}
                         {% if bill.is_overdue %}
@@ -459,7 +459,7 @@
                         {% endif %}
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {% if bill.status == 'paid' %}
                         <span class="bill-status paid">✅ Paid
                           {% if bill.paid_date %}
@@ -478,7 +478,7 @@
                         <span class="bill-status">{{ bill.get_status_display }}</span>
                       {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Action">
                       {% if bill.status == 'paid' %}
                         {% if bill.receipt %}
                           <a href="{{ bill.receipt.url }}" target="_blank" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-600);">📄 Receipt</a>
@@ -561,13 +561,13 @@
             </div>
           </div>
         </div>
-      </div> {% endcomment %}
+      </div>
 
       <!-- SAVED PROPERTIES -->
       <div id="saved" class="profile-section" style="display:none;">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">❤️ Saved Properties</h2>
         {% if saved_properties %}
-          <div class="properties-grid" style="grid-template-columns:repeat(2,1fr);">
+          <div class="properties-grid mobile-carousel-grid" style="grid-template-columns:repeat(2,1fr);">
             {% for property in saved_properties %}
               <div class="property-card">
                 <div class="property-img-wrap" style="height:180px;">

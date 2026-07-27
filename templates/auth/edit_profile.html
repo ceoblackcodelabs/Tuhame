@@ -155,13 +155,12 @@
   .edit-field input.form-control,
   .edit-field select.form-control,
   .edit-field textarea.form-control,
-  .edit-field input[type="text"],
-  .edit-field input[type="email"],
-  .edit-field input[type="tel"],
-  .edit-field input[type="date"],
+  .edit-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
   .edit-field select,
-  .edit-field textarea {
+  .edit-field textarea,
+  #id_mover_base_label {
     width: 100%;
+    max-width: 100%;
     padding: 0.75rem 1rem;
     border: 1.5px solid var(--gray-200);
     border-radius: var(--radius);
@@ -172,7 +171,11 @@
     transition: var(--transition);
     font-family: inherit;
     appearance: none;
+    box-sizing: border-box;
+    min-width: 0;
   }
+
+  #id_mover_base_label { flex: 1 1 200px; }
 
   .edit-field input:focus,
   .edit-field select:focus,
@@ -311,7 +314,7 @@
 
         <label class="edit-avatar-upload-label" for="{{ form.profile_picture.id_for_label }}">
           📷 Change Photo
-          {% comment %} {{ form.profile_picture }} {% endcomment %}
+          {{ form.profile_picture }}
         </label>
         <br>
 
@@ -390,11 +393,11 @@
             <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.35rem;">
               📍 Your Base Location <span style="font-weight:400;color:var(--gray-400);">(shown to hunters browsing the map)</span>
             </label>
-            <div style="display:flex;gap:0.6rem;margin-bottom:0.6rem;">
+            <div style="display:flex;gap:0.6rem;margin-bottom:0.6rem;flex-wrap:wrap;">
               {{ form.mover_base_label }}
-              <button type="button" class="btn btn-sm" style="background:var(--gray-100);border:1px solid var(--gray-300);white-space:nowrap;" onclick="useMoverCurrentLocation()">📡 Use Current Location</button>
+              <button type="button" class="btn btn-sm" style="background:var(--gray-100);border:1px solid var(--gray-300);white-space:nowrap;flex-shrink:0;" onclick="useMoverCurrentLocation()">📡 Use Current Location</button>
             </div>
-            <div id="mover-base-map" style="height:260px;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
+            <div id="mover-base-map" style="height:260px;width:100%;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
             <div style="font-size:0.75rem;color:var(--gray-400);margin-top:0.35rem;">Click the map to set your base — hunters will see roughly this location.</div>
             {{ form.mover_base_lat }}
             {{ form.mover_base_lng }}

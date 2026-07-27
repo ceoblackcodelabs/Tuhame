@@ -327,4 +327,3 @@ class UserRegistrationForm(forms.ModelForm):
                     profile.request_mover_verification()
 
         return user
-

@@ -79,19 +79,21 @@ body {
 }
 
 .nav-logo-img {
-  width: 200px;
-  height: 200px;
-  border-radius: 10px;
-  object-fit: cover;
+  width: auto;
+  height: 64px;
+  max-width: 220px;
+  border-radius: 8px;
+  object-fit: contain;
   flex-shrink: 0;
   transition: var(--transition);
 }
 
 .footer-logo-img {
-  width: 200px;
-  height: 200px;
-  border-radius: 9px;
-  object-fit: cover;
+  width: auto;
+  height: 40px;
+  max-width: 150px;
+  border-radius: 8px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -514,6 +516,34 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
   justify-content: center;
 }
+
+/* Dark/Light mode toggle, styled as a row when placed inside the mobile menu */
+.mobile-menu .dark-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  color: var(--gray-700);
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: var(--radius);
+  transition: var(--transition-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--gray-200);
+  padding-top: 1.125rem;
+}
+
+.mobile-menu .dark-toggle:hover { background: var(--gray-100); color: var(--primary); }
+.mobile-menu .dark-toggle-icon { font-size: 1.1rem; }
+.mobile-menu .dark-toggle-label { flex: 1; }
+
+[data-theme="dark"] .mobile-menu .dark-toggle { color: var(--gray-300); border-color: var(--gray-700); }
+[data-theme="dark"] .mobile-menu .dark-toggle:hover { background: rgba(255,255,255,0.06); color: var(--primary); }
 
 /* ─── Hero Section ─── */
 .hero {
@@ -2257,7 +2287,6 @@ input[type="range"] {
 .bills-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 480px;
 }
 
 .bills-table th {
@@ -3023,6 +3052,8 @@ input[type="range"] {
   .nav-menu, .nav-actions { display: none; }
   .hamburger { display: flex; }
 
+  .nav-logo-img { height: 54px; max-width: 190px; }
+
   .hero { min-height: 560px; }
   .hero-stats { display: none; }
   .hero-content { padding-left: 1rem; padding-right: 1rem; }
@@ -3053,6 +3084,75 @@ input[type="range"] {
 
 @media (max-width: 640px) {
   .container { padding: 0 1.25rem; }
+
+  /* Quick Actions / Residence summary grids were fixed at 3-4 columns via
+     inline styles — collapse them so nothing gets squeezed on phones. */
+  .residence-meta-grid,
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Rent Summary (3 cards) & Bill Stats (4 numbers) — keep them on one row
+     but shrink padding/gap/font so they actually fit instead of overflowing. */
+  .rent-summary-grid {
+    gap: 0.5rem !important;
+  }
+  .rent-summary-grid .dashboard-card {
+    padding: 0.75rem 0.4rem !important;
+  }
+  .rent-summary-amount { font-size: 1rem !important; }
+  .rent-summary-label { font-size: 0.65rem !important; }
+
+  .bill-stats-grid {
+    gap: 0.4rem !important;
+    padding: 0.75rem 0.5rem !important;
+  }
+  .bill-stat-num { font-size: 1rem !important; }
+  .bill-stat-label { font-size: 0.68rem !important; }
+
+  /* Bills table -> stacked cards on phones instead of a horizontally
+     scrolling table. */
+  .bills-table thead { display: none; }
+  .bills-table, .bills-table tbody, .bills-table tr, .bills-table td {
+    display: block;
+    width: 100%;
+  }
+  .bills-table tr {
+    margin-bottom: 0.875rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+  }
+  .bills-table td {
+    border-bottom: none !important;
+    padding: 0.4rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    text-align: right;
+  }
+  .bills-table td[colspan] { display: block; text-align: center; }
+  .bills-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--gray-400);
+    text-align: left;
+    flex-shrink: 0;
+    padding-top: 0.15rem;
+  }
+  .bills-table td:first-child {
+    display: block;
+    text-align: left;
+    font-weight: 600;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .bills-table td:first-child::before { content: none; }
 
   .hero { min-height: 540px; }
   .hero-title { margin-bottom: 0.9rem; }
@@ -3106,6 +3206,8 @@ input[type="range"] {
   .container { padding: 0 1rem; }
   .nav-container { padding: 0 1rem; }
 
+  .nav-logo-img { height: 46px; max-width: 170px; }
+
   .section { padding: 3rem 0; }
   .section-subtitle { margin-bottom: 2rem; font-size: 1rem; }
 
@@ -3143,4 +3245,107 @@ input[type="range"] {
   .hero-title { font-size: clamp(1.6rem, 8vw, 2.2rem); }
   .nav-logo { font-size: 1.25rem; }
   .nav-logo-icon { width: 32px; height: 32px; font-size: 1rem; }
+
+  .residence-meta-grid,
+  .rent-summary-grid,
+  .bill-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .rent-summary-amount { font-size: 1.3rem !important; }
+  .bill-stat-num { font-size: 1.15rem !important; }
+}
+
+/* ─── Reusable auto-advancing carousel/slider ─── */
+.tuhame-carousel-wrap {
+  position: relative;
+}
+.tuhame-carousel-track {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.25rem 0.25rem 1rem;
+  scrollbar-width: thin;
+}
+.tuhame-carousel-track::-webkit-scrollbar { height: 6px; }
+.tuhame-carousel-track::-webkit-scrollbar-thumb { background: var(--gray-300, #d1d5db); border-radius: 3px; }
+.tuhame-carousel-track::-webkit-scrollbar-track { background: transparent; }
+.tuhame-carousel-track > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+.tuhame-carousel-nav {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  font-size: 1rem;
+  color: var(--gray-700, #374151);
+  transition: var(--transition-fast, all 0.15s ease);
+}
+.tuhame-carousel-nav:hover { background: var(--primary, #2563EB); color: #fff; border-color: var(--primary, #2563EB); }
+.tuhame-carousel-nav.prev { left: -6px; }
+.tuhame-carousel-nav.next { right: -6px; }
+@media (max-width: 640px) {
+  .tuhame-carousel-nav { display: none; }
+}
+
+/* Partner logos strip */
+.partner-logo-card {
+  width: 160px;
+  height: 90px;
+  background: var(--white, #fff);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: var(--radius-lg, 12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--gray-400, #9ca3af);
+  filter: grayscale(1);
+  opacity: 0.7;
+  transition: var(--transition-fast, all 0.15s ease);
+}
+.partner-logo-card:hover { filter: grayscale(0); opacity: 1; color: var(--primary, #2563EB); border-color: var(--primary, #2563EB); }
+
+/* Property image slider (property detail page) */
+.property-image-slider .tuhame-carousel-track > * {
+  width: 100%;
+  scroll-snap-align: center;
+}
+
+/* ─── Turn any grid into a swipeable one-row carousel on phones ─── */
+@media (max-width: 640px) {
+  .mobile-carousel-grid {
+    display: flex !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 1rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.25rem 0.25rem 1rem;
+    scrollbar-width: thin;
+  }
+  .mobile-carousel-grid::-webkit-scrollbar { height: 6px; }
+  .mobile-carousel-grid::-webkit-scrollbar-thumb { background: var(--gray-300, #d1d5db); border-radius: 3px; }
+  .mobile-carousel-grid::-webkit-scrollbar-track { background: transparent; }
+  .mobile-carousel-grid > * {
+    flex: 0 0 82%;
+    max-width: 82%;
+    scroll-snap-align: start;
+  }
 }
