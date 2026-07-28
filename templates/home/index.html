@@ -411,31 +411,14 @@
       <h2 class="section-title">Our Trusted Partners</h2>
       <p class="section-subtitle">Working with Kenya's leading banks, movers and service providers</p>
     </div>
-    <div class="tuhame-carousel-wrap">
-      <div class="tuhame-carousel-nav prev" aria-label="Previous partners">‹</div>
-      <div class="tuhame-carousel-track" id="partners-carousel">
-        {% for partner in partners %}
-          <div class="partner-logo-card">
-            {% if partner.logo %}
-              <img src="{{ partner.logo.url }}" alt="{{ partner.name }}" style="max-width:100%;max-height:100%;object-fit:contain;" />
-            {% else %}
-              {{ partner.name }}
-            {% endif %}
-          </div>
-        {% empty %}
-          <div class="partner-logo-card">Safaricom</div>
-          <div class="partner-logo-card">M-Pesa</div>
-          <div class="partner-logo-card">KCB Bank</div>
-          <div class="partner-logo-card">Equity Bank</div>
-          <div class="partner-logo-card">Jumia House</div>
-          <div class="partner-logo-card">Sendy Movers</div>
-          <div class="partner-logo-card">Britam</div>
-          <div class="partner-logo-card">Jubilee Insurance</div>
-          <div class="partner-logo-card">CIC Insurance</div>
-        {% endfor %}
+    <div class="partners-marquee">
+      <div class="partners-track" id="partners-carousel">
+        {% include "home/_partner_logos.html" %}
+        {% include "home/_partner_logos.html" %}
       </div>
-      <div class="tuhame-carousel-nav next" aria-label="Next partners">›</div>
     </div>
+  </div>
+</section>
   </div>
 </section>
 

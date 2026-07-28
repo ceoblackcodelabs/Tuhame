@@ -47,12 +47,11 @@
     font-weight: 700;
   }
 
-  /* Hide Django's default file input + "Currently/Clear" markup, we build our own UI */
+  /* Django's ClearableFileInput now renders as a bare <input type="file">
+     (see PlainClearableFileInput in forms.py), so there's no stray
+     "Currently/Clear/Change" text left to hide here. */
   .edit-avatar-card input[type="file"] {
     display: none;
-  }
-  .edit-avatar-card .file-clear-row {
-    display: none; /* we re-show a clean version of this via JS-free CSS trick below */
   }
 
   .edit-avatar-upload-label {

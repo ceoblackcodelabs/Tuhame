@@ -6,7 +6,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Map Search – 2Hame</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<link rel="preconnect" href="https://tile.openstreetmap.org" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
+<link rel="stylesheet" href="{% static "assets/vendor/leaflet/leaflet.css" %}" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" />
 <link rel="stylesheet" href="{% static "assets/css/map.css" %}" />
 </head>
@@ -88,13 +91,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script>
-// Fallback in case the primary CDN is blocked
-if (typeof L === 'undefined') {
-  document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
-}
-</script>
+<script src="{% static "assets/vendor/leaflet/leaflet.js" %}"></script>
 <script>
 // ── Property Data from Django ──
 const propertiesData = {{ properties|safe }};
@@ -111,18 +108,27 @@ function toggleSidebar(force) {
   menuBtn.classList.toggle('open', open);
 }
 
+// ── Kenya bounding box (with a small margin) ──
+// Kenya's mainland extent is roughly -4.7..5.1 lat, 33.9..41.9 lng.
+const KENYA_BOUNDS = L.latLngBounds([-5.2, 33.4], [5.6, 42.3]);
+
 // ── Init Leaflet with OSM fix ──
 const map = L.map('leaflet-map', {
   center: [-1.2921, 36.8219],
   zoom: 13,
-  zoomControl: false
+  minZoom: 6,
+  zoomControl: false,
+  maxBounds: KENYA_BOUNDS,
+  maxBoundsViscosity: 1.0
 });
 
-// Fixed: Use HTTPS and proper attribution with referrer policy
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Single-host tile URL (OSM's current recommendation — the old a/b/c
+// subdomains are deprecated now that HTTP/2 handles concurrency, and
+// dropping them avoids extra DNS lookups so tiles start loading sooner).
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
   maxZoom: 19,
-  // Add referrer policy to avoid 403 error
+  minZoom: 6,
   crossOrigin: true,
   referrerPolicy: 'no-referrer'
 }).addTo(map);
@@ -165,7 +171,7 @@ function createMarkerIcon(p, active = false) {
 
 function popupHTML(p) {
   return `
-    <img class="popup-img" src="${p.img}" alt="${p.name}" />
+    <img class="popup-img" src="${p.img}" alt="${p.name}" loading="lazy" decoding="async" />
     <div class="popup-body">
       <div class="popup-name">${p.name}</div>
       <div class="popup-loc">📍 ${p.location} · ${p.dist}</div>
@@ -234,7 +240,7 @@ function renderListings(list) {
 
   container.innerHTML = list.map(p => `
     <div class="map-listing-card" data-id="${p.id}" onclick="selectProperty(${p.id})">
-      <img class="map-listing-img" src="${p.img}" alt="${p.name}" />
+      <img class="map-listing-img" src="${p.img}" alt="${p.name}" loading="lazy" decoding="async" />
       <div class="map-listing-info">
         <div class="map-listing-name">${p.name}</div>
         <div class="map-listing-loc">📍 ${p.location} · ${p.dist}</div>
@@ -296,13 +302,14 @@ function sortListings() {
 function searchLocation() {
   const q = document.getElementById('map-search-input').value.trim();
   if (!q) return;
-  fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Kenya')}&format=json&limit=1`)
+  const viewbox = `${KENYA_BOUNDS.getWest()},${KENYA_BOUNDS.getNorth()},${KENYA_BOUNDS.getEast()},${KENYA_BOUNDS.getSouth()}`;
+  fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=ke&viewbox=${viewbox}&bounded=1`)
     .then(r => r.json())
     .then(data => {
       if (data && data[0]) {
         map.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 14, { animate: true });
         showMapToast(`Moved to: ${data[0].display_name.split(',')[0]}`, '📍');
-      } else { showMapToast('Location not found', '❌'); }
+      } else { showMapToast('Location not found in Kenya', '❌'); }
     })
     .catch(() => showMapToast('Search failed — check connection', '⚠️'));
 }
@@ -312,6 +319,10 @@ function locateMe() {
   showMapToast('Finding your location…', '📍');
   navigator.geolocation.getCurrentPosition(pos => {
     const { latitude: lat, longitude: lng } = pos.coords;
+    if (!KENYA_BOUNDS.contains([lat, lng])) {
+      showMapToast('Your location is outside Kenya — showing Kenya map', '📍');
+      return;
+    }
     map.setView([lat, lng], 15, { animate: true });
     L.circle([lat, lng], { radius: 80, color: '#2563EB', fillColor: '#2563EB', fillOpacity: 0.2 }).addTo(map);
     L.marker([lat, lng], {
@@ -388,11 +399,9 @@ renderMoverPins();
 
 // ── Init ──
 renderListings(propertiesData);
-setTimeout(() => {
-  if (propertiesData.length > 0) {
-    selectProperty(propertiesData[0].id, false);
-  }
-}, 600);
+if (propertiesData.length > 0) {
+  selectProperty(propertiesData[0].id, false);
+}
 
 // Fix Leaflet sizing on sidebar toggle / resize
 window.addEventListener('resize', () => map.invalidateSize());

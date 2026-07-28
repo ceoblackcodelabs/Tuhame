@@ -9,6 +9,15 @@ from django.core.exceptions import ValidationError
 User = get_user_model()
 
 
+class PlainClearableFileInput(forms.ClearableFileInput):
+    """Behaves exactly like ClearableFileInput (so the profile_picture-clear
+    checkbox we render ourselves in the template still works), but renders
+    as a bare <input type="file"> — none of the default 'Currently: ...
+    Clear Change:' markup, which was bubbling into the Change Photo button
+    and breaking its layout."""
+    template_name = 'django/forms/widgets/file.html'
+
+
 class ProfileForm(forms.ModelForm):
     """Form for updating user profile"""
 
@@ -45,6 +54,9 @@ class ProfileForm(forms.ModelForm):
             'mover_base_label',
         ]
         widgets = {
+            'profile_picture': PlainClearableFileInput(attrs={
+                'accept': 'image/*'
+            }),
             'mover_bio': forms.Textarea(attrs={
                 'rows': 3,
                 'placeholder': 'Tell hunters about your moving experience, what you specialize in, and why they should pick you…'

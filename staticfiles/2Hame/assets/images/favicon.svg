@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded square backdrop -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)"/>
+
+  <!-- house glyph -->
+  <path d="M32 14 L50 28 V47 a2 2 0 0 1 -2 2 H16 a2 2 0 0 1 -2 -2 V28 Z"
+        fill="#FFFFFF"/>
+  <rect x="27" y="34" width="10" height="15" rx="1.5" fill="#2563EB"/>
+
+  <!-- roof accent -->
+  <path d="M32 12 L52 28 L48 28 L32 15.5 L16 28 L12 28 Z" fill="#FFFFFF"/>
+
+  <!-- location-pin dot accent (ties to map pins) -->
+  <circle cx="47" cy="17" r="6" fill="#22C55E" stroke="#1D4ED8" stroke-width="1.5"/>
+</svg>
