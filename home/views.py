@@ -67,17 +67,20 @@ class HomeView(ListView):
             {'value': 'industrial', 'label': 'Industrial'},
         ]
 
-        # Get category counts
+        # Get category counts — one aggregated query instead of one COUNT
+        # query per property type (was 8 separate DB round trips before).
+        counts_by_type = dict(
+            Property.objects.filter(is_active=True)
+            .values_list('property_type')
+            .annotate(count=Count('id'))
+            .values_list('property_type', 'count')
+        )
         categories = []
         for property_type in PropertyType.choices:
-            count = Property.objects.filter(
-                is_active=True,
-                property_type=property_type[0]
-            ).count()
             categories.append({
                 'type': property_type[0],
                 'label': property_type[1],
-                'count': count,
+                'count': counts_by_type.get(property_type[0], 0),
                 'icon': self.get_category_icon(property_type[0])
             })
         context['categories'] = categories
@@ -448,6 +451,84 @@ class DeleteReviewView(LoginRequiredMixin, View):
 
         return redirect('home:about_property', slug=property_obj.slug)
 
+MAP_PROPERTY_FIELDS = (
+    'id', 'title', 'property_type', 'city', 'state', 'latitude', 'longitude',
+    'price', 'bedrooms', 'bathrooms', 'main_image', 'slug', 'address',
+)
+
+# Hard cap on markers sent to the map per request — keeps the payload and
+# the browser's marker-rendering work bounded as the listings table grows,
+# instead of shipping every active property on every request.
+MAP_MARKER_LIMIT = 500
+
+
+def _apply_map_filters(properties, request):
+    property_type = request.GET.get('type', '')
+    search_query = request.GET.get('search', '')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+
+    if property_type and property_type != 'all':
+        properties = properties.filter(property_type=property_type)
+
+    if search_query:
+        properties = properties.filter(
+            Q(title__icontains=search_query) |
+            Q(city__icontains=search_query) |
+            Q(state__icontains=search_query) |
+            Q(address__icontains=search_query)
+        )
+
+    if min_price:
+        try:
+            properties = properties.filter(price__gte=float(min_price))
+        except (ValueError, TypeError):
+            pass
+
+    if max_price:
+        try:
+            properties = properties.filter(price__lte=float(max_price))
+        except (ValueError, TypeError):
+            pass
+
+    return properties
+
+
+def _serialize_properties_for_map(request):
+    """Shared by PropertyMapSearchListView and PropertyMapDataView so the
+    query + serialization logic (and its optimizations) live in one place."""
+    properties = Property.objects.filter(
+        is_active=True,
+        status=PropertyStatus.AVAILABLE,
+        latitude__isnull=False,
+        longitude__isnull=False,
+    ).only(*MAP_PROPERTY_FIELDS)
+
+    properties = _apply_map_filters(properties, request)
+    properties = properties[:MAP_MARKER_LIMIT]
+
+    properties_data = []
+    for prop in properties:
+        main_image = prop.main_image.url if prop.main_image else None
+        properties_data.append({
+            'id': prop.id,
+            'name': prop.title,
+            'type': prop.property_type,
+            'location': f"{prop.city}, {prop.state}",
+            'lat': float(prop.latitude),
+            'lng': float(prop.longitude),
+            'price': float(prop.price),
+            'beds': prop.bedrooms,
+            'baths': float(prop.bathrooms),
+            'rating': 4.5,  # You can add a rating field or calculate from reviews
+            'dist': '0.5 km',  # You can calculate distance from user location
+            'img': main_image or 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80',
+            'slug': prop.slug,
+            'address': prop.address,
+        })
+    return properties_data
+
+
 class PropertyMapSearchListView(View):
     """
     View for the map search page with dynamic properties
@@ -455,67 +536,7 @@ class PropertyMapSearchListView(View):
     template_name = 'map/map_search.html'
 
     def get(self, request, *args, **kwargs):
-        # Get filter parameters
-        property_type = request.GET.get('type', '')
-        search_query = request.GET.get('search', '')
-        min_price = request.GET.get('min_price', '')
-        max_price = request.GET.get('max_price', '')
-
-        # Get all active properties
-        properties = Property.objects.filter(
-            is_active=True,
-            status=PropertyStatus.AVAILABLE
-        )
-
-        # Apply filters
-        if property_type and property_type != 'all':
-            properties = properties.filter(property_type=property_type)
-
-        if search_query:
-            properties = properties.filter(
-                Q(title__icontains=search_query) |
-                Q(city__icontains=search_query) |
-                Q(state__icontains=search_query) |
-                Q(address__icontains=search_query)
-            )
-
-        if min_price:
-            try:
-                properties = properties.filter(price__gte=float(min_price))
-            except (ValueError, TypeError):
-                pass
-
-        if max_price:
-            try:
-                properties = properties.filter(price__lte=float(max_price))
-            except (ValueError, TypeError):
-                pass
-
-        # Prepare data for the map
-        properties_data = []
-        for prop in properties:
-            # Get the first image or use a placeholder
-            main_image = prop.main_image.url if prop.main_image else None
-
-            properties_data.append({
-                'id': prop.id,
-                'name': prop.title,
-                'type': prop.property_type,
-                'location': f"{prop.city}, {prop.state}",
-                'lat': float(prop.latitude) if prop.latitude else None,
-                'lng': float(prop.longitude) if prop.longitude else None,
-                'price': float(prop.price),
-                'beds': prop.bedrooms,
-                'baths': float(prop.bathrooms),
-                'rating': 4.5,  # You can add a rating field or calculate from reviews
-                'dist': '0.5 km',  # You can calculate distance from user location
-                'img': main_image or 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80',
-                'slug': prop.slug,
-                'address': prop.address,
-            })
-
-        # Filter out properties without coordinates
-        properties_data = [p for p in properties_data if p['lat'] and p['lng']]
+        properties_data = _serialize_properties_for_map(request)
 
         context = {
             'properties': json.dumps(properties_data),
@@ -530,67 +551,7 @@ class PropertyMapDataView(View):
     AJAX endpoint for getting property data for the map
     """
     def get(self, request, *args, **kwargs):
-        # Get filter parameters
-        property_type = request.GET.get('type', '')
-        search_query = request.GET.get('search', '')
-        min_price = request.GET.get('min_price', '')
-        max_price = request.GET.get('max_price', '')
-
-        # Get all active properties
-        properties = Property.objects.filter(
-            is_active=True,
-            status=PropertyStatus.AVAILABLE
-        )
-
-        # Apply filters
-        if property_type and property_type != 'all':
-            properties = properties.filter(property_type=property_type)
-
-        if search_query:
-            properties = properties.filter(
-                Q(title__icontains=search_query) |
-                Q(city__icontains=search_query) |
-                Q(state__icontains=search_query) |
-                Q(address__icontains=search_query)
-            )
-
-        if min_price:
-            try:
-                properties = properties.filter(price__gte=float(min_price))
-            except (ValueError, TypeError):
-                pass
-
-        if max_price:
-            try:
-                properties = properties.filter(price__lte=float(max_price))
-            except (ValueError, TypeError):
-                pass
-
-        # Prepare data for the map
-        properties_data = []
-        for prop in properties:
-            # Get the first image or use a placeholder
-            main_image = prop.main_image.url if prop.main_image else None
-
-            properties_data.append({
-                'id': prop.id,
-                'name': prop.title,
-                'type': prop.property_type,
-                'location': f"{prop.city}, {prop.state}",
-                'lat': float(prop.latitude) if prop.latitude else None,
-                'lng': float(prop.longitude) if prop.longitude else None,
-                'price': float(prop.price),
-                'beds': prop.bedrooms,
-                'baths': float(prop.bathrooms),
-                'rating': 4.5,
-                'dist': '0.5 km',
-                'img': main_image or 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80',
-                'slug': prop.slug,
-                'address': prop.address,
-            })
-
-        # Filter out properties without coordinates
-        properties_data = [p for p in properties_data if p['lat'] and p['lng']]
+        properties_data = _serialize_properties_for_map(request)
 
         return JsonResponse({
             'properties': properties_data,
@@ -773,12 +734,13 @@ class ContactView(View):
                 contact_message.user = request.user
             contact_message.save()
 
-            # Best-effort notification email - never blocks the user-facing
-            # success response if email sending fails (e.g. no SMTP configured yet)
+            # Best-effort notification email - sent on a background thread
+            # so the user-facing success response doesn't wait on the SMTP
+            # round-trip (and still never blocks if email isn't configured).
             try:
-                from django.core.mail import send_mail
                 from django.conf import settings
-                send_mail(
+                from Tuhame.email_utils import send_mail_async
+                send_mail_async(
                     subject=f"[2Hame Contact] {contact_message.get_subject_display()} from {contact_message.name}",
                     message=(
                         f"From: {contact_message.name} <{contact_message.email}>\n"
@@ -811,13 +773,16 @@ class MoverDetailView(DetailView):
     slug_url_kwarg = 'username'
 
     def get_queryset(self):
-        return Profile.objects.filter(role='mover', is_active=True, user__is_active=True)
+        return Profile.objects.filter(
+            role='mover', is_active=True, user__is_active=True
+        ).select_related('user')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile = self.object
-        context['trust_score'] = profile.get_trust_score()
-        context['completed_moves'] = profile.completed_moves_count()
+        completed = profile.completed_moves_count()
+        context['trust_score'] = profile.get_trust_score(completed=completed)
+        context['completed_moves'] = completed
         context['service_areas'] = profile.get_mover_service_areas_list()
         return context
 
@@ -863,6 +828,7 @@ class MoversNearbyDataView(LoginRequiredMixin, View):
 
         data = []
         for m in movers:
+            completed = m.completed_moves_count()
             data.append({
                 'username': m.user.username,
                 'name': m.get_full_name(),
@@ -871,8 +837,8 @@ class MoversNearbyDataView(LoginRequiredMixin, View):
                 'label': m.mover_base_label or m.city,
                 'vehicle': m.get_mover_vehicle_type_display() if m.mover_vehicle_type else 'Mover',
                 'vehicle_code': m.mover_vehicle_type,
-                'trust_score': m.get_trust_score(),
-                'completed_moves': m.completed_moves_count(),
+                'trust_score': m.get_trust_score(completed=completed),
+                'completed_moves': completed,
             })
         return JsonResponse({'movers': data})
 

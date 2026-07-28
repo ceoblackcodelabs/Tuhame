@@ -94,6 +94,8 @@ class Property(models.Model):
             models.Index(fields=['property_type', 'status']),
             models.Index(fields=['city', 'state']),
             models.Index(fields=['price']),
+            models.Index(fields=['is_active', 'status']),
+            models.Index(fields=['-created_at']),
         ]
 
     def __str__(self):
@@ -102,6 +104,9 @@ class Property(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        if self.main_image:
+            from Tuhame.image_utils import optimize_image_field
+            optimize_image_field(self.main_image, max_dimension=1600)
         super().save(*args, **kwargs)
 
 
@@ -114,6 +119,12 @@ class PropertyImage(models.Model):
 
     class Meta:
         ordering = ['order']
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            from Tuhame.image_utils import optimize_image_field
+            optimize_image_field(self.image, max_dimension=1600)
+        super().save(*args, **kwargs)
 
 class PropertyReview(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='reviews')

@@ -2473,7 +2473,7 @@ input[type="range"] {
   gap: 0.6rem;
   margin-bottom: 1.5rem;
 }
-.auth-logo img { height: 340px; width: auto; display: block; object-fit: contain; }
+.auth-logo img { height: 200px; width: auto; display: block; object-fit: contain; }
 
 .auth-title {
   font-size: 1.6rem;
@@ -2489,20 +2489,20 @@ input[type="range"] {
 @media (max-width: 640px) {
   .auth-right { padding: 2.25rem 1.25rem; }
   .auth-logo { margin-bottom: 1.25rem; }
-  .auth-logo img { height: 42px; }
+  .auth-logo img { height: 150px; }
   .auth-title { font-size: 1.4rem; }
   .auth-subtitle { margin-bottom: 1.5rem; }
 }
 
 @media (max-width: 400px) {
   .auth-right { padding: 1.75rem 1rem; }
-  .auth-logo img { height: 150px; }
+  .auth-logo img { height: 160px; }
   .auth-title { font-size: 1.25rem; }
 }
 
 @media (max-width: 700px) {
   .auth-right { padding: 1.75rem 1rem; }
-  .auth-logo img { height: 150px; }
+  .auth-logo img { height: 160px; }
   .auth-title { font-size: 1.25rem; }
 }
 

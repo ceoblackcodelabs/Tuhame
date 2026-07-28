@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,7 +78,10 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR, "templates"],
-        'APP_DIRS': True,
+        # APP_DIRS and OPTIONS['loaders'] are mutually exclusive in Django,
+        # so app-dirs scanning is folded into the loader list below whenever
+        # we override loaders (production only — dev keeps auto-reload).
+        'APP_DIRS': DEBUG,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -85,6 +89,17 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            **({} if DEBUG else {
+                # Cached loader: each template is compiled once per worker
+                # process and reused, instead of being re-read + re-parsed
+                # from disk on every single request.
+                'loaders': [
+                    ('django.template.loaders.cached.Loader', [
+                        'django.template.loaders.filesystem.Loader',
+                        'django.template.loaders.app_directories.Loader',
+                    ]),
+                ],
+            }),
         },
     },
 ]
@@ -99,8 +114,46 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        # Reuse DB connections across requests instead of opening/closing one
+        # every time (biggest win once you move off SQLite to Postgres/MySQL,
+        # where connection setup is the expensive part — harmless here too).
+        'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=60, cast=int),
     }
 }
+
+# ========== PRODUCTION DATABASE ==========
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'daysafaris_daysafarisadventure',
+#         'USER': 'daysafaris_sudo',
+#         'PASSWORD': '@D4y54f4r15',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+        #     'OPTIONS': {
+        #     'connect_timeout': 10,
+        #     'options': '-c statement_timeout=5000ms',
+        # },
+#     }
+# }
+
+# # ========== mysql DATABASE ==========
+# DATABASES = {
+#     'default': {
+#         'ENGINE': config('DB_ENGINE', default='django.db.backends.mysql'),
+#         'NAME': config('DB_NAME', default='daysafaris_daysafarisadventure'),
+#         'USER': config('DB_USER', default='daysafaris_sudo'),
+#         'PASSWORD': config('DB_PASSWORD', default=''),
+#         'HOST': config('DB_HOST', default='localhost'),
+#         'PORT': config('DB_PORT', default='3306'),
+#         'OPTIONS': {
+#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+#             'charset': 'utf8mb4',
+#         },
+#         'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=600, cast=int),
+#         'ATOMIC_REQUESTS': config('DB_ATOMIC_REQUESTS', default=True, cast=bool),
+#     }
+# }
 
 
 # Password validation
@@ -147,6 +200,49 @@ MEDIA_URL = '/media/'
 
 import os
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Compressed, cache-busted static files: each file gets a content hash in
+# its name (so browsers can cache it "forever") and is pre-gzipped/brotli'd
+# at collectstatic time instead of being compressed on every request.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "Tuhame.storage.LenientCompressedManifestStaticFilesStorage",
+    },
+}
+WHITENOISE_MAX_AGE = 31536000  # 1 year — safe because filenames are hashed
+
+# ============ CACHING ============
+# Uses Redis when REDIS_URL is set (recommended for production — a shared
+# cache across multiple gunicorn workers/servers). Falls back to a local
+# in-memory cache otherwise, so caching still helps in dev/single-process
+# setups with zero extra infrastructure required.
+REDIS_URL = config('REDIS_URL', default='')
+
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'TIMEOUT': 300,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'tuhame-cache',
+            'TIMEOUT': 300,
+            'OPTIONS': {'MAX_ENTRIES': 5000},
+        }
+    }
+
+# Sessions read/write through the cache first (falling back to the DB), so
+# a logged-in user's session lookup is usually a cache hit instead of a
+# query on every single request.
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # config/settings.py - Add these settings
 

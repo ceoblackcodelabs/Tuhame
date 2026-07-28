@@ -158,7 +158,14 @@ class Profile(models.Model):
             models.Index(fields=['user', 'is_active']),
             models.Index(fields=['city', 'country']),
             models.Index(fields=['qr_code_token']),
+            models.Index(fields=['role', 'is_active']),
         ]
+
+    def save(self, *args, **kwargs):
+        if self.profile_picture:
+            from Tuhame.image_utils import optimize_image_field
+            optimize_image_field(self.profile_picture, max_dimension=600)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -192,15 +199,19 @@ class Profile(models.Model):
     def active_moves_count(self):
         return self.user.move_offers.filter(status='accepted', move_request__status='matched').count()
 
-    def get_trust_score(self):
+    def get_trust_score(self, completed=None):
         """
         Simple, transparent trust score for a mover's public portfolio.
         Starts at a neutral 50 for a brand-new mover and grows with a track
         record of completed moves and account tenure, capped at 100.
         This is not a fake rating - it's derived entirely from real completed
         moves in our own database.
+
+        Pass `completed` if the caller already has the count (e.g. from
+        `completed_moves_count()`) to avoid running that query twice.
         """
-        completed = self.completed_moves_count()
+        if completed is None:
+            completed = self.completed_moves_count()
         if completed == 0:
             return None  # "New Mover" - no score yet, shown distinctly in templates
         tenure_days = (timezone.now() - self.created_at).days if self.created_at else 0
