@@ -6,7 +6,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Map Search – 2Hame</title>
-<link rel="preconnect" href="https://tile.openstreetmap.org" />
+<link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
 <link rel="stylesheet" href="{% static "assets/vendor/leaflet/leaflet.css" %}" />
@@ -122,15 +122,23 @@ const map = L.map('leaflet-map', {
   maxBoundsViscosity: 1.0
 });
 
-// Single-host tile URL (OSM's current recommendation — the old a/b/c
-// subdomains are deprecated now that HTTP/2 handles concurrency, and
-// dropping them avoids extra DNS lookups so tiles start loading sooner).
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+// Tiles come from CARTO's free basemap service (OSM data, different
+// server) instead of hotlinking tile.openstreetmap.org directly.
+//
+// tile.openstreetmap.org is a volunteer-run server whose usage policy
+// (operations.osmfoundation.org/policies/tiles) explicitly forbids "heavy
+// use" — a live commercial site like this one qualifies — and it actively
+// blocks traffic that strips its referrer or looks automated (that's what
+// the "access blocked" / osm.wiki/blocked page the site was hitting means).
+// CARTO's tiles are built for exactly this kind of production embedding,
+// need no signup/API key for normal traffic, and use the same OSM map
+// data underneath, so the map still looks the same.
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd',
   maxZoom: 19,
   minZoom: 6,
-  crossOrigin: true,
-  referrerPolicy: 'no-referrer'
+  crossOrigin: true
 }).addTo(map);
 
 L.control.zoom({ position: 'topright' }).addTo(map);

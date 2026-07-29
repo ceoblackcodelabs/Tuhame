@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from properties.models import Property
 import uuid
 from django.utils import timezone
+from Tuhame.upload_validators import validate_profile_picture
 
 User = get_user_model()
 
@@ -38,7 +39,8 @@ class Profile(models.Model):
     profile_picture = models.ImageField(
         upload_to='profiles/pictures/',
         blank=True,
-        null=True
+        null=True,
+        validators=[validate_profile_picture]
     )
     date_of_birth = models.DateField(blank=True, null=True)
 

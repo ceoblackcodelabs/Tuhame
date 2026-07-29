@@ -110,50 +110,58 @@ WSGI_APPLICATION = 'Tuhame.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        # Reuse DB connections across requests instead of opening/closing one
-        # every time (biggest win once you move off SQLite to Postgres/MySQL,
-        # where connection setup is the expensive part — harmless here too).
-        'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=60, cast=int),
+# One config for every environment, switched entirely by the DB_ENGINE
+# value in .env — nothing to hand-edit/comment-out before uploading to
+# production. That manual comment-swapping between sqlite/mysql blocks
+# was the likely cause of the "works locally, breaks on production"
+# 500 errors: it's easy to upload a settings.py where the wrong block
+# ended up active, or where MySQL was on but mysqlclient wasn't installed.
+#
+# Local .env:      DB_ENGINE=sqlite3   (or just omit DB_ENGINE — it's the default)
+# Production .env: DB_ENGINE=mysql
+#                  DB_NAME=..., DB_USER=..., DB_PASSWORD=..., DB_HOST=..., DB_PORT=...
+DB_ENGINE = config('DB_ENGINE', default='sqlite3')
+
+if DB_ENGINE == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            },
+            'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=600, cast=int),
+            'ATOMIC_REQUESTS': config('DB_ATOMIC_REQUESTS', default=True, cast=bool),
+        }
     }
-}
-
-# ========== PRODUCTION DATABASE ==========
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'daysafaris_daysafarisadventure',
-#         'USER': 'daysafaris_sudo',
-#         'PASSWORD': '@D4y54f4r15',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-        #     'OPTIONS': {
-        #     'connect_timeout': 10,
-        #     'options': '-c statement_timeout=5000ms',
-        # },
-#     }
-# }
-
-# # ========== mysql DATABASE ==========
-# DATABASES = {
-#     'default': {
-#         'ENGINE': config('DB_ENGINE', default='django.db.backends.mysql'),
-#         'NAME': config('DB_NAME', default='daysafaris_daysafarisadventure'),
-#         'USER': config('DB_USER', default='daysafaris_sudo'),
-#         'PASSWORD': config('DB_PASSWORD', default=''),
-#         'HOST': config('DB_HOST', default='localhost'),
-#         'PORT': config('DB_PORT', default='3306'),
-#         'OPTIONS': {
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-#             'charset': 'utf8mb4',
-#         },
-#         'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=600, cast=int),
-#         'ATOMIC_REQUESTS': config('DB_ATOMIC_REQUESTS', default=True, cast=bool),
-#     }
-# }
+elif DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+            'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=600, cast=int),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            # Reuse DB connections across requests instead of opening/closing
+            # one every time (biggest win once you move off SQLite to
+            # Postgres/MySQL, where connection setup is the expensive part).
+            'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=60, cast=int),
+        }
+    }
 
 
 # Password validation
@@ -216,7 +224,7 @@ WHITENOISE_MAX_AGE = 31536000  # 1 year — safe because filenames are hashed
 
 # ============ CACHING ============
 # Uses Redis when REDIS_URL is set (recommended for production — a shared
-# cache across multiple gunicorn workers/servers). Falls back to a local
+# cache across multiple Passenger processes/servers). Falls back to a local
 # in-memory cache otherwise, so caching still helps in dev/single-process
 # setups with zero extra infrastructure required.
 REDIS_URL = config('REDIS_URL', default='')

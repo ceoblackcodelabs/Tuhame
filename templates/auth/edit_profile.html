@@ -54,6 +54,47 @@
     display: none;
   }
 
+  .avatar-crop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .avatar-crop-box {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 420px;
+  }
+  .avatar-crop-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: var(--gray-900);
+  }
+  .avatar-crop-canvas-wrap {
+    width: 100%;
+    max-height: 60vh;
+    overflow: hidden;
+    background: #111;
+    border-radius: 8px;
+  }
+  .avatar-crop-canvas-wrap img {
+    display: block;
+    max-width: 100%;
+  }
+  .avatar-crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
   .edit-avatar-upload-label {
     display: inline-flex;
     align-items: center;
@@ -331,6 +372,20 @@
         <div class="edit-avatar-hint">JPG or PNG, max 5MB</div>
       </div>
 
+      <!-- Crop-to-square modal (shown when a new photo is picked) -->
+      <div id="avatar-crop-overlay" class="avatar-crop-overlay" style="display:none;">
+        <div class="avatar-crop-box">
+          <div class="avatar-crop-title">Crop your photo</div>
+          <div class="avatar-crop-canvas-wrap">
+            <img id="avatar-crop-target" alt="" />
+          </div>
+          <div class="avatar-crop-actions">
+            <button type="button" id="avatar-crop-cancel" class="btn">Cancel</button>
+            <button type="button" id="avatar-crop-save" class="btn btn-primary">Use this photo</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Form Sections -->
       <div>
 
@@ -556,6 +611,8 @@
 {% endblock content %}
 
 {% block inject_js %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -563,17 +620,67 @@
     const previewImg = document.getElementById('avatar-preview-img');
     const fallback = document.getElementById('avatar-fallback');
 
+    const overlay = document.getElementById('avatar-crop-overlay');
+    const cropTarget = document.getElementById('avatar-crop-target');
+    const cropCancel = document.getElementById('avatar-crop-cancel');
+    const cropSave = document.getElementById('avatar-crop-save');
+    let cropper = null;
+
+    function closeCropModal() {
+      if (cropper) { cropper.destroy(); cropper = null; }
+      overlay.style.display = 'none';
+    }
+
     if (fileInput) {
       fileInput.addEventListener('change', function (e) {
         const file = e.target.files && e.target.files[0];
-        if (!file) return;
+        if (!file || !file.type.startsWith('image/')) return;
+
         const reader = new FileReader();
         reader.onload = function (ev) {
-          previewImg.src = ev.target.result;
-          previewImg.style.display = 'block';
-          if (fallback) fallback.style.display = 'none';
+          cropTarget.src = ev.target.result;
+          overlay.style.display = 'flex';
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(cropTarget, {
+            aspectRatio: 1,
+            viewMode: 1,
+            autoCropArea: 1,
+            background: false,
+            responsive: true
+          });
         };
         reader.readAsDataURL(file);
+      });
+    }
+
+    if (cropCancel) {
+      cropCancel.addEventListener('click', function () {
+        fileInput.value = '';
+        closeCropModal();
+      });
+    }
+
+    if (cropSave) {
+      cropSave.addEventListener('click', function () {
+        if (!cropper) return;
+        // Fixed square output — big enough for any avatar size on the
+        // site, small enough to keep the upload (and the compression
+        // pass on the server) fast.
+        const canvas = cropper.getCroppedCanvas({ width: 600, height: 600 });
+        canvas.toBlob(function (blob) {
+          const originalName = (fileInput.files[0] && fileInput.files[0].name) || 'avatar.jpg';
+          const croppedFile = new File([blob], originalName.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+
+          const dt = new DataTransfer();
+          dt.items.add(croppedFile);
+          fileInput.files = dt.files;
+
+          previewImg.src = canvas.toDataURL('image/jpeg');
+          previewImg.style.display = 'block';
+          if (fallback) fallback.style.display = 'none';
+
+          closeCropModal();
+        }, 'image/jpeg', 0.92);
       });
     }
   });
@@ -593,8 +700,9 @@
     const startLng = parseFloat(lngInput.value) || 36.8219;
 
     moverMap = L.map('mover-base-map', { center: [startLat, startLng], zoom: latInput.value ? 14 : 11 });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
       maxZoom: 19
     }).addTo(moverMap);
 

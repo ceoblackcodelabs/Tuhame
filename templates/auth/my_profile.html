@@ -1192,8 +1192,9 @@
 
     if (!moveMap && typeof L !== 'undefined') {
       moveMap = L.map('move-location-map', { center: [-1.2921, 36.8219], zoom: 12 });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
         maxZoom: 19
       }).addTo(moveMap);
       moveMap.on('click', function (e) { setMapLocation(e.latlng.lat, e.latlng.lng, true); });

@@ -5,7 +5,12 @@ Brotli==1.1.0
 Pillow==10.4.0
 qrcode==7.4.2
 requests==2.32.3
-gunicorn==22.0.0
+
+# MySQL driver for production (pure-Python, works on shared/cPanel hosting
+# where mysqlclient's C extension usually can't be compiled). Harmless to
+# install even if you're on SQLite locally — Tuhame/__init__.py only
+# activates it, and settings.py only uses MySQL, when DB_ENGINE=mysql.
+PyMySQL==1.1.1
 
 # dev / seed data only
 Faker==26.0.0

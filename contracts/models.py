@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 import uuid
+from Tuhame.upload_validators import validate_document, validate_signature_image
 
 
 class ContractType(models.TextChoices):
@@ -51,7 +52,7 @@ class Contract(models.Model):
     late_fee_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
     # Documents
-    contract_file = models.FileField(upload_to='contracts/', blank=True, null=True)
+    contract_file = models.FileField(upload_to='contracts/', blank=True, null=True, validators=[validate_document])
 
     # Additional Info
     special_terms = models.TextField(blank=True)
@@ -99,12 +100,21 @@ class ContractSignature(models.Model):
     signer_email = models.EmailField()
     signed_at = models.DateTimeField(blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
-    signature_file = models.ImageField(upload_to='contracts/signatures/', blank=True, null=True)
+    signature_file = models.ImageField(
+        upload_to='contracts/signatures/', blank=True, null=True,
+        validators=[validate_signature_image]
+    )
     is_owner = models.BooleanField(default=False)
 
     def __str__(self):
         status = "Signed" if self.signed_at else "Pending"
         return f"{self.signer_name} - {status}"
+
+    def save(self, *args, **kwargs):
+        if self.signature_file:
+            from Tuhame.image_utils import optimize_image_field
+            optimize_image_field(self.signature_file, max_dimension=800)
+        super().save(*args, **kwargs)
 
 
 class ContractRenewal(models.Model):

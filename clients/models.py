@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator, MinValueValidator
 from django.utils import timezone
 from home.models import Property
+from Tuhame.upload_validators import validate_document
 
 User = get_user_model()
 
@@ -35,7 +36,7 @@ class Client(models.Model):
     # Identification
     id_type = models.CharField(max_length=50, blank=True, help_text="Passport, Driver's License, etc.")
     id_number = models.CharField(max_length=100, blank=True)
-    id_document = models.FileField(upload_to='clients/documents/', blank=True, null=True)
+    id_document = models.FileField(upload_to='clients/documents/', blank=True, null=True, validators=[validate_document])
 
     # Professional Info
     occupation = models.CharField(max_length=100, blank=True)
@@ -82,7 +83,7 @@ class ClientDocument(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents')
     document_type = models.CharField(max_length=20, choices=DOCUMENT_TYPES)
     title = models.CharField(max_length=200)
-    file = models.FileField(upload_to='clients/documents/')
+    file = models.FileField(upload_to='clients/documents/', validators=[validate_document])
     uploaded_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateField(blank=True, null=True)
 
@@ -178,7 +179,7 @@ class Bill(models.Model):
     # Additional Info
     reference_number = models.CharField(max_length=100, blank=True, help_text="Bill reference or invoice number")
     notes = models.TextField(blank=True)
-    receipt = models.FileField(upload_to='bills/receipts/', blank=True, null=True)
+    receipt = models.FileField(upload_to='bills/receipts/', blank=True, null=True, validators=[validate_document])
 
     # Recurring
     is_recurring = models.BooleanField(default=False)

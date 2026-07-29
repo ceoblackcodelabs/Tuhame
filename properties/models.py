@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from django.utils.text import slugify
+from Tuhame.upload_validators import validate_property_image
 
 User = get_user_model()
 
@@ -76,7 +77,10 @@ class Property(models.Model):
     amenities = models.ManyToManyField(Amenity, blank=True)
 
     # Media
-    main_image = models.ImageField(upload_to='properties/main/', blank=True, null=True)
+    main_image = models.ImageField(
+        upload_to='properties/main/', blank=True, null=True,
+        validators=[validate_property_image]
+    )
 
     # Availability
     available_from = models.DateField(default=timezone.now)
@@ -112,7 +116,7 @@ class Property(models.Model):
 
 class PropertyImage(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='properties/gallery/')
+    image = models.ImageField(upload_to='properties/gallery/', validators=[validate_property_image])
     caption = models.CharField(max_length=200, blank=True)
     is_primary = models.BooleanField(default=False)
     order = models.IntegerField(default=0)

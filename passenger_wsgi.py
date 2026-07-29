@@ -1,0 +1,1 @@
+from Tuhame.wsgi import application
