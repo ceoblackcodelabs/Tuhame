@@ -1,37 +1,92 @@
 {% extends "home/base.html" %}
 
-{% block title %}2Hame - Find Your Next Home{% endblock title %}
+<!-- ─── SEO BLOCKS ─── -->
+{% block meta_description %}Find or list properties on 2Hame – Kenya's leading real estate platform. Search apartments, villas, rentals & BNBs. For tenants, buyers, and property owners. Move with confidence.{% endblock meta_description %}
+
+{% block og_title %}2Hame – Kenya's #1 Real Estate Platform for Buyers, Sellers & Tenants{% endblock og_title %}
+
+{% block og_description %}List your property for free or find your dream home on 2Hame. Connect with verified tenants, buyers, and movers across Kenya. Smart, secure, and built for you.{% endblock og_description %}
+
+{% block twitter_title %}2Hame – Kenya's Smartest Real Estate Marketplace{% endblock twitter_title %}
+
+{% block twitter_description %}Find properties, list rentals, and connect with verified movers. The all-in-one platform for Kenyan real estate – for buyers, sellers, and tenants.{% endblock twitter_description %}
+
+{% block canonical_url %}https://2hame.com{% endblock canonical_url %}
+
+{% block title %}2Hame – Kenya's #1 Real Estate Platform for Buyers, Sellers & Tenants{% endblock title %}
+
+<!-- ─── HOMEPAGE JSON-LD ─── -->
+{% block property_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "2Hame - Kenya's Real Estate & Housing Platform",
+  "description": "Find or list properties on 2Hame. Search apartments, villas, rentals, and BNBs. Connect with tenants, buyers, and verified movers across Kenya.",
+  "url": "https://2hame.com",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Rent Apartments",
+        "url": "https://2hame.com/properties/?property_type=apartment"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Buy Villas",
+        "url": "https://2hame.com/properties/?property_type=villa"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "List Your Property",
+        "url": "https://2hame.com/list-property"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Find Movers",
+        "url": "https://2hame.com/movers"
+      }
+    ]
+  }
+}
+</script>
+{% endblock property_schema %}
 
 {% block content %}
 
 <!-- ─── HERO ─── -->
 <section class="hero">
   <div class="hero-carousel">
-    <!-- Slide 1 -->
+    <!-- Slide 1 - For Tenants -->
     <div class="hero-slide active" data-title="Find Your Next <em>Home</em> With Ease" data-subtitle="Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast.">
       <div class="hero-bg" style="background: linear-gradient(135deg, #1a3a6b 0%, #2563EB 50%, #0a192f 100%); width:100%; height:100%; position:absolute; inset:0;">
         <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;opacity:0.45;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
-    <!-- Slide 2 -->
-    <div class="hero-slide" data-title="Discover Stunning <em>Villas</em> &amp; Family Homes" data-subtitle="Spacious living, private gardens and gated security — find the villa that fits your lifestyle.">
+    <!-- Slide 2 - For Property Owners -->
+    <div class="hero-slide" data-title="List Your Property & <em>Find Tenants</em> Fast" data-subtitle="Reach thousands of verified tenants and buyers. Free listings, premium exposure, and direct communication.">
       <div class="hero-bg" style="position:absolute;inset:0;">
-        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
-    <!-- Slide 3 -->
+    <!-- Slide 3 - Apartments -->
     <div class="hero-slide" data-title="Modern <em>Apartments</em> In Prime Locations" data-subtitle="Live closer to work, school and the city's best spots — verified apartments, updated daily.">
       <div class="hero-bg" style="position:absolute;inset:0;">
         <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
-    <!-- Slide 4 -->
-    <div class="hero-slide" data-title="Cozy <em>BnBs</em> &amp; Short Stays, Ready When You Are" data-subtitle="From weekend getaways to month-long stays — book flexible, fully-furnished spaces in minutes.">
+    <!-- Slide 4 - For Real Estate Agents -->
+    <div class="hero-slide" data-title="For <em>Real Estate Agents</em> &amp; Developers" data-subtitle="Showcase your portfolio, manage listings, and connect with serious buyers and tenants in one place.">
       <div class="hero-bg" style="position:absolute;inset:0;">
-        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+        <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
@@ -39,17 +94,17 @@
 
   <div class="hero-content">
     <div class="hero-badge">
-      <span>🏆</span> Kenya's #1 Smart Housing Platform
+      <span>🏆</span> Kenya's #1 Smart Real Estate Platform
     </div>
     <h1 class="hero-title">Find Your Next <em>Home</em> With Ease</h1>
-    <p class="hero-subtitle">Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast.</p>
+    <p class="hero-subtitle">Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast. <strong style="color:var(--primary);">List your property for free.</strong></p>
 
     <!-- Search Bar -->
     <form method="get" action="{% url 'home:properties' %}" class="hero-search">
       <span class="hero-search-icon">🔍</span>
-      <input class="hero-search-input live-search" type="text" name="search" placeholder="Search by location, property name…" value="{{ search_query }}" />
+      <input class="hero-search-input live-search" type="text" name="search" placeholder="Search by location, property name, or keyword…" value="{{ search_query }}" aria-label="Search properties" />
       <div class="hero-search-divider"></div>
-      <select class="hero-search-select" name="property_type">
+      <select class="hero-search-select" name="property_type" aria-label="Property type">
         {% for type in property_types %}
           <option value="{{ type.value }}" {% if selected_type == type.value %}selected{% endif %}>{{ type.label }}</option>
         {% endfor %}
@@ -61,6 +116,7 @@
     <div class="hero-buttons">
       <a href="{% url 'home:properties' %}" class="btn btn-primary btn-lg">🏘 Explore Properties</a>
       <a href="{% url 'home:property_map' %}" class="btn btn-outline btn-lg">🗺 View Map</a>
+      <a href="#" class="btn btn-outline btn-lg">📝 List Your Property</a>
     </div>
   </div>
 
@@ -74,15 +130,179 @@
   <div class="hero-stats">
     <div class="hero-stat">
       <div class="hero-stat-num" data-target="12500" data-suffix="+">0</div>
-      <div class="hero-stat-label">Properties</div>
+      <div class="hero-stat-label">Properties Listed</div>
     </div>
     <div class="hero-stat">
       <div class="hero-stat-num" data-target="8200" data-suffix="+">0</div>
       <div class="hero-stat-label">Happy Tenants</div>
     </div>
     <div class="hero-stat">
+      <div class="hero-stat-num" data-target="2300" data-suffix="+">0</div>
+      <div class="hero-stat-label">Property Owners</div>
+    </div>
+    <div class="hero-stat">
       <div class="hero-stat-num" data-target="47">0</div>
-      <div class="hero-stat-label">Cities</div>
+      <div class="hero-stat-label">Cities Across Kenya</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ABOUT ─── -->
+<section class="section" style="background:var(--light-bg);">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
+      <div>
+        <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">🏡 About 2Hame</div>
+        <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">Built To Make Moving Simple, Not Stressful</h2>
+        <p style="color:var(--gray-500);margin-bottom:0.5rem;line-height:1.7;">
+          2Hame is Kenya's all-in-one real estate platform — connecting tenants, landlords, buyers, and agents directly with verified listings, transparent pricing, and powerful tools that take the guesswork out of finding, listing, or moving into a home.
+        </p>
+        <p style="color:var(--gray-500);line-height:1.7;">
+          From interactive map searches and AI-powered property matching to digital tenant profiles, We handle every step of your journey. Property owners get free listings, real-time analytics dashboards, and secure payment processing, while tenants enjoy direct communication, neighborhood insights, and a move cost calculator to plan their budget. Whether you're searching for your dream apartment, listing a rental, or booking verified movers, 2Hame brings everything together in one seamless experience.
+        </p>
+        <div class="about-highlights">
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">✅</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Verified Listings & AI Search</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Every property verified by our team with AI-powered matching and smart filters.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">🗺️</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Map & Move Score™</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Explore properties on live maps with neighborhood insights and our exclusive Move Score.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">🤝</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Zero Middlemen + Direct Connect</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Talk directly to landlords, tenants, and verified movers — no hidden fees or intermediaries.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">📊</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Owner Dashboard & Free Listings</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">List properties for free with real-time analytics, payment processing, and performance tracking.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">🚚</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Movers Marketplace & Cost Calculator</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Book verified movers and plan your budget with our comprehensive move cost calculator.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">📍</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Built For Kenya</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Local pricing, local neighbourhoods, local support — designed for Kenyans by Kenyans.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="about-stats-grid">
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">{{ total_active_properties|default:"0" }}+</div>
+          <div class="about-stat-label">Active Listings</div>
+        </div>
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">{{ categories|length|default:"0" }}</div>
+          <div class="about-stat-label">Property Categories</div>
+        </div>
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">24/7</div>
+          <div class="about-stat-label">Support Available</div>
+        </div>
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">100%</div>
+          <div class="about-stat-label">Verified Listings</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOR PROPERTY OWNERS CTA ─── -->
+<section class="section" style="background:var(--white);">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
+      <div>
+        <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">🏢 For Property Owners</div>
+        <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">List Your Property & <span style="color:green;">Find Tenants Fast</span></h2>
+        <p style="color:var(--gray-500);margin-bottom:0.5rem;line-height:1.7;">
+          Whether you're a landlord, real estate agent, or developer — reach thousands of verified tenants and buyers actively searching for their next home through our AI-powered search and interactive map platform.
+        </p>
+        <p style="color:var(--gray-500);line-height:1.7;">
+          List your property for free and get access to real-time analytics, secure payment processing, and direct communication tools.
+        </p>
+        <div class="about-highlights">
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">✅</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Free Listings & Premium Visibility</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">List your property for free with premium options to boost visibility among thousands of active tenants and buyers.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">📊</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Analytics Dashboard & Performance Tracking</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Track views, inquiries, and engagement metrics to understand what's working and optimize your listings.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">🤝</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Direct Communication & Secure Payments</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Connect directly with serious tenants via encrypted chat and process deposits and rent securely through our platform.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">🗺️</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Maps & Move Score™</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Showcase your property on live maps with neighborhood insights and the 2Hame Move Score to attract quality tenants.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">👤</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Digital Tenant Profiles & Verification</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Access verified tenant profiles with rental history, documents, and preferences for faster decision-making.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">🚚</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Movers Marketplace Integration</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Connect tenants with verified movers for a seamless move-in experience — from listing to move-in day.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="about-stats-grid">
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">{{ total_active_properties|default:"0" }}+</div>
+          <div class="about-stat-label">Active Listings</div>
+        </div>
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">{{ categories|length|default:"0" }}</div>
+          <div class="about-stat-label">Property Categories</div>
+        </div>
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">24/7</div>
+          <div class="about-stat-label">Support Available</div>
+        </div>
+        <div class="about-stat-card">
+          <div class="about-stat-num" style="color:green">100%</div>
+          <div class="about-stat-label">Verified Listings</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -92,11 +312,11 @@
   <div class="container">
     <div class="section-header">
       <h2 class="section-title">Browse by Category</h2>
-      <p class="section-subtitle">Find exactly the type of home you're looking for</p>
+      <p class="section-subtitle">Find exactly the type of home you're looking for — or list yours</p>
     </div>
     <div class="categories-grid">
       {% for category in categories %}
-        <a href="{% url 'home:properties' %}?property_type={{ category.type }}" class="category-card fade-up">
+        <a href="{% url 'home:properties' %}?property_type={{ category.type }}" class="category-card fade-up" title="Browse {{ category.label }} in Kenya">
           <span class="category-icon">{{ category.icon }}</span>
           <div class="category-name">{{ category.label }}</div>
           <div class="category-count">{{ category.count|default:"0" }} listings</div>
@@ -108,64 +328,6 @@
   </div>
 </section>
 
-<!-- ─── ABOUT ─── -->
-<section class="section" style="background:var(--white);">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
-      <div>
-        <div class="badge badge-primary" style="margin-bottom:1rem;">🏡 About 2Hame</div>
-        <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">Built To Make Moving Simple, Not Stressful</h2>
-        <p style="color:var(--gray-500);margin-bottom:0.5rem;line-height:1.7;">
-          2Hame is Kenya's smart housing platform — connecting tenants, landlords and agents directly, with verified listings, transparent pricing, and tools that take the guesswork out of finding a home.
-        </p>
-        <p style="color:var(--gray-500);line-height:1.7;">
-          From the first search to move-in day, we handle the details — interactive maps, digital tenant profiles, and secure direct communication — so you can focus on settling in.
-        </p>
-        <div class="about-highlights">
-          <div class="about-highlight-item">
-            <div class="about-highlight-icon">✅</div>
-            <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Verified Listings Only</strong>
-              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Every property is checked by our team before it goes live.</p>
-            </div>
-          </div>
-          <div class="about-highlight-item">
-            <div class="about-highlight-icon">🤝</div>
-            <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Zero Middlemen</strong>
-              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Talk directly to landlords and agents — no hidden fees.</p>
-            </div>
-          </div>
-          <div class="about-highlight-item">
-            <div class="about-highlight-icon">📍</div>
-            <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Built For Kenya</strong>
-              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Local pricing, local neighbourhoods, local support.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="about-stats-grid">
-        <div class="about-stat-card">
-          <div class="about-stat-num">{{ total_active_properties|default:"0" }}+</div>
-          <div class="about-stat-label">Active Listings</div>
-        </div>
-        <div class="about-stat-card">
-          <div class="about-stat-num">{{ categories|length|default:"0" }}</div>
-          <div class="about-stat-label">Property Categories</div>
-        </div>
-        <div class="about-stat-card">
-          <div class="about-stat-num">24/7</div>
-          <div class="about-stat-label">Support Available</div>
-        </div>
-        <div class="about-stat-card">
-          <div class="about-stat-num">100%</div>
-          <div class="about-stat-label">Verified Listings</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ─── WHY 2Hame ─── -->
 <section class="section features-bg">
@@ -196,14 +358,14 @@
         <div class="feature-desc">Explore properties on a live map with custom markers, radius search, and real-time availability filters.</div>
       </div>
       <div class="feature-card fade-up">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Owner Analytics Dashboard</div>
+        <div class="feature-desc">Track views, inquiries, and performance metrics for your listed properties — know exactly what's working.</div>
+      </div>
+      <div class="feature-card fade-up">
         <div class="feature-icon">🔒</div>
         <div class="feature-title">Secure Communication</div>
         <div class="feature-desc">End-to-end encrypted chats, secure document sharing, and a safe environment for every conversation.</div>
-      </div>
-      <div class="feature-card fade-up">
-        <div class="feature-icon">⚡</div>
-        <div class="feature-title">Real-time Availability</div>
-        <div class="feature-desc">Live availability updates so you never waste time pursuing a property that's already been taken.</div>
       </div>
     </div>
   </div>
@@ -346,7 +508,7 @@
   <div class="container">
     <div class="section-header">
       <h2 class="section-title">What Our Users Say</h2>
-      <p class="section-subtitle">Real feedback from tenants and homeowners using 2Hame</p>
+      <p class="section-subtitle">Real feedback from tenants, buyers, and property owners using 2Hame</p>
     </div>
     <div class="testimonials-grid">
       {% for review in testimonials %}
@@ -370,7 +532,7 @@
           <div class="testimonial-footer">
             <div class="testimonial-avatar">A</div>
             <div>
-              <div class="testimonial-name">Early User</div>
+              <div class="testimonial-name">Ann W., Tenant</div>
               <div class="testimonial-location">Nairobi, Kenya</div>
             </div>
           </div>
@@ -382,7 +544,7 @@
           <div class="testimonial-footer">
             <div class="testimonial-avatar">L</div>
             <div>
-              <div class="testimonial-name">Property Owner</div>
+              <div class="testimonial-name">Michael K., Property Owner</div>
               <div class="testimonial-location">Mombasa, Kenya</div>
             </div>
           </div>
@@ -394,7 +556,7 @@
           <div class="testimonial-footer">
             <div class="testimonial-avatar">T</div>
             <div>
-              <div class="testimonial-name">New Tenant</div>
+              <div class="testimonial-name">David M., Tenant</div>
               <div class="testimonial-location">Kisumu, Kenya</div>
             </div>
           </div>
@@ -417,8 +579,6 @@
         {% include "home/_partner_logos.html" %}
       </div>
     </div>
-  </div>
-</section>
   </div>
 </section>
 

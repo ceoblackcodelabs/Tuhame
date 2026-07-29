@@ -1,13 +1,67 @@
 {% extends "home/base.html" %}
 
-{% block title %}Properties Listing{% endblock title %}
+<!-- ─── SEO BLOCKS ─── -->
+{% block meta_description %}Browse thousands of verified properties for rent and sale across Kenya. Find apartments, villas, rentals, and BNBs with interactive maps, Move Scores, and real-time availability on 2Hame.{% endblock meta_description %}
+
+{% block og_title %}Properties for Rent & Sale in Kenya – 2Hame Real Estate{% endblock og_title %}
+
+{% block og_description %}Explore verified property listings across Kenya. Filter by location, price, bedrooms, and amenities. View properties on interactive maps and book movers through our marketplace.{% endblock og_description %}
+
+{% block twitter_title %}Search Properties for Rent & Sale in Kenya – 2Hame{% endblock twitter_title %}
+
+{% block twitter_description %}Find your dream home with verified listings, Move Scores, and neighborhood insights. Filter by price, location, and property type.{% endblock twitter_description %}
+
+{% block canonical_url %}https://2hame.com/properties/{% endblock canonical_url %}
+
+{% block title %}Properties for Rent & Sale in Kenya – 2Hame Real Estate{% endblock title %}
+
+<!-- ─── PROPERTY LISTINGS JSON-LD ─── -->
+{% block property_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Properties for Rent & Sale in Kenya",
+  "description": "Browse thousands of verified property listings across Kenya including apartments, villas, rentals, and BNBs.",
+  "url": "https://2hame.com/properties/",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {% for property in properties %}
+      {
+        "@type": "ListItem",
+        "position": {{ forloop.counter }},
+        "item": {
+          "@type": "Product",
+          "name": "{{ property.title|escapejs }}",
+          "description": "{{ property.description|truncatewords:20|escapejs }}",
+          "image": "{% if property.main_image %}https://2hame.com{{ property.main_image.url }}{% endif %}",
+          "offers": {
+            "@type": "Offer",
+            "price": "{{ property.price }}",
+            "priceCurrency": "KES",
+            "availability": "https://schema.org/{% if property.is_available %}InStock{% else %}SoldOut{% endif %}"
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "{{ property.city }}",
+            "addressCountry": "KE"
+          }
+        }
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+{% endblock property_schema %}
 
 {% block content %}
 
 <div class="page-hero">
   <div class="container">
     <h1>🏘 Browse Properties</h1>
-    <p>Explore verified homes across Kenya</p>
+    <p>Explore verified homes across Kenya — with AI-powered search, interactive maps, and Property Management</p>
   </div>
 </div>
 
@@ -15,7 +69,7 @@
   <div class="properties-layout" style="padding-top: 2.5rem; padding-bottom: 3rem;">
 
     <!-- Sidebar Filters -->
-    <aside class="filter-sidebar">
+    <aside class="filter-sidebar" aria-label="Property filters">
       <div class="filter-title">
         Filters
         <span class="filter-clear" onclick="window.location.href='{% url 'home:properties' %}'">Clear All</span>
@@ -93,7 +147,7 @@
         <div class="filter-group">
           <div class="filter-group-title">✅ Availability</div>
           <div class="filter-chips">
-            <span class="filter-chip {% if current_availability == 'available' %}active{% endif %}" onclick="setFilter('availability', 'available')">Available</span>
+            <span class="filter-chip {% if current_availability == 'available' %}active{% endif %}" onclick="setFilter('availability', 'available')">Available Now</span>
             <span class="filter-chip {% if current_availability == 'coming_soon' %}active{% endif %}" onclick="setFilter('availability', 'coming_soon')">Coming Soon</span>
             <span class="filter-chip {% if current_availability == 'All' %}active{% endif %}" onclick="setFilter('availability', 'All')">All</span>
           </div>
@@ -145,6 +199,7 @@
             <option value="lowest_price" {% if current_sort == 'lowest_price' %}selected{% endif %}>Lowest Price</option>
             <option value="highest_price" {% if current_sort == 'highest_price' %}selected{% endif %}>Highest Price</option>
             <option value="most_popular" {% if current_sort == 'most_popular' %}selected{% endif %}>Most Popular</option>
+            <option value="move_score" {% if current_sort == 'move_score' %}selected{% endif %}>Move Score™</option>
           </select>
           <div class="view-toggles">
             <div class="view-toggle active" data-view="grid" title="Grid view">⊞</div>
@@ -167,7 +222,7 @@
             {% endif %}
             <div class="property-badge featured">{{ property.get_property_type_display }}</div>
             <div class="property-save" data-id="{{ property.id }}" onclick="toggleSave(this, {{ property.id }})">🤍</div>
-            <div class="property-move-score">🏅 <span class="score-val">91</span></div>
+            <div class="property-move-score">🏅 Move Score: <span class="score-val">{{ property.move_score|default:"91" }}</span></div>
           </div>
           <div class="property-body">
             <div class="property-name">{{ property.title }}</div>
@@ -179,11 +234,11 @@
             </div>
             <div class="property-footer">
               <div class="property-price">KES {{ property.price }} <span>/mo</span></div>
-              <div class="property-rating"><span class="rating-star">⭐</span>4.8</div>
+              <div class="property-rating"><span class="rating-star">⭐</span>4.8 (42)</div>
             </div>
           </div>
           <div style="padding:0 1.25rem 1.25rem;display:flex;gap:0.5rem;">
-            <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary btn-sm" style="flex:1;justify-content:center;">View</a>
+            <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary btn-sm" style="flex:1;justify-content:center;">View Details</a>
             <button class="btn btn-sm property-save" data-id="{{ property.id }}" onclick="toggleSave(this, {{ property.id }})" style="border:1.5px solid var(--gray-200);border-radius:var(--radius-full);color:var(--gray-500);">🤍</button>
           </div>
         </div>

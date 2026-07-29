@@ -3,18 +3,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- ─── PRIMARY SEO ─── -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="2Hame – Find, Move, Settle. Kenya's smartest housing platform for apartments, rentals, villas and BNBs." />
-  <title> {% block title %}{% endblock title %} 2Hame – Find. Move. Settle.</title>
-  <link rel="stylesheet" href="{% static "assets/css/style.css" %}" />
+  <meta name="description" content="{% block meta_description %}2Hame – Kenya's premier real estate platform for property listings, rentals, apartments, villas, and BNBs. List your property for free and reach thousands of potential tenants and buyers.{% endblock meta_description %}" />
+  <meta name="keywords" content="real estate Kenya, property listings, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property agents, real estate investors, find movers, housing marketplace" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="2Hame by BlackCodeLabs" />
+  <link rel="canonical" href="{% block canonical_url %}https://2hame.com{% endblock canonical_url %}" />
+
+  <!-- ─── OPEN GRAPH (Social Media) ─── -->
+  <meta property="og:title" content="{% block og_title %}2Hame – Kenya's #1 Real Estate & Housing Platform{% endblock og_title %}" />
+  <meta property="og:description" content="{% block og_description %}Find your dream home or list your property on 2Hame. Connect with tenants, buyers, and verified movers across Kenya.{% endblock og_description %}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{% block og_url %}https://2hame.com{% endblock og_url %}" />
+  <meta property="og:image" content="{% block og_image %}https://2hame.com{% static 'assets/img/all.png' %}{% endblock og_image %}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="2Hame" />
+  <meta property="og:locale" content="en_KE" />
+
+  <!-- ─── TWITTER CARDS ─── -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{% block twitter_title %}2Hame – Kenya's Smartest Real Estate Marketplace{% endblock twitter_title %}" />
+  <meta name="twitter:description" content="{% block twitter_description %}Find properties, list rentals, and connect with verified movers. The all-in-one platform for Kenyan real estate.{% endblock twitter_description %}" />
+  <meta name="twitter:image" content="{% block twitter_image %}https://2hame.com{% static 'assets/img/all.png' %}{% endblock twitter_image %}" />
+
+  <!-- ─── STRUCTURED DATA (JSON-LD) ─── -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "RealEstateAgent",
+      "name": "2Hame",
+      "url": "https://2hame.com",
+      "logo": "https://2hame.com/static/assets/img/all.png",
+      "image": "https://2hame.com/static/assets/img/all.png",
+      "description": "Kenya's leading real estate platform connecting property owners, tenants, buyers, and movers.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Nairobi",
+        "addressCountry": "KE"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+254768075539",
+        "contactType": "customer service",
+        "availableLanguage": ["English", "Swahili"]
+      },
+      "sameAs": [
+        "https://facebook.com/2hame_housing",
+        "https://x.com/2hame_housing",
+        "https://instagram.com/2hame_housing",
+        "https://linkedin.com/company/2hame_housing"
+      ]
+    }
+  </script>
+
+  <!-- ─── ADDITIONAL SCHEMA FOR PROPERTY LISTINGS (if viewing a property) ─── -->
+  {% block property_schema %}{% endblock property_schema %}
+
+  <title>{% block title %}2Hame – Kenya's #1 Real Estate & Housing Platform{% endblock title %}</title>
+
+  <!-- ─── STYLES ─── -->
+  <link rel="stylesheet" href="{% static 'assets/css/style.css' %}" />
   {% block inject_css %}{% endblock inject_css %}
-  <link rel="icon" type="image/svg+xml" href="{% static "assets/images/favicon.svg" %}" />
-  <link rel="icon" type="image/png" sizes="32x32" href="{% static "assets/images/favicon-32.png" %}" />
-  <link rel="icon" type="image/png" sizes="16x16" href="{% static "assets/images/favicon-16.png" %}" />
-  <link rel="shortcut icon" href="{% static "assets/images/favicon.ico" %}" />
-  <link rel="apple-touch-icon" sizes="180x180" href="{% static "assets/images/apple-touch-icon.png" %}" />
+
+  <!-- ─── FAVICON ─── -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/images/favicon.ico' %}" />
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/images/favicon.ico' %}" />
+  <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}" />
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/images/apple-touch-icon.png' %}" />
   <meta name="theme-color" content="#2563EB" />
+
+  <!-- ─── VERIFICATION FOR SEARCH CONSOLES ─── -->
+  <meta name="google-site-verification" content="2PeCW0qX4IbYBR4KcD4XCO6GBvP1wOJ-NUDHQoqrkrc" />
+  <meta name="msvalidate.01" content="FB67A03642BB6A7E28C25C3C010798EF" />
 </head>
 <body>
 
@@ -23,17 +86,17 @@
   <input type="hidden" id="user-auth-status" value="{% if user.is_authenticated %}true{% else %}false{% endif %}">
 
 <!-- ─── NAVBAR ─── -->
-<nav class="navbar transparent">
+<nav class="navbar transparent" role="navigation" aria-label="Main navigation">
   <div class="nav-container">
-    <a href="{% url "home:home" %}" class="nav-logo">
-      <img src="{% static 'assets/img/logo.png' %}" alt="TuHame" class="nav-logo-img" />
+    <a href="{% url 'home:home' %}" class="nav-logo" aria-label="2Hame Home">
+      <img src="{% static 'assets/img/logo.png' %}" alt="2Hame - Kenya's Real Estate Platform" class="nav-logo-img" />
     </a>
-    <ul class="nav-menu">
-      <li><a href="{% url "home:home" %}" class="nav-link active">Home</a></li>
-      <li><a href="{% url "home:properties" %}" class="nav-link">Properties</a></li>
-      <li><a href="{% url "home:property_map" %}" class="nav-link">Map Search</a></li>
-      <li><a href="{% url "home:contact" %}" class="nav-link">Contact</a></li>
-      <li><a href="{% url "home:mover_map" %}" class="nav-link">🚚 Movers</a></li>
+    <ul class="nav-menu" role="menubar">
+      <li role="none"><a href="{% url 'home:home' %}" class="nav-link active" role="menuitem">Home</a></li>
+      <li role="none"><a href="{% url 'home:properties' %}" class="nav-link" role="menuitem">Properties</a></li>
+      <li role="none"><a href="{% url 'home:property_map' %}" class="nav-link" role="menuitem">Map Search</a></li>
+      <li role="none"><a href="{% url 'home:contact' %}" class="nav-link" role="menuitem">Contact</a></li>
+      <li role="none"><a href="{% url 'home:mover_map' %}" class="nav-link" role="menuitem">🚚 Movers</a></li>
     </ul>
     <div class="nav-actions">
   <button class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
@@ -43,50 +106,50 @@
     <button class="profile-icon-btn" id="profile-dropdown-toggle" aria-label="Account menu" aria-expanded="false">
       {% if request.user.is_authenticated %}
         {% if request.user.profile.profile_picture %}
-          <img src="{{ request.user.profile.profile_picture.url }}" alt="" class="profile-icon-avatar" />
+          <img src="{{ request.user.profile.profile_picture.url }}" alt="{{ request.user.username }}'s profile" class="profile-icon-avatar" />
         {% else %}
           <span class="profile-icon-fallback">{{ request.user.username|slice:":1"|upper }}</span>
         {% endif %}
       {% else %}
-        <span class="profile-icon-fallback">👤</span>
+        <span class="profile-icon-fallback" aria-hidden="true">👤</span>
       {% endif %}
     </button>
 
-    <div class="profile-dropdown-menu" id="profile-dropdown-menu">
+    <div class="profile-dropdown-menu" id="profile-dropdown-menu" role="menu">
         {% if request.user.is_authenticated %}
           <div class="profile-dropdown-header">
             <div class="profile-dropdown-name">{{ request.user.get_full_name|default:request.user.username }}</div>
             <div class="profile-dropdown-email">{{ request.user.email }}</div>
           </div>
-          <a href="{% url 'my_profile' %}" class="profile-dropdown-item">👤 Profile</a>
-          <a href="{% url 'edit_profile' %}" class="profile-dropdown-item">✏️ Edit Profile</a>
+          <a href="{% url 'my_profile' %}" class="profile-dropdown-item" role="menuitem">👤 Profile</a>
+          <a href="{% url 'edit_profile' %}" class="profile-dropdown-item" role="menuitem">✏️ Edit Profile</a>
           <div class="profile-dropdown-divider"></div>
-          <a href="{% url 'logout' %}" class="profile-dropdown-item profile-dropdown-danger">🚪 Logout</a>
+          <a href="{% url 'logout' %}" class="profile-dropdown-item profile-dropdown-danger" role="menuitem">🚪 Logout</a>
         {% else %}
-          <a href="{% url 'login' %}" class="profile-dropdown-item">🔑 Login</a>
-          <a href="{% url 'register' %}" class="profile-dropdown-item">📝 Register</a>
+          <a href="{% url 'login' %}" class="profile-dropdown-item" role="menuitem">🔑 Login</a>
+          <a href="{% url 'register' %}" class="profile-dropdown-item" role="menuitem">📝 Register</a>
         {% endif %}
       </div>
     </div>
   </div>
-    <button class="hamburger" aria-label="Menu">
+    <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </div>
 </nav>
 
 <!-- Mobile Menu -->
-<div class="mobile-menu">
+<div class="mobile-menu" role="dialog" aria-label="Mobile navigation">
   <div style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.2rem;color:var(--primary);padding:0.5rem 1rem 1rem;">
-    <img src="{% static 'assets/img/logo.png' %}" alt="TuHame" style="width:32px;height:32px;border-radius:9px;object-fit:cover;" />
-    TuHame
+    <img src="{% static 'assets/img/logo.png' %}" alt="2Hame" style="width:32px;height:32px;border-radius:9px;object-fit:cover;" />
+    2Hame
   </div>
-  <a href="{% url "home:home" %}">🏠 Home</a>
-  <a href="{% url "home:properties" %}">🏘 Properties</a>
-  <a href="{% url "home:property_map" %}">🗺 Map Search</a>
-  <a href="{% url "home:contact" %}">✉️ Contact</a>
-  <a href="{% url "home:mover_map" %}">🚚 Movers Marketplace</a>
-  <a href="{% url "my_profile" %}">👤 Profile</a>
+  <a href="{% url 'home:home' %}">🏠 Home</a>
+  <a href="{% url 'home:properties' %}">🏘 Properties</a>
+  <a href="{% url 'home:property_map' %}">🗺 Map Search</a>
+  <a href="{% url 'home:contact' %}">✉️ Contact</a>
+  <a href="{% url 'home:mover_map' %}">🚚 Movers Marketplace</a>
+  <a href="{% url 'my_profile' %}">👤 Profile</a>
   <button type="button" class="dark-toggle" aria-label="Toggle dark mode">
     <span class="dark-toggle-icon">🌙</span>
     <span class="dark-toggle-label">Dark Mode</span>
@@ -105,33 +168,33 @@
 {% block content %}{% endblock content %}
 
 <!-- ─── FOOTER ─── -->
-<footer class="footer">
+<footer class="footer" role="contentinfo">
   <div class="container">
     <div class="footer-grid">
       <div>
         <div class="footer-brand-logo">
-          <img src="{% static 'assets/img/logo.png' %}" alt="TuHame" class="footer-logo-img" />
+          <img src="{% static 'assets/img/logo.png' %}" alt="2Hame - Kenya's Real Estate Platform" class="footer-logo-img" />
         </div>
         <div class="footer-tagline">Find • Move • Settle</div>
-        <p class="footer-desc">Kenya's smartest housing platform. Discover, compare, and move into your perfect home with ease and confidence.</p>
+        <p class="footer-desc">Kenya's smartest real estate platform. Discover properties, list your rentals, and connect with verified movers across the country.</p>
         <div class="footer-social">
-          <a href="#" title="Facebook">📘</a>
-          <a href="#" title="Twitter/X">🐦</a>
-          <a href="#" title="Instagram">📸</a>
-          <a href="#" title="LinkedIn">💼</a>
-          <a href="#" title="YouTube">▶️</a>
+          <a href="#" aria-label="Facebook" rel="noopener noreferrer">📘</a>
+          <a href="#" aria-label="Twitter/X" rel="noopener noreferrer">🐦</a>
+          <a href="#" aria-label="Instagram" rel="noopener noreferrer">📸</a>
+          <a href="#" aria-label="LinkedIn" rel="noopener noreferrer">💼</a>
+          <a href="#" aria-label="YouTube" rel="noopener noreferrer">▶️</a>
         </div>
       </div>
       <div>
         <div class="footer-heading">Quick Links</div>
         <ul class="footer-links">
-          <li><a href="{% url "home:home" %}">→ Home</a></li>
-          <li><a href="{% url "home:properties" %}">→ Properties</a></li>
-          <li><a href="{% url "home:property_map" %}">→ Map Search</a></li>
-          <li><a href="{% url "home:contact" %}">→ Contact Us</a></li>
-          <li><a href="{% url "home:mover_map" %}">→ Movers Marketplace</a></li>
-          <li><a href="{% url "my_profile" %}">→ My Profile</a></li>
-          <li><a href="#">→ Post a Property</a></li>
+          <li><a href="{% url 'home:home' %}">→ Home</a></li>
+          <li><a href="{% url 'home:properties' %}">→ Properties</a></li>
+          <li><a href="{% url 'home:property_map' %}">→ Map Search</a></li>
+          <li><a href="{% url 'home:contact' %}">→ Contact Us</a></li>
+          <li><a href="{% url 'home:mover_map' %}">→ Movers Marketplace</a></li>
+          <li><a href="{% url 'my_profile' %}">→ My Profile</a></li>
+          <li><a href="#">→ List a Property</a></li>
           <li><a href="#">→ Move Cost Calculator</a></li>
         </ul>
       </div>
@@ -150,13 +213,13 @@
         <div class="footer-heading">Contact Us</div>
         <ul class="footer-links" style="margin-bottom:1.25rem;">
           <li><a href="#">📍 Nairobi, Kenya</a></li>
-          <li><a href="tel:+254700000000">📞 +254768075539</a></li>
-          <li><a href="mailto:info@2hame.com">✉️info@2hame.com</a></li>
+          <li><a href="tel:+254768075539">📞 +254 768 075 539</a></li>
+          <li><a href="mailto:info@2Hame.com">✉️ info@2Hame.com</a></li>
         </ul>
         <div class="footer-heading">Newsletter</div>
         <p style="font-size:0.85rem;margin-bottom:0.5rem;">Get new listings & housing tips weekly.</p>
         <div class="footer-newsletter-form">
-          <input type="email" class="footer-newsletter-input" placeholder="Your email" />
+          <input type="email" class="footer-newsletter-input" placeholder="Your email" aria-label="Email for newsletter" />
           <button class="btn btn-primary btn-sm">Join</button>
         </div>
       </div>
@@ -172,7 +235,7 @@
   </div>
 </footer>
 
-<script src="{% static "assets/js/main.js" %}"></script>
+<script src="{% static 'assets/js/main.js' %}"></script>
 {% block inject_js %}{% endblock inject_js %}
 
 <!-- Toast notifications -->
