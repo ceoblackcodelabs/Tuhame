@@ -38,7 +38,7 @@
             <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(34,197,94,0.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📞</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Phone</strong>
-              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">+254 700 000 000</p>
+              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">+254768075539</p>
             </div>
           </div>
 
@@ -46,7 +46,7 @@
             <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(124,58,237,0.1);color:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">✉️</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Email</strong>
-              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">hello@2hame.co.ke</p>
+              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">info@2hame.com</p>
             </div>
           </div>
 
@@ -69,12 +69,12 @@
       </div>
 
       <!-- Contact form -->
-      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2.5rem;">
+      <div class="contact-form-card" style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2.5rem;">
 
 
         <form method="post" novalidate>
           {% csrf_token %}
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+          <div class="contact-form-row">
             <div class="form-group">
               <label class="form-label" for="{{ form.name.id_for_label }}">Full Name</label>
               {{ form.name }}
@@ -87,7 +87,7 @@
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+          <div class="contact-form-row">
             <div class="form-group">
               <label class="form-label" for="{{ form.phone.id_for_label }}">Phone Number <span style="color:var(--gray-400);font-weight:400;">(optional)</span></label>
               {{ form.phone }}

@@ -7,6 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Map Search – 2Hame</title>
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+<link rel="preconnect" href="https://b.basemaps.cartocdn.com" />
+<link rel="preconnect" href="https://c.basemaps.cartocdn.com" />
+<link rel="preconnect" href="https://d.basemaps.cartocdn.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
 <link rel="stylesheet" href="{% static "assets/vendor/leaflet/leaflet.css" %}" />
@@ -84,6 +87,7 @@
         <span></span><span></span><span></span>
       </button>
       <div id="leaflet-map"></div>
+      <div class="map-loading-shimmer" id="map-loading-shimmer"><span>Loading map…</span></div>
       <div class="map-info-banner" id="map-info-banner">📍 Kenya — {{ properties_count }} properties found</div>
       <button class="locate-btn" onclick="locateMe()" title="Find my location">📍</button>
     </div>
@@ -119,7 +123,8 @@ const map = L.map('leaflet-map', {
   minZoom: 6,
   zoomControl: false,
   maxBounds: KENYA_BOUNDS,
-  maxBoundsViscosity: 1.0
+  maxBoundsViscosity: 1.0,
+  preferCanvas: true
 });
 
 // Tiles come from CARTO's free basemap service (OSM data, different
@@ -133,7 +138,7 @@ const map = L.map('leaflet-map', {
 // CARTO's tiles are built for exactly this kind of production embedding,
 // need no signup/API key for normal traffic, and use the same OSM map
 // data underneath, so the map still looks the same.
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+const baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   subdomains: 'abcd',
   maxZoom: 19,
@@ -142,6 +147,14 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 }).addTo(map);
 
 L.control.zoom({ position: 'topright' }).addTo(map);
+
+// ── Loading shimmer: hide once the tile layer reports all visible tiles
+// have actually painted, with a safety timeout so a single slow/failed
+// tile never leaves it stuck forever. ──
+const shimmerEl = document.getElementById('map-loading-shimmer');
+function hideShimmer() { if (shimmerEl) shimmerEl.classList.add('hidden'); }
+baseTileLayer.once('load', hideShimmer);
+setTimeout(hideShimmer, 4000);
 
 // ── Markers ──
 const markers = {};

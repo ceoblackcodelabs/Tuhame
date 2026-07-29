@@ -6,7 +6,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Movers Marketplace – Tuhame</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+<link rel="preconnect" href="https://b.basemaps.cartocdn.com" />
+<link rel="preconnect" href="https://c.basemaps.cartocdn.com" />
+<link rel="preconnect" href="https://d.basemaps.cartocdn.com" />
+<link rel="stylesheet" href="{% static "assets/vendor/leaflet/leaflet.css" %}" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" />
 <link rel="stylesheet" href="{% static "assets/css/map.css" %}" />
 <link rel="icon" type="image/svg+xml" href="{% static "assets/images/favicon.svg" %}" />
@@ -119,6 +123,7 @@
         <span></span><span></span><span></span>
       </button>
       <div id="leaflet-map"></div>
+      <div class="map-loading-shimmer" id="map-loading-shimmer"><span>Loading map…</span></div>
       <div class="map-info-banner" id="map-info-banner">🚚 Open move requests near you</div>
       <button class="locate-btn" onclick="locateMe()" title="Find my location">📍</button>
     </div>
@@ -126,12 +131,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script>
-if (typeof L === 'undefined') {
-  document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
-}
-</script>
+<script src="{% static "assets/vendor/leaflet/leaflet.js" %}"></script>
 <script>
 function getCsrfToken() {
   const match = document.cookie.match(/csrftoken=([^;]+)/);
@@ -148,13 +148,18 @@ function toggleSidebar(force) {
   menuBtn.classList.toggle('open', open);
 }
 
-const map = L.map('leaflet-map', { center: [-1.2921, 36.8219], zoom: 12, zoomControl: false });
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+const map = L.map('leaflet-map', { center: [-1.2921, 36.8219], zoom: 12, zoomControl: false, preferCanvas: true });
+const baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   subdomains: 'abcd',
   maxZoom: 19
 }).addTo(map);
 L.control.zoom({ position: 'topright' }).addTo(map);
+
+const shimmerEl = document.getElementById('map-loading-shimmer');
+function hideShimmer() { if (shimmerEl) shimmerEl.classList.add('hidden'); }
+baseTileLayer.once('load', hideShimmer);
+setTimeout(hideShimmer, 4000);
 
 let myLat = null, myLng = null;
 const fromMarkers = {};
