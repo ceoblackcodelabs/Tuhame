@@ -3662,6 +3662,20 @@ input[type="range"] {
   transform: translateY(-2px);
 }
 .partner-logo-icon { width: 26px; height: 26px; flex-shrink: 0; }
+.partner-logo-img {
+  max-width: 100px;
+  max-height: 40px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.partner-logo-link {
+  display: contents;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
 .partner-logo-name {
   font-family: var(--font-display);
   font-weight: 800;

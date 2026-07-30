@@ -39,5 +39,9 @@ def validate_signature_image(f):
     _validate(f, max_size=2 * 1024 * 1024, extensions=IMAGE_EXTENSIONS, kind='image')
 
 
+def validate_partner_logo(f):
+    _validate(f, max_size=2 * 1024 * 1024, extensions=IMAGE_EXTENSIONS, kind='image')
+
+
 def validate_document(f):
     _validate(f, max_size=10 * 1024 * 1024, extensions=DOCUMENT_EXTENSIONS, kind='document')

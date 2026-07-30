@@ -3,6 +3,8 @@ from properties.models import Property
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+from Tuhame.upload_validators import validate_partner_logo
+
 User = get_user_model()
 
 class ViewingSchedule(models.Model):
@@ -322,3 +324,24 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.get_subject_display()} ({self.created_at:%Y-%m-%d})"
+
+
+class Partner(models.Model):
+    """A partner/sponsor shown in the homepage 'Trusted Partners' strip."""
+
+    name = models.CharField(max_length=100)
+    logo = models.ImageField(
+        upload_to='partners/logos/', blank=True, null=True,
+        validators=[validate_partner_logo],
+        help_text="Optional — a default placeholder icon is shown if left blank."
+    )
+    link = models.URLField(blank=True, help_text="Where clicking the logo should send visitors.")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, help_text="Lower numbers show first.")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name

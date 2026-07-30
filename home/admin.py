@@ -10,7 +10,7 @@ from properties.models import (
     Amenity,
 )
 
-from .models import ViewingSchedule, SavedProperty, MoveChecklistItem, ContactMessage, MoveRequest, MoveOffer
+from .models import ViewingSchedule, SavedProperty, MoveChecklistItem, ContactMessage, MoveRequest, MoveOffer, Partner
 
 
 @admin.register(ViewingSchedule)
@@ -307,3 +307,17 @@ class MoveOfferAdmin(admin.ModelAdmin):
     list_display = ('mover', 'move_request', 'price', 'status', 'distance_km', 'eta_minutes', 'created_at')
     list_filter = ('status',)
     search_fields = ('mover__username', 'move_request__user__username')
+
+
+@admin.register(Partner)
+class PartnerAdmin(admin.ModelAdmin):
+    list_display = ('logo_preview', 'name', 'link', 'is_active', 'order')
+    list_editable = ('is_active', 'order')
+    search_fields = ('name',)
+    list_filter = ('is_active',)
+
+    def logo_preview(self, obj):
+        if obj.logo:
+            return format_html('<img src="{}" style="height:32px;width:auto;border-radius:4px;" />', obj.logo.url)
+        return format_html('<span style="color:#9CA3AF;">No logo — placeholder shown</span>')
+    logo_preview.short_description = 'Logo'

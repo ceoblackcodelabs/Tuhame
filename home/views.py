@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from properties.models import Property, PropertyStatus, PropertyType, Amenity, PropertyReview
 from django.db import models
 from .forms import ViewingScheduleForm, ReviewForm, ContactForm
+from .models import Partner
 from django.contrib import messages
 import json
 from django.http import JsonResponse
@@ -85,6 +86,11 @@ class HomeView(ListView):
             })
         context['categories'] = categories
         context['total_active_properties'] = Property.objects.filter(is_active=True).count()
+
+        # Trusted Partners strip — DB-backed so owners can add/remove
+        # partners without a code change; the template falls back to a
+        # placeholder icon for any partner with no logo uploaded.
+        context['partners'] = Partner.objects.filter(is_active=True)
 
         # Testimonials - pulled from real, positive property reviews
         context['testimonials'] = PropertyReview.objects.filter(
