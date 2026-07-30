@@ -121,10 +121,23 @@ const map = L.map('leaflet-map', {
   center: [-1.2921, 36.8219],
   zoom: 13,
   minZoom: 6,
+  maxZoom: 20,
   zoomControl: false,
   maxBounds: KENYA_BOUNDS,
   maxBoundsViscosity: 1.0,
-  preferCanvas: true
+  preferCanvas: true,
+  // These four options are what make Leaflet's zoom feel like Google
+  // Maps' continuous zoom instead of "snapping" between whole levels:
+  // zoomSnap lets it rest at fractional zooms (e.g. 14.5) instead of only
+  // integers, zoomDelta/wheelPxPerZoomLevel make each scroll/pinch step
+  // smaller and smoother, and wheelDebounceTime coalesces fast trackpad
+  // scroll events instead of firing a zoom per tick.
+  zoomSnap: 0.5,
+  zoomDelta: 0.5,
+  wheelPxPerZoomLevel: 90,
+  wheelDebounceTime: 30,
+  fadeAnimation: true,
+  markerZoomAnimation: true
 });
 
 // Tiles come from CARTO's free basemap service (OSM data, different
@@ -141,9 +154,13 @@ const map = L.map('leaflet-map', {
 const baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   subdomains: 'abcd',
-  maxZoom: 19,
+  maxZoom: 20,
+  maxNativeZoom: 19, // CARTO stops rendering new tiles past z19 — Leaflet upscales the z19 tile for z20 instead of requesting a tile that doesn't exist
   minZoom: 6,
-  crossOrigin: true
+  crossOrigin: true,
+  keepBuffer: 4,          // keep tiles just outside the viewport cached in memory
+  updateWhenZooming: false, // skip mid-zoom tile requests, only fetch once the zoom settles
+  updateWhenIdle: false      // still pans/loads ahead smoothly on desktop
 }).addTo(map);
 
 L.control.zoom({ position: 'topright' }).addTo(map);

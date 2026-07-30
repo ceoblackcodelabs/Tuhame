@@ -154,11 +154,8 @@
       <div>
         <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">🏡 About 2Hame</div>
         <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">Built To Make Moving Simple, Not Stressful</h2>
-        <p style="color:var(--gray-500);margin-bottom:0.5rem;line-height:1.7;">
-          2Hame is Kenya's all-in-one real estate platform — connecting tenants, landlords, buyers, and agents directly with verified listings, transparent pricing, and powerful tools that take the guesswork out of finding, listing, or moving into a home.
-        </p>
         <p style="color:var(--gray-500);line-height:1.7;">
-          From interactive map searches and AI-powered property matching to digital tenant profiles, We handle every step of your journey. Property owners get free listings, real-time analytics dashboards, and secure payment processing, while tenants enjoy direct communication, neighborhood insights, and a move cost calculator to plan their budget. Whether you're searching for your dream apartment, listing a rental, or booking verified movers, 2Hame brings everything together in one seamless experience.
+          2Hame is Kenya's all-in-one real estate platform — connecting tenants, landlords, buyers, and agents directly with verified listings, transparent pricing, and the tools to search, list, and move with confidence.
         </p>
         <div class="about-highlights">
           <div class="about-highlight-item">
@@ -285,22 +282,51 @@
           </div>
         </div>
       </div>
-      <div class="about-stats-grid">
-        <div class="about-stat-card">
-          <div class="about-stat-num" style="color:green">{{ total_active_properties|default:"0" }}+</div>
-          <div class="about-stat-label">Active Listings</div>
+      <div class="owner-cta-panel">
+        <div class="owner-dashboard-preview" aria-hidden="true">
+          <div class="browser-chrome">
+            <span class="browser-dot"></span><span class="browser-dot"></span><span class="browser-dot"></span>
+            <div class="browser-bar"></div>
+          </div>
+          <svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="400" height="220" fill="none"/>
+            <!-- sidebar -->
+            <rect x="0" y="0" width="70" height="220" fill="#0c1d13"/>
+            <circle cx="35" cy="24" r="8" fill="#22c55e"/>
+            <rect x="18" y="46" width="34" height="6" rx="3" fill="rgba(255,255,255,0.14)"/>
+            <rect x="18" y="62" width="34" height="6" rx="3" fill="rgba(255,255,255,0.28)"/>
+            <rect x="18" y="78" width="34" height="6" rx="3" fill="rgba(255,255,255,0.14)"/>
+            <rect x="18" y="94" width="34" height="6" rx="3" fill="rgba(255,255,255,0.14)"/>
+            <!-- stat cards -->
+            <rect x="86" y="16" width="92" height="50" rx="8" fill="rgba(255,255,255,0.06)"/>
+            <rect x="98" y="28" width="40" height="6" rx="3" fill="rgba(255,255,255,0.3)"/>
+            <rect x="98" y="42" width="60" height="10" rx="3" fill="#22c55e"/>
+            <rect x="188" y="16" width="92" height="50" rx="8" fill="rgba(255,255,255,0.06)"/>
+            <rect x="200" y="28" width="40" height="6" rx="3" fill="rgba(255,255,255,0.3)"/>
+            <rect x="200" y="42" width="50" height="10" rx="3" fill="#4ade80"/>
+            <rect x="290" y="16" width="94" height="50" rx="8" fill="rgba(255,255,255,0.06)"/>
+            <rect x="302" y="28" width="40" height="6" rx="3" fill="rgba(255,255,255,0.3)"/>
+            <rect x="302" y="42" width="45" height="10" rx="3" fill="#86efac"/>
+            <!-- chart -->
+            <rect x="86" y="78" width="180" height="126" rx="8" fill="rgba(255,255,255,0.06)"/>
+            <polyline points="98,170 122,150 146,158 170,120 194,132 218,98 242,110" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="98,170 122,150 146,158 170,120 194,132 218,98 242,110 242,190 98,190" fill="rgba(34,197,94,0.15)" stroke="none"/>
+            <!-- donut -->
+            <rect x="278" y="78" width="106" height="126" rx="8" fill="rgba(255,255,255,0.06)"/>
+            <circle cx="331" cy="130" r="30" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="12"/>
+            <circle cx="331" cy="130" r="30" fill="none" stroke="#22c55e" stroke-width="12" stroke-dasharray="120 190" stroke-linecap="round"/>
+            <rect x="296" y="172" width="70" height="6" rx="3" fill="rgba(255,255,255,0.2)"/>
+            <rect x="296" y="184" width="50" height="6" rx="3" fill="rgba(255,255,255,0.12)"/>
+          </svg>
         </div>
-        <div class="about-stat-card">
-          <div class="about-stat-num" style="color:green">{{ categories|length|default:"0" }}</div>
-          <div class="about-stat-label">Property Categories</div>
-        </div>
-        <div class="about-stat-card">
-          <div class="about-stat-num" style="color:green">24/7</div>
-          <div class="about-stat-label">Support Available</div>
-        </div>
-        <div class="about-stat-card">
-          <div class="about-stat-num" style="color:green">100%</div>
-          <div class="about-stat-label">Verified Listings</div>
+        <div class="owner-cta-btn-row">
+          {% if request.user.is_authenticated and request.user.profile.role == 'owner' and request.user.profile.is_verified_owner %}
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">Go To Dashboard →</a>
+            <span class="owner-cta-note">You're a verified owner — manage your listings and analytics.</span>
+          {% else %}
+            <a href="{% url 'edit_profile' %}" class="btn btn-primary btn-lg">Become An Owner →</a>
+            <span class="owner-cta-note">Free to list. Verification usually takes less than 24 hours.</span>
+          {% endif %}
         </div>
       </div>
     </div>
