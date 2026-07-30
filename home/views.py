@@ -263,6 +263,22 @@ class PropertiesDetailView(DetailView):
 
         context['similar_properties'] = similar_properties
 
+        # Full ordered image list for the photo lightbox/mobile carousel —
+        # the grid above only ever shows the main image + first 3 extras,
+        # but the lightbox needs every photo the owner uploaded.
+        all_images = []
+        if property_obj.main_image:
+            all_images.append({
+                'url': property_obj.main_image.url,
+                'caption': property_obj.title,
+            })
+        for image in property_obj.images.all():
+            all_images.append({
+                'url': image.image.url,
+                'caption': image.caption or property_obj.title,
+            })
+        context['all_property_images'] = all_images
+
         # Initialize viewing form with user data if authenticated
         initial_data = {}
         if self.request.user.is_authenticated:

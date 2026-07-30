@@ -197,6 +197,16 @@ document.querySelectorAll('.map-filter-chip').forEach(chip => {
   });
 });
 
+// ─── Property Card Tap-To-Open ───
+// Powers the compact mobile list rows, where the "View Details" button
+// is hidden — tapping anywhere on the row (except the save heart) opens it.
+document.querySelectorAll('.property-card[data-href]').forEach(card => {
+  card.addEventListener('click', function (e) {
+    if (e.target.closest('a, button, input, label, textarea, select')) return;
+    window.location.href = this.dataset.href;
+  });
+});
+
 // ─── View Toggle (Grid/List) ───
 const viewToggles = document.querySelectorAll('.view-toggle');
 const propertiesGrid = document.querySelector('.properties-grid');

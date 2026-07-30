@@ -1,4 +1,5 @@
 {% extends "home/base.html" %}
+{% load phone_filters %}
 
 {% block title %}{{ property.title }} - Available Properties on Sale{% endblock title %}
 
@@ -25,9 +26,9 @@
     <span>{{ property.title }}</span>
   </div>
 
-  <!-- Photo Gallery -->
-  <div class="property-gallery">
-    <div class="gallery-main">
+  <!-- Photo Gallery — Desktop/Tablet Grid -->
+  <div class="property-gallery" id="property-gallery-grid">
+    <div class="gallery-main" onclick="openLightbox(0)">
       {% if property.main_image %}
         <img class="gallery-img" src="{{ property.main_image.url }}" alt="{{ property.title }}" style="width:100%;height:100%;object-fit:cover;" />
       {% else %}
@@ -35,20 +36,52 @@
       {% endif %}
     </div>
     {% for image in property.images.all|slice:":3" %}
-      <div>
+      <div class="{% if forloop.last and property.images.count > 3 %}gallery-more{% endif %}" onclick="openLightbox({{ forloop.counter }})">
         <img class="gallery-img" src="{{ image.image.url }}" alt="{{ image.caption|default:property.title }}" style="width:100%;height:100%;object-fit:cover;" />
       </div>
     {% empty %}
-      <div>
+      <div onclick="openLightbox(1)">
         <img class="gallery-img" src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&auto=format&fit=crop&q=80" alt="Living room" style="width:100%;height:100%;object-fit:cover;" />
       </div>
-      <div>
+      <div onclick="openLightbox(2)">
         <img class="gallery-img" src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&auto=format&fit=crop&q=80" alt="Kitchen" style="width:100%;height:100%;object-fit:cover;" />
       </div>
-      <div class="gallery-more">
+      <div class="gallery-more" onclick="openLightbox(3)">
         <img class="gallery-img" src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&auto=format&fit=crop&q=80" alt="More photos" style="width:100%;height:100%;object-fit:cover;" />
       </div>
     {% endfor %}
+  </div>
+
+  <!-- Photo Gallery — Phone Carousel (every photo, swipeable) -->
+  <div class="property-gallery-carousel" id="property-gallery-carousel">
+    <div class="carousel-track" id="carousel-track">
+      {% for img in all_property_images %}
+        <div class="carousel-slide" onclick="openLightbox({{ forloop.counter0 }})">
+          <img src="{{ img.url }}" alt="{{ img.caption }}" {% if not forloop.first %}loading="lazy"{% endif %} style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+      {% empty %}
+        <div class="carousel-slide">
+          <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&auto=format&fit=crop&q=80" alt="{{ property.title }}" style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+      {% endfor %}
+    </div>
+    {% if all_property_images|length > 1 %}
+      <div class="carousel-counter"><span id="carousel-current">1</span> / {{ all_property_images|length }}</div>
+    {% endif %}
+    <button type="button" class="carousel-viewall-btn" onclick="openLightbox(0)">🖼 View All Photos</button>
+  </div>
+
+  {{ all_property_images|json_script:"gallery-data" }}
+
+  <!-- Photo Lightbox (shared by grid + carousel) -->
+  <div id="photo-lightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Property photos" hidden>
+    <button type="button" class="lightbox-close" onclick="closeLightbox()" aria-label="Close">✕</button>
+    <button type="button" class="lightbox-nav lightbox-prev" onclick="lightboxStep(-1)" aria-label="Previous photo">‹</button>
+    <div class="lightbox-stage">
+      <img id="lightbox-img" src="" alt="" />
+    </div>
+    <button type="button" class="lightbox-nav lightbox-next" onclick="lightboxStep(1)" aria-label="Next photo">›</button>
+    <div class="lightbox-counter"><span id="lightbox-current">1</span> / <span id="lightbox-total">1</span></div>
   </div>
 
   <!-- Detail Layout -->
@@ -460,11 +493,22 @@
         </div>
 
         <!-- Contact Buttons -->
+        {% with phone=property.owner.profile.phone_number %}
         <div class="contact-btns">
-          <button class="contact-btn contact-btn-call" onclick="showToast('Calling {{ property.owner.profile.phone|default:'+254 712 000 001' }}…','📞')">📞 Call Landlord</button>
-          <button class="contact-btn contact-btn-whatsapp" onclick="showToast('Opening WhatsApp…','💬')">💬 WhatsApp</button>
-          <button class="contact-btn contact-btn-email" onclick="showToast('Opening email to {{ property.owner.email }}…','✉️')">✉️ Send Email</button>
+          {% if phone %}
+            <a href="tel:{{ phone|tel_href }}" class="contact-btn contact-btn-call">📞 Call Landlord</a>
+            <a href="https://wa.me/{{ phone|whatsapp_number }}?text=Hi%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20%28KES%20{{ property.price|urlencode }}%2Fmonth%29%20on%202Hame.%20Is%20it%20still%20available%3F"
+               class="contact-btn contact-btn-whatsapp" target="_blank" rel="noopener">💬 WhatsApp</a>
+          {% else %}
+            <span class="contact-btn" style="opacity:0.5;cursor:not-allowed;" title="No phone number on file for this landlord">📞 Call Landlord</span>
+            <span class="contact-btn" style="opacity:0.5;cursor:not-allowed;" title="No phone number on file for this landlord">💬 WhatsApp</span>
+          {% endif %}
+          {% if property.owner.email %}
+            <a href="mailto:{{ property.owner.email }}?subject=Inquiry%20about%20{{ property.title|urlencode }}&body=Hi%2C%20I%27m%20interested%20in%20this%20property%20listed%20on%202Hame."
+               class="contact-btn contact-btn-email">✉️ Send Email</a>
+          {% endif %}
         </div>
+        {% endwith %}
 
         <!-- Schedule Viewing -->
         <div class="detail-section-title" style="margin-top:0;">Schedule a Viewing</div>
@@ -569,7 +613,7 @@
     <div class="properties-grid">
 
       {% for similar in similar_properties %}
-      <div class="property-card">
+      <div class="property-card" data-href="{% url 'home:about_property' similar.slug %}">
         <div class="property-img-wrap">
           {% if similar.main_image %}
             <img src="{{ similar.main_image.url }}" alt="{{ similar.title }}" style="width:100%;height:100%;object-fit:cover;" />
@@ -577,7 +621,7 @@
             <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
           {% endif %}
           <div class="property-badge featured">Featured</div>
-          <div class="property-save" data-id="sim-{{ forloop.counter }}">🤍</div>
+          <div class="property-save" data-id="sim-{{ forloop.counter }}" onclick="event.stopPropagation();">🤍</div>
         </div>
         <div class="property-body">
           <div class="property-name">{{ similar.title }}</div>
@@ -592,7 +636,7 @@
             <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
           </div>
         </div>
-        <div style="padding:0 1.25rem 1.25rem;">
+        <div class="property-card-actions">
           <a href="{% url 'home:about_property' similar.slug %}" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View Details</a>
         </div>
       </div>
@@ -609,6 +653,81 @@
 {% endblock content %}
 
 {% block inject_js %}
+<script>
+  // ── Photo Lightbox (shared by desktop grid + mobile carousel) ──
+  (function () {
+    const dataEl = document.getElementById('gallery-data');
+    const images = dataEl ? JSON.parse(dataEl.textContent) : [];
+    const lightbox = document.getElementById('photo-lightbox');
+    const imgEl = document.getElementById('lightbox-img');
+    const currentEl = document.getElementById('lightbox-current');
+    const totalEl = document.getElementById('lightbox-total');
+    let index = 0;
+
+    window.openLightbox = function (i) {
+      if (!images.length || !lightbox) return;
+      index = Math.max(0, Math.min(i, images.length - 1));
+      render();
+      lightbox.hidden = false;
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.closeLightbox = function () {
+      if (!lightbox) return;
+      lightbox.hidden = true;
+      document.body.style.overflow = '';
+    };
+
+    window.lightboxStep = function (delta) {
+      if (!images.length) return;
+      index = (index + delta + images.length) % images.length;
+      render();
+    };
+
+    function render() {
+      const photo = images[index];
+      if (!photo) return;
+      imgEl.src = photo.url;
+      imgEl.alt = photo.caption || '';
+      if (currentEl) currentEl.textContent = index + 1;
+      if (totalEl) totalEl.textContent = images.length;
+    }
+
+    if (lightbox) {
+      lightbox.addEventListener('click', function (e) {
+        if (e.target === lightbox) closeLightbox();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (lightbox.hidden) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') lightboxStep(1);
+        if (e.key === 'ArrowLeft') lightboxStep(-1);
+      });
+
+      let touchStartX = null;
+      lightbox.addEventListener('touchstart', function (e) {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      lightbox.addEventListener('touchend', function (e) {
+        if (touchStartX === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) lightboxStep(dx > 0 ? -1 : 1);
+        touchStartX = null;
+      }, { passive: true });
+    }
+  })();
+
+  // ── Mobile carousel slide counter ──
+  (function () {
+    const track = document.getElementById('carousel-track');
+    const counterEl = document.getElementById('carousel-current');
+    if (!track || !counterEl) return;
+    track.addEventListener('scroll', function () {
+      const idx = Math.round(track.scrollLeft / track.clientWidth) + 1;
+      counterEl.textContent = idx;
+    }, { passive: true });
+  })();
+</script>
 {% if property.latitude and property.longitude %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
