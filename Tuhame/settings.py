@@ -270,7 +270,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Add your ngrok/dev tunnel URL here locally instead of hardcoding it.
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='',
+    default='https://fd89-217-199-148-239.ngrok-free.app',
     cast=lambda v: [h.strip() for h in v.split(',') if h.strip()]
 )
 
