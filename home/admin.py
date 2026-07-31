@@ -10,7 +10,7 @@ from properties.models import (
     Amenity,
 )
 
-from .models import ViewingSchedule, SavedProperty, MoveChecklistItem, ContactMessage, MoveRequest, MoveOffer, Partner
+from .models import ViewingSchedule, SavedProperty, MoveChecklistItem, ContactMessage, MoveRequest, MoveOffer, Partner, Testimonial
 
 
 @admin.register(ViewingSchedule)
@@ -307,6 +307,21 @@ class MoveOfferAdmin(admin.ModelAdmin):
     list_display = ('mover', 'move_request', 'price', 'status', 'distance_km', 'eta_minutes', 'created_at')
     list_filter = ('status',)
     search_fields = ('mover__username', 'move_request__user__username')
+
+
+@admin.register(Testimonial)
+class TestimonialAdmin(admin.ModelAdmin):
+    list_display = ('reviewer_name', 'reviewer_type', 'location', 'rating', 'is_featured', 'is_verified', 'is_published', 'created_at')
+    list_editable = ('is_featured', 'is_verified', 'is_published')
+    list_filter = ('reviewer_type', 'rating', 'is_featured', 'is_verified', 'is_published')
+    search_fields = ('reviewer_name', 'reviewer_email', 'comment', 'location')
+    autocomplete_fields = []
+    fieldsets = (
+        ('Reviewer', {'fields': ('user', 'reviewer_name', 'reviewer_email', 'reviewer_type', 'location')}),
+        ('Testimonial', {'fields': ('property', 'rating', 'comment')}),
+        ('SEO', {'fields': ('seo_meta_description', 'seo_keywords'), 'classes': ('collapse',)}),
+        ('Status', {'fields': ('is_featured', 'is_verified', 'is_published')}),
+    )
 
 
 @admin.register(Partner)

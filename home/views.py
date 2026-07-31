@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from properties.models import Property, PropertyStatus, PropertyType, Amenity, PropertyReview
 from django.db import models
 from .forms import ViewingScheduleForm, ReviewForm, ContactForm
-from .models import Partner
+from .models import Partner, Testimonial
 from django.contrib import messages
 import json
 from django.http import JsonResponse
@@ -92,10 +92,10 @@ class HomeView(ListView):
         # placeholder icon for any partner with no logo uploaded.
         context['partners'] = Partner.objects.filter(is_active=True)
 
-        # Testimonials - pulled from real, positive property reviews
-        context['testimonials'] = PropertyReview.objects.filter(
-            rating__gte=4
-        ).exclude(comment='').select_related('user', 'property').order_by('-rating', '-created_at')[:6]
+        # Testimonials - curated, admin-managed testimonials for the homepage
+        context['testimonials'] = Testimonial.objects.filter(
+            is_published=True
+        ).select_related('user', 'property')[:6]
 
         return context
 

@@ -15,6 +15,8 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('payments/', include('payments.urls')),
     path('contracts/', include('contracts.urls')),
+    path('blog/', include('blog.urls')),
+    path('ckeditor5/', include('django_ckeditor_5.urls')),
 ]
 
 # Static files: WhiteNoise's middleware already serves these in both dev and

@@ -345,3 +345,44 @@ class Partner(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Testimonial(models.Model):
+    # Core fields
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True, blank=True)
+
+    # Testimonial content
+    reviewer_name = models.CharField(max_length=100)
+    reviewer_email = models.EmailField()
+    reviewer_type = models.CharField(max_length=50, choices=[
+        ('tenant', 'Tenant/Home Seeker'),
+        ('owner', 'Property Owner/Landlord'),
+        ('agent', 'Real Estate Agent'),
+        ('mover', 'Moving Service Provider'),
+        ('investor', 'Investor/Developer')
+    ])
+    location = models.CharField(max_length=100)
+
+    # Rating
+    rating = models.IntegerField(choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')])
+    comment = models.TextField()
+
+    # SEO fields
+    seo_meta_description = models.CharField(max_length=160, blank=True)
+    seo_keywords = models.CharField(max_length=255, blank=True)
+
+    # Featured status
+    is_featured = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_featured', '-rating', '-created_at']
+
+    def __str__(self):
+        return f"{self.reviewer_name} - {self.get_reviewer_type_display()}"

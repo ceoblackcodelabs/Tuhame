@@ -7,15 +7,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="{% block meta_description %}2Hame – Kenya's premier real estate platform for property listings, rentals, apartments, villas, and BNBs. List your property for free and reach thousands of potential tenants and buyers.{% endblock meta_description %}" />
-  <meta name="keywords" content="real estate Kenya, property listings, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property agents, real estate investors, find movers, housing marketplace" />
+  <meta name="keywords" content="{% block meta_keywords %}real estate Kenya, property listings, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property agents, real estate investors, find movers, housing marketplace{% endblock meta_keywords %}" />
   <meta name="robots" content="index, follow" />
-  <meta name="author" content="2Hame by BlackCodeLab" />
+  <meta name="author" content="2Hame by BlackCodeLabs" />
   <link rel="canonical" href="{% block canonical_url %}https://2hame.com{% endblock canonical_url %}" />
 
   <!-- ─── OPEN GRAPH (Social Media) ─── -->
   <meta property="og:title" content="{% block og_title %}2Hame – Kenya's #1 Real Estate & Housing Platform{% endblock og_title %}" />
   <meta property="og:description" content="{% block og_description %}Find your dream home or list your property on 2Hame. Connect with tenants, buyers, and verified movers across Kenya.{% endblock og_description %}" />
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}" />
   <meta property="og:url" content="{% block og_url %}https://2hame.com{% endblock og_url %}" />
   <meta property="og:image" content="{% block og_image %}https://2hame.com{% static 'assets/img/all.png' %}{% endblock og_image %}" />
   <meta property="og:image:width" content="1200" />
@@ -96,6 +96,7 @@
       <li role="none"><a href="{% url 'home:properties' %}" class="nav-link" role="menuitem">Properties</a></li>
       <li role="none"><a href="{% url 'home:property_map' %}" class="nav-link" role="menuitem">Map Search</a></li>
       <li role="none"><a href="{% url 'home:contact' %}" class="nav-link" role="menuitem">Contact</a></li>
+      <li role="none"><a href="{% url 'blog:blog_list' %}" class="nav-link" role="menuitem">Blog</a></li>
       <li role="none"><a href="{% url 'home:mover_map' %}" class="nav-link" role="menuitem">🚚 Movers</a></li>
     </ul>
     <div class="nav-actions">
@@ -148,6 +149,7 @@
   <a href="{% url 'home:properties' %}">🏘 Properties</a>
   <a href="{% url 'home:property_map' %}">🗺 Map Search</a>
   <a href="{% url 'home:contact' %}">✉️ Contact</a>
+  <a href="{% url 'blog:blog_list' %}">📰 Blog</a>
   <a href="{% url 'home:mover_map' %}">🚚 Movers Marketplace</a>
   <a href="{% url 'my_profile' %}">👤 Profile</a>
   <button type="button" class="dark-toggle" aria-label="Toggle dark mode">
@@ -191,6 +193,7 @@
           <li><a href="{% url 'home:home' %}">→ Home</a></li>
           <li><a href="{% url 'home:properties' %}">→ Properties</a></li>
           <li><a href="{% url 'home:property_map' %}">→ Map Search</a></li>
+          <li><a href="{% url 'blog:blog_list' %}">→ Blog</a></li>
           <li><a href="{% url 'home:contact' %}">→ Contact Us</a></li>
           <li><a href="{% url 'home:mover_map' %}">→ Movers Marketplace</a></li>
           <li><a href="{% url 'my_profile' %}">→ My Profile</a></li>

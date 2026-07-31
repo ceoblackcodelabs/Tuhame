@@ -1,0 +1,119 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}{{ post.display_title }} – 2Hame Blog{% endblock title %}
+{% block meta_description %}{{ post.meta_description }}{% endblock meta_description %}
+{% block meta_keywords %}{{ post.seo_keywords|default:post.tags }}{% endblock meta_keywords %}
+{% block canonical_url %}https://2hame.com{{ post.get_absolute_url }}{% endblock canonical_url %}
+
+{% block og_title %}{{ post.display_title }}{% endblock og_title %}
+{% block og_description %}{{ post.meta_description }}{% endblock og_description %}
+{% block og_type %}article{% endblock og_type %}
+{% block og_url %}https://2hame.com{{ post.get_absolute_url }}{% endblock og_url %}
+{% block og_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/all.png' %}{% endif %}{% endblock og_image %}
+
+{% block twitter_title %}{{ post.display_title }}{% endblock twitter_title %}
+{% block twitter_description %}{{ post.meta_description }}{% endblock twitter_description %}
+{% block twitter_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/all.png' %}{% endif %}{% endblock twitter_image %}
+
+{% block property_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ post.display_title|escapejs }},
+  "description": {{ post.meta_description|escapejs }},
+  "datePublished": "{{ post.published_at|date:'c' }}",
+  "dateModified": "{{ post.updated_at|date:'c' }}",
+  {% if post.cover_image %}"image": "https://2hame.com{{ post.cover_image.url }}",{% endif %}
+  "author": {
+    "@type": "Person",
+    "name": {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team"|escapejs }}
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "2Hame",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://2hame.com/static/assets/img/all.png"
+    }
+  },
+  "mainEntityOfPage": "https://2hame.com{{ post.get_absolute_url }}"
+}
+</script>
+{% endblock property_schema %}
+
+{% block content %}
+
+<div class="blog-article-hero">
+  <div class="blog-article-hero-inner">
+    <div class="blog-article-breadcrumb">
+      <a href="{% url 'blog:blog_list' %}">Blog</a> / {{ post.get_category_display }}
+    </div>
+    <span class="blog-article-eyebrow">{{ post.get_category_display }}</span>
+    <h1 class="blog-article-title">{{ post.title }}</h1>
+    <div class="blog-article-meta">
+      <span>✍️ {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
+      <span>•</span>
+      <span>{{ post.published_at|date:"F j, Y" }}</span>
+      <span>•</span>
+      <span>{{ post.reading_time_minutes }} min read</span>
+      <span>•</span>
+      <span>👁 {{ post.views_count }} views</span>
+    </div>
+  </div>
+</div>
+
+{% if post.cover_image %}
+<div class="blog-article-cover">
+  <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" />
+</div>
+{% endif %}
+
+<div class="blog-article-body">
+  <div class="blog-article-content">
+    {{ post.content|safe }}
+  </div>
+
+  <div class="blog-share-row">
+    <span class="blog-share-label">Share:</span>
+    <a class="blog-share-btn" title="Share on WhatsApp" target="_blank" rel="noopener"
+       href="https://wa.me/?text={{ post.title|urlencode }}%20https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">💬</a>
+    <a class="blog-share-btn" title="Share on X" target="_blank" rel="noopener"
+       href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">🐦</a>
+    <a class="blog-share-btn" title="Share on Facebook" target="_blank" rel="noopener"
+       href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">📘</a>
+    <button type="button" class="blog-share-btn" title="Copy link" onclick="navigator.clipboard.writeText(window.location.href); showToast && showToast('Link copied!','🔗');">🔗</button>
+  </div>
+</div>
+
+{% if related_posts %}
+<div class="blog-related">
+  <h2>More in {{ post.get_category_display }}</h2>
+  <div class="blog-related-grid">
+    {% for rp in related_posts %}
+      <a href="{{ rp.get_absolute_url }}" class="blog-card">
+        <div class="blog-card-img">
+          {% if rp.cover_image %}
+            <img src="{{ rp.cover_image.url }}" alt="{{ rp.title }}" loading="lazy" />
+          {% else %}
+            <div class="blog-card-img-placeholder">📰</div>
+          {% endif %}
+          <span class="blog-card-category">{{ rp.get_category_display }}</span>
+        </div>
+        <div class="blog-card-body">
+          <h3 class="blog-card-title">{{ rp.title }}</h3>
+          <p class="blog-card-excerpt">{{ rp.excerpt|default:rp.content|striptags|truncatewords:18 }}</p>
+          <div class="blog-card-meta">
+            <span>{{ rp.published_at|date:"M d, Y" }}</span>
+            <span>•</span>
+            <span>{{ rp.reading_time_minutes }} min read</span>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock content %}

@@ -1,0 +1,102 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Blog – 2Hame Real Estate Insights{% endblock title %}
+{% block meta_description %}Renting tips, landlord guides, moving advice and market insights for Kenya's real estate scene — from the 2Hame team.{% endblock meta_description %}
+{% block meta_keywords %}Kenya real estate blog, renting tips Kenya, landlord guides, moving tips Nairobi, property market insights Kenya{% endblock meta_keywords %}
+{% block canonical_url %}https://2hame.com{% url 'blog:blog_list' %}{% endblock canonical_url %}
+{% block og_title %}2Hame Blog – Real Estate Insights for Kenya{% endblock og_title %}
+{% block og_description %}Renting tips, landlord guides, moving advice and market insights for Kenya's real estate scene.{% endblock og_description %}
+{% block og_url %}https://2hame.com{% url 'blog:blog_list' %}{% endblock og_url %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>📰 The 2Hame Blog</h1>
+    <p>Renting tips, landlord guides, and market insights for Kenya's real estate scene</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <form method="get" class="blog-filter-bar">
+      <div class="blog-filter-pills">
+        <a href="{% url 'blog:blog_list' %}" class="blog-pill {% if not active_category %}active{% endif %}">All</a>
+        {% for value, label in categories %}
+          <a href="?category={{ value }}" class="blog-pill {% if active_category == value %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+      <div class="blog-search-box">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search articles…" aria-label="Search articles" />
+        <button type="submit" aria-label="Search">🔍</button>
+      </div>
+    </form>
+
+    {% if featured_post and not active_category and not query %}
+      <a href="{{ featured_post.get_absolute_url }}" class="blog-featured-card">
+        <div class="blog-featured-img" {% if featured_post.cover_image %}style="background-image:url('{{ featured_post.cover_image.url }}');"{% endif %}></div>
+        <div class="blog-featured-body">
+          <span class="blog-featured-eyebrow">{{ featured_post.get_category_display }}</span>
+          <h2 class="blog-featured-title">{{ featured_post.title }}</h2>
+          <p class="blog-featured-excerpt">{{ featured_post.excerpt|default:featured_post.content|striptags|truncatewords:28 }}</p>
+          <div class="blog-card-meta">
+            <span>{{ featured_post.author.get_full_name|default:featured_post.author.username|default:"2Hame Team" }}</span>
+            <span>•</span>
+            <span>{{ featured_post.published_at|date:"M d, Y" }}</span>
+            <span>•</span>
+            <span>{{ featured_post.reading_time_minutes }} min read</span>
+          </div>
+        </div>
+      </a>
+    {% endif %}
+
+    <div class="blog-grid">
+      {% for post in posts %}
+        <a href="{{ post.get_absolute_url }}" class="blog-card fade-up">
+          <div class="blog-card-img">
+            {% if post.cover_image %}
+              <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" loading="lazy" />
+            {% else %}
+              <div class="blog-card-img-placeholder">📰</div>
+            {% endif %}
+            <span class="blog-card-category">{{ post.get_category_display }}</span>
+          </div>
+          <div class="blog-card-body">
+            <h3 class="blog-card-title">{{ post.title }}</h3>
+            <p class="blog-card-excerpt">{{ post.excerpt|default:post.content|striptags|truncatewords:22 }}</p>
+            <div class="blog-card-meta">
+              <span>{{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
+              <span>•</span>
+              <span>{{ post.published_at|date:"M d, Y" }}</span>
+              <span>•</span>
+              <span>{{ post.reading_time_minutes }} min read</span>
+            </div>
+          </div>
+        </a>
+      {% empty %}
+        <div class="blog-empty-state">
+          <div style="font-size:3rem;">📝</div>
+          <h3>{% if query or active_category %}No articles match your filter{% else %}No articles yet{% endif %}</h3>
+          <p>{% if query or active_category %}Try a different search or category.{% else %}Check back soon — we're working on our first posts.{% endif %}</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+      <div class="blog-pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}{% if query %}&q={{ query }}{% endif %}">← Newer</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}{% if query %}&q={{ query }}{% endif %}">Older →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock content %}

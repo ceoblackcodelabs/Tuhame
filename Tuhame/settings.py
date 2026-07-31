@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django_ckeditor_5',
     'home',
     'users',
     'dashboard',
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
     'contracts',
     'payments',
     'Report',
+    'blog',
 ]
 
 MIDDLEWARE = [
@@ -210,6 +212,30 @@ MEDIA_URL = '/media/'
 import os
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# CKEditor5 (blog post content) — uploads go through Django's normal
+# MEDIA storage instead of a separate config, so backups/migrations
+# already cover them.
+CKEDITOR_5_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+CKEDITOR_5_UPLOAD_PATH = 'blog/uploads/'
+CKEDITOR_5_CONFIGS = {
+    'blog': {
+        'toolbar': [
+            'heading', '|',
+            'bold', 'italic', 'underline', 'link', '|',
+            'bulletedList', 'numberedList', 'blockQuote', '|',
+            'insertTable', 'imageUpload', 'mediaEmbed', '|',
+            'undo', 'redo',
+        ],
+        'image': {
+            'toolbar': ['imageTextAlternative', '|', 'imageStyle:alignLeft',
+                        'imageStyle:alignRight', 'imageStyle:alignCenter', 'imageStyle:side'],
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells'],
+        },
+    },
+}
+
 # Compressed, cache-busted static files: each file gets a content hash in
 # its name (so browsers can cache it "forever") and is pre-gzipped/brotli'd
 # at collectstatic time instead of being compressed on every request.
@@ -270,7 +296,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Add your ngrok/dev tunnel URL here locally instead of hardcoding it.
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://fd89-217-199-148-239.ngrok-free.app',
+    default='',
     cast=lambda v: [h.strip() for h in v.split(',') if h.strip()]
 )
 

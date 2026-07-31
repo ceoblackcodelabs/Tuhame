@@ -537,16 +537,16 @@
       <p class="section-subtitle">Real feedback from tenants, buyers, and property owners using 2Hame</p>
     </div>
     <div class="testimonials-grid">
-      {% for review in testimonials %}
+      {% for t in testimonials %}
         <div class="testimonial-card fade-up">
           <div class="testimonial-quote-icon">❝</div>
-          <div class="testimonial-stars">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
-          <p class="testimonial-text">{{ review.comment|truncatewords:32 }}</p>
+          <div class="testimonial-stars">{% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+          <p class="testimonial-text">{{ t.comment|truncatewords:32 }}</p>
           <div class="testimonial-footer">
-            <div class="testimonial-avatar">{{ review.user.first_name|default:review.user.username|first|upper }}</div>
+            <div class="testimonial-avatar">{{ t.reviewer_name|first|upper }}</div>
             <div>
-              <div class="testimonial-name">{{ review.user.get_full_name|default:review.user.username }}</div>
-              <div class="testimonial-location">{{ review.property.city }}{% if review.property.city and review.property.state %}, {% endif %}{{ review.property.state }}</div>
+              <div class="testimonial-name">{{ t.reviewer_name }}, {{ t.get_reviewer_type_display }}{% if t.is_verified %} ✅{% endif %}</div>
+              <div class="testimonial-location">{{ t.location }}</div>
             </div>
           </div>
         </div>

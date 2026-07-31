@@ -5,6 +5,7 @@ Brotli==1.1.0
 Pillow==10.4.0
 qrcode==7.4.2
 requests==2.32.3
+django-ckeditor-5==0.2.20
 
 # MySQL driver for production (pure-Python, works on shared/cPanel hosting
 # where mysqlclient's C extension usually can't be compiled). Harmless to
