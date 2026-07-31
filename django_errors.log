@@ -1,0 +1,42 @@
+Invalid HTTP_HOST header: '63db-217-199-148-239.ngrok-free.app'. You may need to add '63db-217-199-148-239.ngrok-free.app' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/http/request.py", line 203, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '63db-217-199-148-239.ngrok-free.app'. You may need to add '63db-217-199-148-239.ngrok-free.app' to ALLOWED_HOSTS.
+Invalid HTTP_HOST header: '63db-217-199-148-239.ngrok-free.app'. You may need to add '63db-217-199-148-239.ngrok-free.app' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/http/request.py", line 203, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '63db-217-199-148-239.ngrok-free.app'. You may need to add '63db-217-199-148-239.ngrok-free.app' to ALLOWED_HOSTS.
+Invalid HTTP_HOST header: '63db-217-199-148-239.ngrok-free.app'. You may need to add '63db-217-199-148-239.ngrok-free.app' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/http/request.py", line 203, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '63db-217-199-148-239.ngrok-free.app'. You may need to add '63db-217-199-148-239.ngrok-free.app' to ALLOWED_HOSTS.
