@@ -1,7 +1,10 @@
 {% extends "AdminBase.html" %}
 {% load humanize %}
+{% load icons %}
 
 {% block title %}Viewing Request #{{ viewing.id }}{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
 
 {% block content %}
 
@@ -72,13 +75,13 @@
                                     {% if viewing.status == 'pending' %}
                                         <span class="badge badge-warning" style="font-size:0.9rem;padding:0.4rem 1rem;">⏳ Pending</span>
                                     {% elif viewing.status == 'confirmed' %}
-                                        <span class="badge badge-success" style="font-size:0.9rem;padding:0.4rem 1rem;">✅ Confirmed</span>
+                                        <span class="badge badge-success" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "check" %} Confirmed</span>
                                     {% elif viewing.status == 'completed' %}
-                                        <span class="badge badge-info" style="font-size:0.9rem;padding:0.4rem 1rem;">✔️ Completed</span>
+                                        <span class="badge badge-info" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "check-heavy" %}️ Completed</span>
                                     {% elif viewing.status == 'cancelled' %}
-                                        <span class="badge badge-danger" style="font-size:0.9rem;padding:0.4rem 1rem;">❌ Cancelled</span>
+                                        <span class="badge badge-danger" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "close" %} Cancelled</span>
                                     {% else %}
-                                        <span class="badge badge-secondary" style="font-size:0.9rem;padding:0.4rem 1rem;">🚫 No Show</span>
+                                        <span class="badge badge-secondary" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "blocked" %} No Show</span>
                                     {% endif %}
                                 </h3>
                             </div>
@@ -122,7 +125,7 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0">👤 Requester Information</h4>
+                        <h4 class="card-title mb-0">{% icon "user" %} Requester Information</h4>
                         <span class="badge badge-light">{{ viewing.created_at|timesince }} ago</span>
                     </div>
                     <div class="row">
@@ -173,7 +176,7 @@
             <!-- Property Details -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">🏠 Property Details</h4>
+                    <h4 class="card-title">{% icon "home" %} Property Details</h4>
                     <div class="row">
                         <div class="col-md-12">
                             <div class="info-item">
@@ -187,19 +190,19 @@
                         </div>
                         <div class="col-md-6">
                             <div class="info-item">
-                                <div class="info-label">📍 Address</div>
+                                <div class="info-label">{% icon "map-pin" %} Address</div>
                                 <div class="info-value">{{ property.address }}</div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-item">
-                                <div class="info-label">🏙️ City, State</div>
+                                <div class="info-label">{% icon "cityscape" %}️ City, State</div>
                                 <div class="info-value">{{ property.city }}, {{ property.state }}</div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="info-item">
-                                <div class="info-label">💰 Price</div>
+                                <div class="info-label">{% icon "money" %} Price</div>
                                 <div class="info-value" style="color:var(--primary);font-weight:700;font-size:1.05rem;">
                                     ${{ property.price|floatformat:2|intcomma }}
                                 </div>
@@ -207,13 +210,13 @@
                         </div>
                         <div class="col-md-4">
                             <div class="info-item">
-                                <div class="info-label">📐 Area</div>
+                                <div class="info-label">{% icon "ruler-tri" %} Area</div>
                                 <div class="info-value">{{ property.area_sqft|floatformat:0|intcomma }} ft²</div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="info-item">
-                                <div class="info-label">🏷️ Type</div>
+                                <div class="info-label">{% icon "tag" %}️ Type</div>
                                 <div class="info-value">{{ property.get_property_type_display }}</div>
                             </div>
                         </div>
@@ -227,25 +230,25 @@
             <!-- Viewing Details -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">📅 Viewing Details</h4>
+                    <h4 class="card-title">{% icon "calendar" %} Viewing Details</h4>
                     <div style="display:flex;flex-direction:column;gap:0.5rem;">
                         <div class="detail-item">
-                            <div class="detail-label">📆 Preferred Date</div>
+                            <div class="detail-label">{% icon "calendar-alt" %} Preferred Date</div>
                             <div class="detail-value">
                                 {{ viewing.preferred_date|date:"l, F d, Y" }}
                             </div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">🕐 Preferred Time</div>
+                            <div class="detail-label">{% icon "clock" %} Preferred Time</div>
                             <div class="detail-value">
-                                {% if viewing.preferred_time == 'morning' %}🌅 Morning (8am - 12pm)
-                                {% elif viewing.preferred_time == 'afternoon' %}☀️ Afternoon (12pm - 5pm)
-                                {% else %}🌙 Evening (5pm - 7pm){% endif %}
+                                {% if viewing.preferred_time == 'morning' %}{% icon "sunrise" %} Morning (8am - 12pm)
+                                {% elif viewing.preferred_time == 'afternoon' %}{% icon "sun" %}️ Afternoon (12pm - 5pm)
+                                {% else %}{% icon "moon" %} Evening (5pm - 7pm){% endif %}
                             </div>
                         </div>
                         {% if viewing.scheduled_datetime %}
                         <div class="detail-item" style="border-left:3px solid #28a745;padding-left:0.75rem;">
-                            <div class="detail-label">✅ Scheduled Date & Time</div>
+                            <div class="detail-label">{% icon "check" %} Scheduled Date & Time</div>
                             <div class="detail-value" style="color:#28a745;font-weight:600;">
                                 {{ viewing.scheduled_datetime|date:"l, F d, Y H:i" }}
                             </div>
@@ -268,7 +271,7 @@
             <!-- Quick Actions -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">⚡ Quick Actions</h4>
+                    <h4 class="card-title">{% icon "zap" %} Quick Actions</h4>
                     <div style="display:flex;flex-direction:column;gap:0.5rem;">
                         {% if viewing.status == 'pending' %}
                             <a href="{% url 'confirm_viewing' viewing.pk %}" class="btn btn-success" style="width:100%;justify-content:center;">
@@ -297,7 +300,7 @@
             {% if viewing.special_requests %}
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">💬 Special Requests</h4>
+                    <h4 class="card-title">{% icon "message" %} Special Requests</h4>
                     <div class="request-box">
                         <p class="mb-0">{{ viewing.special_requests|linebreaks }}</p>
                     </div>
@@ -309,7 +312,7 @@
             {% if viewing.notes %}
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">📝 Internal Notes</h4>
+                    <h4 class="card-title">{% icon "edit" %} Internal Notes</h4>
                     <div class="notes-box">
                         <p class="mb-0">{{ viewing.notes|linebreaks }}</p>
                     </div>
@@ -321,7 +324,7 @@
             {% if viewing.cancellation_reason %}
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">❌ Cancellation Reason</h4>
+                    <h4 class="card-title">{% icon "close" %} Cancellation Reason</h4>
                     <div class="cancellation-box">
                         <p class="mb-0">{{ viewing.cancellation_reason|linebreaks }}</p>
                     </div>
@@ -332,7 +335,7 @@
             <!-- Status Timeline -->
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">📊 Status Timeline</h4>
+                    <h4 class="card-title">{% icon "bar-chart" %} Status Timeline</h4>
                     <div class="timeline-container">
                         {% for activity in activity_log %}
                             <div class="timeline-item">

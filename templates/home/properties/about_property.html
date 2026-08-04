@@ -1,7 +1,69 @@
 {% extends "home/base.html" %}
+{% load static %}
 {% load phone_filters %}
+{% load icons %}
 
 {% block title %}{{ property.title }} - Available Properties on Sale{% endblock title %}
+
+{% block meta_description %}{{ property.description|truncatechars:155|default:"Explore this property in "|add:property.city }} in {{ property.city }}, {{ property.state }} — {{ property.bedrooms }} bed, {{ property.bathrooms }} bath. View photos, pricing, and amenities on 2Hame.{% endblock meta_description %}
+
+{% block canonical_url %}https://2hame.com{% url 'home:about_property' slug=property.slug %}{% endblock canonical_url %}
+
+{% block og_title %}{{ property.title }} – {{ property.city }}, {{ property.state }}{% endblock og_title %}
+{% block og_description %}{{ property.bedrooms }} bed, {{ property.bathrooms }} bath {{ property.get_property_type_display }} in {{ property.city }}. {{ property.description|truncatechars:120 }}{% endblock og_description %}
+{% block og_type %}website{% endblock og_type %}
+{% block og_url %}https://2hame.com{% url 'home:about_property' slug=property.slug %}{% endblock og_url %}
+{% block og_image %}{% if property.main_image %}https://2hame.com{{ property.main_image.url }}{% else %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endif %}{% endblock og_image %}
+
+{% block twitter_title %}{{ property.title }} – {{ property.city }}, {{ property.state }}{% endblock twitter_title %}
+{% block twitter_description %}{{ property.bedrooms }} bed, {{ property.bathrooms }} bath {{ property.get_property_type_display }} in {{ property.city }}, Kenya.{% endblock twitter_description %}
+{% block twitter_image %}{% if property.main_image %}https://2hame.com{{ property.main_image.url }}{% else %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endif %}{% endblock twitter_image %}
+
+{% block breadcrumb_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://2hame.com"},
+    {"@type": "ListItem", "position": 2, "name": "Properties", "item": "https://2hame.com{% url 'home:properties' %}"},
+    {"@type": "ListItem", "position": 3, "name": "{{ property.title|escapejs }}", "item": "https://2hame.com{% url 'home:about_property' slug=property.slug %}"}
+  ]
+}
+</script>
+{% endblock breadcrumb_schema %}
+
+{% block property_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "RealEstateListing",
+  "name": "{{ property.title|escapejs }}",
+  "description": "{{ property.description|truncatechars:300|escapejs }}",
+  "url": "https://2hame.com{% url 'home:about_property' slug=property.slug %}",
+  {% if property.main_image %}"image": "https://2hame.com{{ property.main_image.url }}",{% endif %}
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ property.address|escapejs }}",
+    "addressLocality": "{{ property.city|escapejs }}",
+    "addressRegion": "{{ property.state|escapejs }}",
+    "addressCountry": "KE"
+  },
+  "numberOfRooms": {{ property.bedrooms|default:0 }},
+  "floorSize": {
+    "@type": "QuantitativeValue",
+    "value": {{ property.area_sqft|default:0 }},
+    "unitCode": "FTK"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ property.price }}",
+    "priceCurrency": "KES",
+    "availability": "{% if property.status == 'available' %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+  }
+}
+</script>
+{% endblock property_schema %}
 
 {% block inject_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -11,7 +73,7 @@
 
 <div class="page-hero">
   <div class="container">
-    <h1>🏘 About <b>{{ property.title }}</b></h1>
+    <h1>{% icon "neighborhood" %} About <b>{{ property.title }}</b></h1>
     <p>Explore your next home</p>
   </div>
 </div>
@@ -68,14 +130,14 @@
     {% if all_property_images|length > 1 %}
       <div class="carousel-counter"><span id="carousel-current">1</span> / {{ all_property_images|length }}</div>
     {% endif %}
-    <button type="button" class="carousel-viewall-btn" onclick="openLightbox(0)">🖼 View All Photos</button>
+    <button type="button" class="carousel-viewall-btn" onclick="openLightbox(0)">{% icon "image" %} View All Photos</button>
   </div>
 
   {{ all_property_images|json_script:"gallery-data" }}
 
   <!-- Photo Lightbox (shared by grid + carousel) -->
   <div id="photo-lightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Property photos" hidden>
-    <button type="button" class="lightbox-close" onclick="closeLightbox()" aria-label="Close">✕</button>
+    <button type="button" class="lightbox-close" onclick="closeLightbox()" aria-label="Close">{% icon "x" %}</button>
     <button type="button" class="lightbox-nav lightbox-prev" onclick="lightboxStep(-1)" aria-label="Previous photo">‹</button>
     <div class="lightbox-stage">
       <img id="lightbox-img" src="" alt="" />
@@ -92,15 +154,15 @@
       <div class="detail-header">
         <div>
           <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">
-            <span class="badge badge-primary">🏠 {{ property.get_property_type_display }}</span>
-            <span class="badge badge-accent">✅ {{ property.get_status_display }}</span>
+            <span class="badge badge-primary">{% icon "home" %} {{ property.get_property_type_display }}</span>
+            <span class="badge badge-accent">{% icon "check" %} {{ property.get_status_display }}</span>
             {% if property.is_active %}
               <span class="badge" style="background:rgba(37,99,235,0.08);color:var(--primary);">Active</span>
             {% endif %}
           </div>
           <h1 class="detail-title">{{ property.title }}</h1>
           <div style="display:flex;align-items:center;gap:0.5rem;color:var(--gray-500);margin-top:0.5rem;font-size:0.9rem;">
-            📍 {{ property.address }}, {{ property.city }}, {{ property.state }}
+            {% icon "map-pin" %} {{ property.address }}, {{ property.city }}, {{ property.state }}
             {% comment %} <span style="color:var(--primary);font-size:0.8rem;cursor:pointer;">View on map →</span> {% endcomment %}
           </div>
         </div>
@@ -115,12 +177,12 @@
 
       <!-- Meta -->
       <div class="detail-meta">
-        <div class="detail-meta-item">🛏 <strong>{{ property.bedrooms }}</strong> Bedrooms</div>
-        <div class="detail-meta-item">🚿 <strong>{{ property.bathrooms }}</strong> Bathrooms</div>
-        <div class="detail-meta-item">📐 <strong>{{ property.area_sqft }} m²</strong></div>
-        <div class="detail-meta-item">🏢 Floor <strong>{{ property.floor_number }} of {{ property.total_floors }}</strong></div>
-        <div class="detail-meta-item">🚗 <strong>{{ property.units.count }}</strong> Parking</div>
-        <div class="detail-meta-item">📅 Available <strong>Now</strong></div>
+        <div class="detail-meta-item">{% icon "bed" %} <strong>{{ property.bedrooms }}</strong> Bedrooms</div>
+        <div class="detail-meta-item">{% icon "shower" %} <strong>{{ property.bathrooms }}</strong> Bathrooms</div>
+        <div class="detail-meta-item">{% icon "ruler-tri" %} <strong>{{ property.area_sqft }} m²</strong></div>
+        <div class="detail-meta-item">{% icon "building" %} Floor <strong>{{ property.floor_number }} of {{ property.total_floors }}</strong></div>
+        <div class="detail-meta-item">{% icon "car" %} <strong>{{ property.units.count }}</strong> Parking</div>
+        <div class="detail-meta-item">{% icon "calendar" %} Available <strong>Now</strong></div>
       </div>
 
       <!-- Description -->
@@ -135,18 +197,18 @@
         {% for amenity in property.amenities.all %}
           <div class="amenity-item available">{{ amenity.icon|default:"✅" }} {{ amenity.name }}</div>
         {% empty %}
-          <div class="amenity-item available">📶 WiFi Included</div>
-          <div class="amenity-item available">🚗 Parking Available</div>
-          <div class="amenity-item available">🔒 24hr Security</div>
-          <div class="amenity-item available">💧 Water Supply</div>
-          <div class="amenity-item available">⚡ Backup Power</div>
-          <div class="amenity-item available">🏊 Swimming Pool</div>
-          <div class="amenity-item available">💪 Gym Access</div>
-          <div class="amenity-item available">🌿 Garden</div>
-          <div class="amenity-item available">🛗 Elevator</div>
-          <div class="amenity-item unavailable">🐾 Pet Friendly</div>
-          <div class="amenity-item available">🍳 Fitted Kitchen</div>
-          <div class="amenity-item available">🧺 Laundry Room</div>
+          <div class="amenity-item available">{% icon "signal" %} WiFi Included</div>
+          <div class="amenity-item available">{% icon "car" %} Parking Available</div>
+          <div class="amenity-item available">{% icon "lock" %} 24hr Security</div>
+          <div class="amenity-item available">{% icon "droplet" %} Water Supply</div>
+          <div class="amenity-item available">{% icon "zap" %} Backup Power</div>
+          <div class="amenity-item available">{% icon "pool" %} Swimming Pool</div>
+          <div class="amenity-item available">{% icon "strength" %} Gym Access</div>
+          <div class="amenity-item available">{% icon "leaf" %} Garden</div>
+          <div class="amenity-item available">{% icon "elevator" %} Elevator</div>
+          <div class="amenity-item unavailable">{% icon "pet" %} Pet Friendly</div>
+          <div class="amenity-item available">{% icon "kitchen" %} Fitted Kitchen</div>
+          <div class="amenity-item available">{% icon "basket" %} Laundry Room</div>
         {% endfor %}
       </div>
 
@@ -154,59 +216,59 @@
       <div class="detail-section-title">2Hame Nearby™</div>
       <div class="nearby-grid">
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#EFF6FF;">🏫</div>
+          <div class="nearby-icon" style="background:#EFF6FF;">{% icon "school" %}</div>
           <div>
             <div class="nearby-name">{{ property.city }} Primary School</div>
-            <div class="nearby-dist">📏 0.4 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 0.4 km away</div>
           </div>
         </div>
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#FEF3C7;">🏥</div>
+          <div class="nearby-icon" style="background:#FEF3C7;">{% icon "hospital" %}</div>
           <div>
             <div class="nearby-name">{{ property.city }} Hospital</div>
-            <div class="nearby-dist">📏 1.2 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 1.2 km away</div>
           </div>
         </div>
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#F0FDF4;">🛒</div>
+          <div class="nearby-icon" style="background:#F0FDF4;">{% icon "cart" %}</div>
           <div>
             <div class="nearby-name">Supermarket</div>
-            <div class="nearby-dist">📏 0.8 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 0.8 km away</div>
           </div>
         </div>
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#FDF4FF;">🚌</div>
+          <div class="nearby-icon" style="background:#FDF4FF;">{% icon "bus" %}</div>
           <div>
             <div class="nearby-name">{{ property.city }} Bus Stop</div>
-            <div class="nearby-dist">📏 0.2 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 0.2 km away</div>
           </div>
         </div>
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#FFF7ED;">🏬</div>
+          <div class="nearby-icon" style="background:#FFF7ED;">{% icon "mall" %}</div>
           <div>
             <div class="nearby-name">The Junction Mall</div>
-            <div class="nearby-dist">📏 1.6 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 1.6 km away</div>
           </div>
         </div>
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#EFF6FF;">🏦</div>
+          <div class="nearby-icon" style="background:#EFF6FF;">{% icon "bank" %}</div>
           <div>
             <div class="nearby-name">Bank {{ property.city }}</div>
-            <div class="nearby-dist">📏 0.5 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 0.5 km away</div>
           </div>
         </div>
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#F0FDF4;">⛽</div>
+          <div class="nearby-icon" style="background:#F0FDF4;">{% icon "fuel" %}</div>
           <div>
             <div class="nearby-name">Fuel Station</div>
-            <div class="nearby-dist">📏 0.7 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 0.7 km away</div>
           </div>
         </div>
         <div class="nearby-item">
-          <div class="nearby-icon" style="background:#FEF3C7;">🍽</div>
+          <div class="nearby-icon" style="background:#FEF3C7;">{% icon "dining" %}</div>
           <div>
             <div class="nearby-name">Java House {{ property.city }}</div>
-            <div class="nearby-dist">📏 0.3 km away</div>
+            <div class="nearby-dist">{% icon "ruler" %} 0.3 km away</div>
           </div>
         </div>
       </div>
@@ -214,7 +276,7 @@
       <!-- Move Score Full -->
       <div class="detail-section-title">2Hame Move Score™</div>
       <div class="move-score-card">
-        <div class="move-score-title">🏅 Overall Move Score — {{ property.title }}</div>
+        <div class="move-score-title">{% icon "award" %} Overall Move Score — {{ property.title }}</div>
         <div class="move-score-main">
           <div class="move-score-circle"><span class="move-score-num">91</span></div>
           <div class="move-score-bars">
@@ -246,7 +308,7 @@
           </div>
         </div>
         <div style="padding:0.875rem;background:rgba(255,255,255,0.06);border-radius:10px;text-align:center;">
-          <div style="color:var(--accent);font-weight:800;">✨ Excellent Move — Top 8% in {{ property.city }}</div>
+          <div style="color:var(--accent);font-weight:800;">{% icon "sparkles" %} Excellent Move — Top 8% in {{ property.city }}</div>
         </div>
       </div>
 
@@ -286,7 +348,7 @@
       <!-- Write a Review -->
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;">
         <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--gray-900);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
-          ✍️ Write a Review
+          {% icon "signature" %}️ Write a Review
         </div>
 
         {% if user.is_authenticated %}
@@ -294,16 +356,16 @@
             {% if user_review %}
               <!-- Already reviewed -->
               <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);padding:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-                <span style="font-size:1.5rem;">✅</span>
+                <span style="font-size:1.5rem;">{% icon "check" %}</span>
                 <div>
                   <div style="font-weight:600;font-size:0.9rem;color:var(--gray-800);">You've already reviewed this property</div>
                   <div style="font-size:0.8rem;color:var(--gray-400);">Your {{ user_review.rating }}-star review was posted on {{ user_review.created_at|date:"F d, Y" }}</div>
                 </div>
                 <div style="display:flex;gap:0.5rem;margin-left:auto;flex-wrap:wrap;">
-                  <a href="{% url 'home:edit_review' property.slug %}" class="btn btn-sm btn-outline-dark">✏️ Edit Review</a>
+                  <a href="{% url 'home:edit_review' property.slug %}" class="btn btn-sm btn-outline-dark">{% icon "pencil" %}️ Edit Review</a>
                   <form method="post" action="{% url 'home:delete_review' property.slug %}" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete your review?')">🗑️ Delete</button>
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete your review?')">{% icon "trash" %}️ Delete</button>
                   </form>
                 </div>
               </div>
@@ -326,7 +388,7 @@
                               class="star-btn"
                               data-value="{{ i }}"
                               style="font-size:2rem;background:none;border:none;cursor:pointer;padding:0;color:var(--gray-200);transition:color 0.15s ease;line-height:1;"
-                              onclick="setRating({{ i }})">★</button>
+                              onclick="setRating({{ i }})">{% icon "star" %}</button>
                     {% endfor %}
                   </div>
                   <input type="hidden" name="rating" id="rating-input" value="{{ review_form.rating.value|default:'' }}" />
@@ -351,14 +413,14 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
-                  🌟 Submit Review
+                  {% icon "featured" %} Submit Review
                 </button>
               </form>
             {% endif %}
           {% else %}
             <!-- User cannot review this property (not living there) -->
             <div style="text-align:center;padding:1.5rem;background:var(--gray-50);border-radius:var(--radius);border:1px dashed var(--gray-200);">
-              <div style="font-size:2rem;margin-bottom:0.5rem;">🏠</div>
+              <div style="font-size:2rem;margin-bottom:0.5rem;">{% icon "home" %}</div>
               <p style="color:var(--gray-500);font-size:0.875rem;margin-bottom:0.5rem;">
                 You can only review properties you are currently living in.
               </p>
@@ -375,7 +437,7 @@
           {% endif %}
         {% else %}
           <div style="text-align:center;padding:1.5rem;background:var(--gray-50);border-radius:var(--radius);border:1px dashed var(--gray-200);">
-            <div style="font-size:2rem;margin-bottom:0.5rem;">🔐</div>
+            <div style="font-size:2rem;margin-bottom:0.5rem;">{% icon "secure" %}</div>
             <p style="color:var(--gray-500);font-size:0.875rem;margin-bottom:1rem;">Sign in to leave a review for this property</p>
             <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-sm">Login to Review</a>
           </div>
@@ -410,7 +472,7 @@
               <!-- Star rating -->
               <div style="display:flex;align-items:center;gap:0.25rem;flex-shrink:0;">
                 {% for i in "12345" %}
-                  <span style="color:{% if forloop.counter <= review.rating %}var(--warning){% else %}var(--gray-200){% endif %};font-size:1rem;">★</span>
+                  <span style="color:{% if forloop.counter <= review.rating %}var(--warning){% else %}var(--gray-200){% endif %};font-size:1rem;">{% icon "star" %}</span>
                 {% endfor %}
                 <span style="font-size:0.78rem;font-weight:700;color:var(--gray-600);margin-left:0.25rem;">{{ review.rating }}.0</span>
               </div>
@@ -423,7 +485,7 @@
           </div>
         {% empty %}
           <div style="background:var(--gray-50);border-radius:var(--radius);padding:2rem;border:1px solid var(--gray-200);text-align:center;">
-            <div style="font-size:2.5rem;margin-bottom:0.75rem;">💬</div>
+            <div style="font-size:2.5rem;margin-bottom:0.75rem;">{% icon "message" %}</div>
             <div style="font-weight:600;color:var(--gray-500);margin-bottom:0.25rem;">No reviews yet</div>
             <div style="font-size:0.85rem;color:var(--gray-400);">Be the first to share your experience with this property.</div>
           </div>
@@ -440,7 +502,7 @@
       {% else %}
         <div style="height:280px;background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--gray-200);">
           <div style="text-align:center;">
-            <div style="font-size:2.5rem;margin-bottom:0.5rem;">🗺</div>
+            <div style="font-size:2.5rem;margin-bottom:0.5rem;">{% icon "map" %}</div>
             <p style="color:var(--gray-500);font-size:0.9rem;">
               Exact location not available for this listing — <a href="{% url 'home:property_map' %}" style="color:var(--primary);font-weight:600;">browse the map search →</a>
             </p>
@@ -459,12 +521,12 @@
           <div style="color:var(--gray-400);font-size:0.85rem;">per month</div>
           <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
             {% if property.security_deposit > 0 %}
-              <span class="tag">💰 Deposit: KES {{ property.security_deposit }}</span>
+              <span class="tag">{% icon "money" %} Deposit: KES {{ property.security_deposit }}</span>
             {% endif %}
             {% if property.maintenance_fee > 0 %}
-              <span class="tag">🔧 Maintenance: KES {{ property.maintenance_fee }}</span>
+              <span class="tag">{% icon "wrench" %} Maintenance: KES {{ property.maintenance_fee }}</span>
             {% endif %}
-            <span class="tag">📅 Min. {{ property.minimum_lease_days }} days</span>
+            <span class="tag">{% icon "calendar" %} Min. {{ property.minimum_lease_days }} days</span>
           </div>
         </div>
 
@@ -488,7 +550,7 @@
                 Property Owner
               {% endif %}
             </div>
-            <div class="landlord-badge">✅ Verified Landlord</div>
+            <div class="landlord-badge">{% icon "check" %} Verified Landlord</div>
           </div>
         </div>
 
@@ -496,16 +558,16 @@
         {% with phone=property.owner.profile.phone_number %}
         <div class="contact-btns">
           {% if phone %}
-            <a href="tel:{{ phone|tel_href }}" class="contact-btn contact-btn-call">📞 Call Landlord</a>
+            <a href="tel:{{ phone|tel_href }}" class="contact-btn contact-btn-call">{% icon "phone" %} Call Landlord</a>
             <a href="https://wa.me/{{ phone|whatsapp_number }}?text=Hi%2C%20I%27m%20interested%20in%20{{ property.title|urlencode }}%20%28KES%20{{ property.price|urlencode }}%2Fmonth%29%20on%202Hame.%20Is%20it%20still%20available%3F"
-               class="contact-btn contact-btn-whatsapp" target="_blank" rel="noopener">💬 WhatsApp</a>
+               class="contact-btn contact-btn-whatsapp" target="_blank" rel="noopener">{% icon "message" %} WhatsApp</a>
           {% else %}
-            <span class="contact-btn" style="opacity:0.5;cursor:not-allowed;" title="No phone number on file for this landlord">📞 Call Landlord</span>
-            <span class="contact-btn" style="opacity:0.5;cursor:not-allowed;" title="No phone number on file for this landlord">💬 WhatsApp</span>
+            <span class="contact-btn" style="opacity:0.5;cursor:not-allowed;" title="No phone number on file for this landlord">{% icon "phone" %} Call Landlord</span>
+            <span class="contact-btn" style="opacity:0.5;cursor:not-allowed;" title="No phone number on file for this landlord">{% icon "message" %} WhatsApp</span>
           {% endif %}
           {% if property.owner.email %}
             <a href="mailto:{{ property.owner.email }}?subject=Inquiry%20about%20{{ property.title|urlencode }}&body=Hi%2C%20I%27m%20interested%20in%20this%20property%20listed%20on%202Hame."
-               class="contact-btn contact-btn-email">✉️ Send Email</a>
+               class="contact-btn contact-btn-email">{% icon "mail" %}️ Send Email</a>
           {% endif %}
         </div>
         {% endwith %}
@@ -575,7 +637,7 @@
 
       <!-- Move Calculator -->
       <div class="dashboard-card">
-        <div class="dashboard-card-title">📦 Move Cost Estimate</div>
+        <div class="dashboard-card-title">{% icon "package" %} Move Cost Estimate</div>
         <div id="move-calc">
           <div class="filter-group-title" style="margin-bottom:0.5rem;">Distance (km)</div>
           <input type="number" id="move-distance" class="filter-input" placeholder="e.g. 15" style="margin-bottom:0.75rem;" />
@@ -589,7 +651,7 @@
 
       <!-- Mortgage Calculator -->
       <div class="dashboard-card">
-        <div class="dashboard-card-title">💰 Mortgage Calculator</div>
+        <div class="dashboard-card-title">{% icon "money" %} Mortgage Calculator</div>
         <div id="mortgage-calc">
           <div class="filter-group-title" style="margin-bottom:0.5rem;">Loan Amount (KES)</div>
           <input type="number" id="loan-amount" class="filter-input" placeholder="e.g. {{ property.price|add:'0'|floatformat:'0' }}" style="margin-bottom:0.75rem;" />
@@ -621,15 +683,15 @@
             <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
           {% endif %}
           <div class="property-badge featured">Featured</div>
-          <div class="property-save" data-id="sim-{{ forloop.counter }}" onclick="event.stopPropagation();">🤍</div>
+          <div class="property-save" data-id="sim-{{ forloop.counter }}" onclick="event.stopPropagation();">{% icon "heart-outline" %}</div>
         </div>
         <div class="property-body">
           <div class="property-name">{{ similar.title }}</div>
-          <div class="property-location">📍 {{ similar.city }}, {{ similar.state }}</div>
+          <div class="property-location">{% icon "map-pin" %} {{ similar.city }}, {{ similar.state }}</div>
           <div class="property-meta">
-            <div class="property-meta-item">🛏 {{ similar.bedrooms }}</div>
-            <div class="property-meta-item">🚿 {{ similar.bathrooms }}</div>
-            <div class="property-meta-item">📐 {{ similar.area_sqft }} m²</div>
+            <div class="property-meta-item">{% icon "bed" %} {{ similar.bedrooms }}</div>
+            <div class="property-meta-item">{% icon "shower" %} {{ similar.bathrooms }}</div>
+            <div class="property-meta-item">{% icon "ruler-tri" %} {{ similar.area_sqft }} m²</div>
           </div>
           <div class="property-footer">
             <div class="property-price">KES {{ similar.price }} <span>/mo</span></div>

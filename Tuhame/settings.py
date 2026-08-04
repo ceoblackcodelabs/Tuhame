@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
     'django_ckeditor_5',
     'home',
     'users',
@@ -170,17 +171,42 @@ else:
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} [{levelname}] {name}: {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'file': {
-            'class': 'logging.FileHandler',
+            # Rotating instead of a single ever-growing FileHandler — caps
+            # django_errors.log at 5MB x 5 backups (25MB total) instead of
+            # growing without bound on a long-lived production server.
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': BASE_DIR / 'django_errors.log',
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': ['file'] + (['console'] if DEBUG else []),
             'level': 'ERROR',
             'propagate': True,
+        },
+        # django.request specifically covers unhandled view exceptions
+        # (what actually produces a 500) and 4xx responses, with the full
+        # traceback attached - this is what you want to grep for after a
+        # user reports "the site errored out".
+        'django.request': {
+            'handlers': ['file'] + (['console'] if DEBUG else []),
+            'level': 'ERROR',
+            'propagate': False,
         },
     },
 }

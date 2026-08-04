@@ -1,13 +1,16 @@
 {% extends "home/base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}My {{ card_title }} QR Card -{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
 
 {% block content %}
 <section class="section" style="padding-top:7rem;min-height:80vh;display:flex;align-items:center;">
   <div class="container" style="max-width:520px;">
     <div style="text-align:center;margin-bottom:1.5rem;">
-      <h1 style="font-family:var(--font-display);font-size:1.5rem;">{{ card_icon }} My {{ card_title }} Card</h1>
+      <h1 style="font-family:var(--font-display);font-size:1.5rem;">{% icon card_icon %} My {{ card_title }} Card</h1>
       <p style="color:var(--gray-500);font-size:0.9rem;">Share this QR code — anyone who scans it sees your public portfolio.</p>
     </div>
 
@@ -18,7 +21,7 @@
             <img src="{% static 'assets/images/favicon.svg' %}" alt="Tuhame" style="width:28px;height:28px;border-radius:6px;" />
             Tuhame
           </div>
-          <div style="font-size:0.8rem;opacity:0.85;margin-top:0.25rem;">{{ card_icon }} {{ card_title }}</div>
+          <div style="font-size:0.8rem;opacity:0.85;margin-top:0.25rem;">{% icon card_icon %} {{ card_title }}</div>
         </div>
 
         <div style="background:#fff;border-radius:var(--radius-lg);padding:1rem;width:fit-content;margin:0 auto;">
@@ -42,7 +45,7 @@
           {% if qr_code %}
             <a href="{{ qr_code }}" download="{{ card_type }}-qr-card.png" class="btn btn-primary btn-sm">⬇️ Download QR</a>
           {% endif %}
-          <a href="{{ portfolio_url }}" target="_blank" class="btn btn-outline-dark btn-sm">🔗 View My Public Page</a>
+          <a href="{{ portfolio_url }}" target="_blank" class="btn btn-outline-dark btn-sm">{% icon "link" %} View My Public Page</a>
           <a href="{% url 'my_profile' %}" class="btn btn-outline-dark btn-sm">← Back to Profile</a>
         </div>
       </div>

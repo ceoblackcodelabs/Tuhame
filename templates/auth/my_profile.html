@@ -1,6 +1,9 @@
 {% extends "home/base.html" %}
+{% load icons %}
 
 {% block title %}My Profile{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
 
 {% block inject_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -46,7 +49,7 @@
 
 <div class="page-hero">
   <div class="container">
-    <h1>🏘 My Profile <b>{% if profile.current_property %}{{ profile.current_property.title }}{% else %}No Property Assigned{% endif %}</b></h1>
+    <h1>{% icon "neighborhood" %} My Profile <b>{% if profile.current_property %}{{ profile.current_property.title }}{% else %}No Property Assigned{% endif %}</b></h1>
     <p>My Current Home</p>
   </div>
 </div>
@@ -68,16 +71,16 @@
           {% endif %}
           <div class="profile-name">{{ profile.get_full_name|default:user.username }}</div>
           <div class="profile-email">{{ user.email }}</div>
-          <div>📞 {{ profile.phone_number|default:"No phone set" }}</div>
+          <div>{% icon "phone" %} {{ profile.phone_number|default:"No phone set" }}</div>
 
           {% if profile.role == 'owner' %}
             {% if profile.is_verified_owner %}
-              <div class="profile-verified" style="color:var(--accent, #22C55E);">✅ Verified Property Owner</div>
+              <div class="profile-verified" style="color:var(--accent, #22C55E);">{% icon "check" %} Verified Property Owner</div>
               <a href="{% url 'dashboard' %}" class="btn btn-sm" style="margin-top:0.75rem;width:100%;justify-content:center;background:var(--primary);color:#fff;">
-                📊 Go to Owner Dashboard
+                {% icon "bar-chart" %} Go to Owner Dashboard
               </a>
               <a href="{% url 'owner_qr_card' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.5rem;width:100%;justify-content:center;">
-                🏠 My Owner QR Card
+                {% icon "home" %} My Owner QR Card
               </a>
             {% elif profile.verification_status == 'pending' %}
               <div class="profile-verified" style="color:#D97706;">⏳ Verification Pending</div>
@@ -85,25 +88,25 @@
                 We're reviewing your request to become a property owner. This usually takes 1-2 business days.
               </p>
             {% elif profile.verification_status == 'rejected' %}
-              <div class="profile-verified" style="color:#DC2626;">❌ Verification Rejected</div>
+              <div class="profile-verified" style="color:#DC2626;">{% icon "close" %} Verification Rejected</div>
               {% if profile.verification_notes %}
                 <p style="font-size:0.78rem;color:var(--gray-400);margin-top:0.35rem;">{{ profile.verification_notes }}</p>
               {% endif %}
               <form method="post" action="{% url 'request_owner_verification' %}" style="margin-top:0.5rem;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-dark btn-sm" style="width:100%;justify-content:center;">🔄 Request Verification Again</button>
+                <button type="submit" class="btn btn-outline-dark btn-sm" style="width:100%;justify-content:center;">{% icon "refresh" %} Request Verification Again</button>
               </form>
             {% else %}
-              <div class="profile-verified" style="color:var(--gray-400);">🏠 Property Owner</div>
+              <div class="profile-verified" style="color:var(--gray-400);">{% icon "home" %} Property Owner</div>
             {% endif %}
           {% elif profile.role == 'mover' %}
             {% if profile.is_verified_mover %}
-              <div class="profile-verified" style="color:var(--accent, #22C55E);">✅ Verified Mover</div>
+              <div class="profile-verified" style="color:var(--accent, #22C55E);">{% icon "check" %} Verified Mover</div>
               <a href="{% url 'home:mover_detail' request.user.username %}" class="btn btn-sm" style="margin-top:0.75rem;width:100%;justify-content:center;background:var(--primary);color:#fff;">
-                🚚 View My Public Profile
+                {% icon "truck" %} View My Public Profile
               </a>
               <a href="{% url 'mover_qr_card' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.5rem;width:100%;justify-content:center;">
-                🚚 My Mover QR Card
+                {% icon "truck" %} My Mover QR Card
               </a>
             {% elif profile.verification_status == 'pending' %}
               <div class="profile-verified" style="color:#D97706;">⏳ Verification Pending</div>
@@ -111,49 +114,49 @@
                 We're reviewing your request to become a mover. This usually takes 1-2 business days.
               </p>
             {% elif profile.verification_status == 'rejected' %}
-              <div class="profile-verified" style="color:#DC2626;">❌ Verification Rejected</div>
+              <div class="profile-verified" style="color:#DC2626;">{% icon "close" %} Verification Rejected</div>
               {% if profile.verification_notes %}
                 <p style="font-size:0.78rem;color:var(--gray-400);margin-top:0.35rem;">{{ profile.verification_notes }}</p>
               {% endif %}
               <form method="post" action="{% url 'request_owner_verification' %}" style="margin-top:0.5rem;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-dark btn-sm" style="width:100%;justify-content:center;">🔄 Request Verification Again</button>
+                <button type="submit" class="btn btn-outline-dark btn-sm" style="width:100%;justify-content:center;">{% icon "refresh" %} Request Verification Again</button>
               </form>
             {% else %}
-              <div class="profile-verified" style="color:var(--gray-400);">🚚 Mover</div>
-              <a href="{% url 'request_owner_verification' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.5rem;width:100%;justify-content:center;" onclick="event.preventDefault();document.getElementById('mover-verify-form').submit();">🔄 Get Verified</a>
+              <div class="profile-verified" style="color:var(--gray-400);">{% icon "truck" %} Mover</div>
+              <a href="{% url 'request_owner_verification' %}" class="btn btn-outline-dark btn-sm" style="margin-top:0.5rem;width:100%;justify-content:center;" onclick="event.preventDefault();document.getElementById('mover-verify-form').submit();">{% icon "refresh" %} Get Verified</a>
               <form method="post" action="{% url 'request_owner_verification' %}" id="mover-verify-form" style="display:none;">{% csrf_token %}</form>
             {% endif %}
           {% else %}
-            <div class="profile-verified">🔎 House Hunter</div>
+            <div class="profile-verified">{% icon "search-detail" %} House Hunter</div>
           {% endif %}
 
-          <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">✏️ Edit Profile</a>
+          <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">{% icon "pencil" %}️ Edit Profile</a>
         </div>
       </div>
 
       <!-- Nav -->
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:0.75rem;">
         <div class="profile-nav-item active" data-section="overview" onclick="switchTab('overview')">
-          <span class="icon">📊</span> Overview
+          <span class="icon">{% icon "bar-chart" %}</span> Overview
         </div>
         <div class="profile-nav-item" data-section="residence" onclick="switchTab('residence')">
-          <span class="icon">🏠</span> My Residence
+          <span class="icon">{% icon "home" %}</span> My Residence
         </div>
         <div class="profile-nav-item" data-section="qr" onclick="switchTab('qr')">
-          <span class="icon">📱</span> Digital ID & QR
+          <span class="icon">{% icon "mobile" %}</span> Digital ID & QR
         </div>
         <div class="profile-nav-item" data-section="rent" onclick="switchTab('rent')">
-          <span class="icon">💳</span> Rent & Bills
+          <span class="icon">{% icon "card" %}</span> Rent & Bills
         </div>
         <div class="profile-nav-item" data-section="saved" onclick="switchTab('saved')">
-          <span class="icon">❤️</span> Saved Properties
+          <span class="icon">{% icon "heart" %}️</span> Saved Properties
         </div>
         <div class="profile-nav-item" data-section="planner" onclick="switchTab('planner')">
-          <span class="icon">📦</span> Move Planner
+          <span class="icon">{% icon "package" %}</span> Move Planner
         </div>
         <div class="profile-nav-item" data-section="history" onclick="switchTab('history')">
-          <span class="icon">🕐</span> Moving History
+          <span class="icon">{% icon "clock" %}</span> Moving History
         </div>
       </div>
     </aside>
@@ -163,7 +166,7 @@
 
       <!-- OVERVIEW -->
       <div id="overview" class="profile-section">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:0.25rem;">Welcome back, {{ profile.get_full_name|default:user.username }} 👋</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:0.25rem;">Welcome back, {{ profile.get_full_name|default:user.username }} {% icon "wave" %}</h2>
         <p style="color:var(--gray-400);margin-bottom:1.5rem;font-size:0.9rem;">Here's a snapshot of your 2Hame dashboard</p>
 
         <div class="stat-cards-grid">
@@ -183,7 +186,7 @@
 
         <!-- Current Home -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">🏠 Current Residence</div>
+          <div class="dashboard-card-title">{% icon "home" %} Current Residence</div>
           <div style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
             <div style="width:140px;height:100px;border-radius:var(--radius);overflow:hidden;flex-shrink:0;">
               {% if profile.current_property and profile.current_property.main_image %}
@@ -195,11 +198,11 @@
             <div style="flex:1;">
               {% if profile.current_property %}
                 <div style="font-weight:700;font-size:1rem;color:var(--gray-900);margin-bottom:0.5rem;">{{ profile.current_property.title }}</div>
-                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.25rem;">📍 {{ profile.current_property.address }}, {{ profile.current_property.city }}</div>
-                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.75rem;">🏗 House No. {{ profile.current_property.slug|upper }}</div>
+                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.25rem;">{% icon "map-pin" %} {{ profile.current_property.address }}, {{ profile.current_property.city }}</div>
+                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.75rem;">{% icon "construction" %} House No. {{ profile.current_property.slug|upper }}</div>
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-                  <span class="tag">📅 Move-in: {{ profile.moved_in_date|date:"M Y"|default:"N/A" }}</span>
-                  <span class="tag">📋 {% if profile.current_property.minimum_lease_days %}{{ profile.current_property.minimum_lease_days|divisibleby:30|yesno:"Monthly,Yearly" }}{% else %}Monthly{% endif %}</span>
+                  <span class="tag">{% icon "calendar" %} Move-in: {{ profile.moved_in_date|date:"M Y"|default:"N/A" }}</span>
+                  <span class="tag">{% icon "clipboard" %} {% if profile.current_property.minimum_lease_days %}{{ profile.current_property.minimum_lease_days|divisibleby:30|yesno:"Monthly,Yearly" }}{% else %}Monthly{% endif %}</span>
                 </div>
               {% else %}
                 <div style="font-weight:700;font-size:1rem;color:var(--gray-400);">No current property assigned</div>
@@ -213,7 +216,7 @@
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Landlord</div>
               {% if profile.current_property and profile.current_property.owner %}
                 <div style="font-weight:600;font-size:0.875rem;">{{ profile.current_property.owner.get_full_name|default:profile.current_property.owner.username }}</div>
-                <div style="font-size:0.8rem;color:var(--primary);">📞 {{ profile.current_property.owner.profile.phone_number|default:"Not set" }}</div>
+                <div style="font-size:0.8rem;color:var(--primary);">{% icon "phone" %} {{ profile.current_property.owner.profile.phone_number|default:"Not set" }}</div>
               {% else %}
                 <div style="font-weight:600;font-size:0.875rem;">N/A</div>
               {% endif %}
@@ -225,26 +228,26 @@
             </div>
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Lease Status</div>
-              <div class="bill-status paid">✅ Active</div>
+              <div class="bill-status paid">{% icon "check" %} Active</div>
             </div>
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">⚡ Quick Actions</div>
+          <div class="dashboard-card-title">{% icon "zap" %} Quick Actions</div>
           <div class="quick-actions-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.875rem;">
             <button class="btn btn-outline-dark btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);" onclick="switchTab('rent')">
-              <span style="font-size:1.3rem;">💳</span>Pay Rent
+              <span style="font-size:1.3rem;">{% icon "card" %}</span>Pay Rent
             </button>
             <button class="btn btn-outline-dark btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);" onclick="switchTab('qr')">
-              <span style="font-size:1.3rem;">📱</span>My QR ID
+              <span style="font-size:1.3rem;">{% icon "mobile" %}</span>My QR ID
             </button>
             <button class="btn btn-outline-dark btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);" onclick="switchTab('planner')">
-              <span style="font-size:1.3rem;">📦</span>Planner
+              <span style="font-size:1.3rem;">{% icon "package" %}</span>Planner
             </button>
             <a href="{% url 'home:properties' %}" class="btn btn-primary btn-sm" style="flex-direction:column;gap:0.35rem;height:70px;border-radius:var(--radius);">
-              <span style="font-size:1.3rem;">🔍</span>Browse
+              <span style="font-size:1.3rem;">{% icon "search" %}</span>Browse
             </a>
           </div>
         </div>
@@ -252,7 +255,7 @@
 
       <!-- RESIDENCE -->
       <div id="residence" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">🏠 My Residence</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "home" %} My Residence</h2>
         <div class="dashboard-card">
           <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.5rem;">
             <div style="width:100%;max-width:300px;height:180px;border-radius:var(--radius-lg);overflow:hidden;">
@@ -275,7 +278,7 @@
                 </div>
               {% else %}
                 <div style="text-align:center;padding:2rem 0;color:var(--gray-400);">
-                  <div style="font-size:3rem;margin-bottom:1rem;">🏠</div>
+                  <div style="font-size:3rem;margin-bottom:1rem;">{% icon "home" %}</div>
                   <p>You don't have a current property assigned.</p>
                   <a href="{% url 'home:properties' %}" class="btn btn-primary">Browse Properties</a>
                 </div>
@@ -285,7 +288,7 @@
           {% if profile.current_property and profile.current_property.owner %}
             <hr class="divider" />
             <div>
-              <strong style="font-size:0.875rem;">📞 Landlord Contact</strong>
+              <strong style="font-size:0.875rem;">{% icon "phone" %} Landlord Contact</strong>
               <div style="display:flex;align-items:center;gap:1rem;margin-top:0.75rem;flex-wrap:wrap;">
                 {% if profile.current_property.owner.profile.profile_picture %}
                   <img src="{{ profile.current_property.owner.profile.profile_picture.url }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Landlord" />
@@ -299,9 +302,9 @@
                   <div style="font-size:0.82rem;color:var(--gray-400);">Property Owner</div>
                 </div>
                 <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
-                  <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);" onclick="profileToast('Calling {{ profile.current_property.owner.profile.phone_number|default:'landlord' }}…','📞')">📞 Call</button>
-                  <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);" onclick="profileToast('Opening WhatsApp…','💬')">💬 WhatsApp</button>
-                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">✉️ Email</button>
+                  <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);" onclick="profileToast('Calling {{ profile.current_property.owner.profile.phone_number|default:'landlord' }}…','📞')">{% icon "phone" %} Call</button>
+                  <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);" onclick="profileToast('Opening WhatsApp…','💬')">{% icon "message" %} WhatsApp</button>
+                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">{% icon "mail" %}️ Email</button>
                 </div>
               </div>
             </div>
@@ -311,7 +314,7 @@
 
       <!-- QR -->
       <div id="qr" class="profile-section" style="display:none;">
-          <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">📱 Digital House Identity</h2>
+          <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "mobile" %} Digital House Identity</h2>
           <div class="dashboard-card" style="max-width:480px;">
               <div class="qr-section">
                   <div style="background:linear-gradient(135deg,var(--secondary) 0%,#1E3A8A 100%);border-radius:var(--radius-xl);padding:2rem;color:#fff;margin-bottom:1.5rem;">
@@ -350,7 +353,7 @@
                           <div style="color:var(--gray-400);margin-bottom:0.25rem;">Status</div>
                           <div style="font-weight:700;color:var(--accent);">
                               {% if qr_code_data %}
-                                  ✅ Active
+                                  {% icon "check" %} Active
                               {% else %}
                                   ⏳ Not Generated
                               {% endif %}
@@ -360,8 +363,8 @@
                   <div class="qr-btns" style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
                       {% if qr_code_data %}
                           <button class="btn btn-primary" onclick="downloadQR()">⬇️ Download QR</button>
-                          <button class="btn btn-outline-dark" onclick="shareQR()">📤 Share</button>
-                          <a href="{% url 'regenerate_qr' %}" class="btn btn-outline-warning">🔄 Regenerate QR</a>
+                          <button class="btn btn-outline-dark" onclick="shareQR()">{% icon "upload" %} Share</button>
+                          <a href="{% url 'regenerate_qr' %}" class="btn btn-outline-warning">{% icon "refresh" %} Regenerate QR</a>
                       {% endif %}
                   </div>
               </div>
@@ -370,7 +373,7 @@
 
       <!-- RENT & BILLS -->
       <div id="rent" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">💳 Rent & Bills</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "card" %} Rent & Bills</h2>
 
         <!-- Summary -->
         <div class="rent-summary-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;">
@@ -390,7 +393,7 @@
 
         <!-- Bills Table -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">📋 Bills & Utilities</div>
+          <div class="dashboard-card-title">{% icon "clipboard" %} Bills & Utilities</div>
 
           <!-- Bill Statistics Summary -->
           {% if bills %}
@@ -432,15 +435,15 @@
                       {% if bill.category and bill.category.icon %}
                         {{ bill.category.icon }}
                       {% else %}
-                        {% if bill.bill_type == 'rent' %}🏠
-                        {% elif bill.bill_type == 'water' %}💧
-                        {% elif bill.bill_type == 'electricity' %}⚡
-                        {% elif bill.bill_type == 'internet' %}📶
-                        {% elif bill.bill_type == 'service_charge' %}🏢
-                        {% elif bill.bill_type == 'maintenance' %}🔧
-                        {% elif bill.bill_type == 'security' %}🔒
-                        {% elif bill.bill_type == 'garbage' %}🗑
-                        {% else %}📋
+                        {% if bill.bill_type == 'rent' %}{% icon "home" %}
+                        {% elif bill.bill_type == 'water' %}{% icon "droplet" %}
+                        {% elif bill.bill_type == 'electricity' %}{% icon "zap" %}
+                        {% elif bill.bill_type == 'internet' %}{% icon "signal" %}
+                        {% elif bill.bill_type == 'service_charge' %}{% icon "building" %}
+                        {% elif bill.bill_type == 'maintenance' %}{% icon "wrench" %}
+                        {% elif bill.bill_type == 'security' %}{% icon "lock" %}
+                        {% elif bill.bill_type == 'garbage' %}{% icon "trash" %}
+                        {% else %}{% icon "clipboard" %}
                         {% endif %}
                       {% endif %}
                       {{ bill.description }}
@@ -461,7 +464,7 @@
                     </td>
                     <td data-label="Status">
                       {% if bill.status == 'paid' %}
-                        <span class="bill-status paid">✅ Paid
+                        <span class="bill-status paid">{% icon "check" %} Paid
                           {% if bill.paid_date %}
                             <span style="font-size:0.7rem;display:block;color:var(--gray-400);">{{ bill.paid_date|date:"M d, Y" }}</span>
                           {% endif %}
@@ -469,11 +472,11 @@
                       {% elif bill.status == 'pending' %}
                         <span class="bill-status pending">⏳ Pending</span>
                       {% elif bill.status == 'overdue' %}
-                        <span class="bill-status overdue">❗ Overdue</span>
+                        <span class="bill-status overdue">{% icon "exclaim" %} Overdue</span>
                       {% elif bill.status == 'processing' %}
-                        <span class="bill-status processing">🔄 Processing</span>
+                        <span class="bill-status processing">{% icon "refresh" %} Processing</span>
                       {% elif bill.status == 'cancelled' %}
-                        <span class="bill-status cancelled">❌ Cancelled</span>
+                        <span class="bill-status cancelled">{% icon "close" %} Cancelled</span>
                       {% else %}
                         <span class="bill-status">{{ bill.get_status_display }}</span>
                       {% endif %}
@@ -481,7 +484,7 @@
                     <td data-label="Action">
                       {% if bill.status == 'paid' %}
                         {% if bill.receipt %}
-                          <a href="{{ bill.receipt.url }}" target="_blank" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-600);">📄 Receipt</a>
+                          <a href="{{ bill.receipt.url }}" target="_blank" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-600);">{% icon "file" %} Receipt</a>
                         {% else %}
                           <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-600);" onclick="profileToast('No receipt uploaded','📄')">Receipt</button>
                         {% endif %}
@@ -496,7 +499,7 @@
               {% else %}
                 <tr>
                   <td colspan="5" style="text-align:center;padding:2rem;color:var(--gray-400);">
-                    <div style="font-size:2rem;margin-bottom:0.5rem;">📋</div>
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">{% icon "clipboard" %}</div>
                     No bills found for your current property
                   </td>
                 </tr>
@@ -508,17 +511,17 @@
         <!-- Utility Usage -->
         {% if utility_usage %}
           <div class="dashboard-card" style="margin-top:1.5rem;">
-            <div class="dashboard-card-title">📊 Utility Usage</div>
+            <div class="dashboard-card-title">{% icon "bar-chart" %} Utility Usage</div>
             <div style="display:flex;flex-direction:column;gap:1rem;">
               {% for usage in utility_usage %}
                 <div>
                   <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;">
                     <span>
-                      {% if usage.utility_type == 'water' %}💧
-                      {% elif usage.utility_type == 'electricity' %}⚡
-                      {% elif usage.utility_type == 'gas' %}🔥
-                      {% elif usage.utility_type == 'internet' %}📶
-                      {% else %}📋
+                      {% if usage.utility_type == 'water' %}{% icon "droplet" %}
+                      {% elif usage.utility_type == 'electricity' %}{% icon "zap" %}
+                      {% elif usage.utility_type == 'gas' %}{% icon "fire" %}
+                      {% elif usage.utility_type == 'internet' %}{% icon "signal" %}
+                      {% else %}{% icon "clipboard" %}
                       {% endif %}
                       {{ usage.get_utility_type_display }}
                     </span>
@@ -545,18 +548,18 @@
 
         <!-- Utility Usage -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">📊 Utility Usage — June 2025</div>
+          <div class="dashboard-card-title">{% icon "bar-chart" %} Utility Usage — June 2025</div>
           <div style="display:flex;flex-direction:column;gap:1rem;">
             <div>
-              <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;"><span>💧 Water</span><span style="color:var(--gray-400);">18 units</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;"><span>{% icon "droplet" %} Water</span><span style="color:var(--gray-400);">18 units</span></div>
               <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:60%;"></div></div>
             </div>
             <div>
-              <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;"><span>⚡ Electricity</span><span style="color:var(--gray-400);">420 kWh</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;"><span>{% icon "zap" %} Electricity</span><span style="color:var(--gray-400);">420 kWh</span></div>
               <div class="progress-bar-wrap"><div class="progress-bar-fill orange" style="width:84%;"></div></div>
             </div>
             <div>
-              <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;"><span>📶 Data</span><span style="color:var(--gray-400);">68 GB</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;"><span>{% icon "signal" %} Data</span><span style="color:var(--gray-400);">68 GB</span></div>
               <div class="progress-bar-wrap"><div class="progress-bar-fill green" style="width:45%;"></div></div>
             </div>
           </div>
@@ -565,7 +568,7 @@
 
       <!-- SAVED PROPERTIES -->
       <div id="saved" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">❤️ Saved Properties</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "heart" %}️ Saved Properties</h2>
         {% if saved_properties %}
           <div class="properties-grid mobile-carousel-grid" style="grid-template-columns:repeat(2,1fr);">
             {% for property in saved_properties %}
@@ -576,11 +579,11 @@
                   {% else %}
                     <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&auto=format&fit=crop&q=80');background-size:cover;"></div>
                   {% endif %}
-                  <div class="property-save saved" data-id="fav-{{ property.property.id }}">❤️</div>
+                  <div class="property-save saved" data-id="fav-{{ property.property.id }}">{% icon "heart" %}️</div>
                 </div>
                 <div class="property-body">
                   <div class="property-name">{{ property.property.title }}</div>
-                  <div class="property-location">📍 {{ property.property.city }}, {{ property.property.state }}</div>
+                  <div class="property-location">{% icon "map-pin" %} {{ property.property.city }}, {{ property.property.state }}</div>
                   <div class="property-footer">
                     <div class="property-price">KES {{ property.property.price }} <span>/mo</span></div>
                     <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
@@ -592,7 +595,7 @@
           </div>
         {% else %}
           <div class="dashboard-card" style="text-align:center;padding:3rem 2rem;">
-            <div style="font-size:3rem;margin-bottom:1rem;">❤️</div>
+            <div style="font-size:3rem;margin-bottom:1rem;">{% icon "heart" %}️</div>
             <h3 style="color:var(--gray-500);">No saved properties yet</h3>
             <p style="color:var(--gray-400);">Browse properties and save your favorites!</p>
             <a href="{% url 'home:properties' %}" class="btn btn-primary" style="margin-top:1rem;">Browse Properties</a>
@@ -602,11 +605,11 @@
 
       <!-- MOVE PLANNER -->
       <div id="planner" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">📦 Smart Move Planner</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "package" %} Smart Move Planner</h2>
 
         <!-- Move Request Form -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">🚚 Initiate Move</div>
+          <div class="dashboard-card-title">{% icon "truck" %} Initiate Move</div>
           <form id="move-request-form" method="post" action="{% url 'home:submit_move_request' %}">
             {% csrf_token %}
 
@@ -615,7 +618,7 @@
               <!-- Moving From -->
               <div style="grid-column:1/-1;">
                 <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
-                  📍 Moving From (Current Address)
+                  {% icon "map-pin" %} Moving From (Current Address)
                 </label>
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                   <div style="flex:1;min-width:200px;">
@@ -629,7 +632,7 @@
                   </div>
                   <div style="flex:1;min-width:200px;">
                     <button type="button" class="btn btn-sm" style="width:100%;justify-content:center;background:var(--gray-100);color:var(--gray-700);border:1px solid var(--gray-300);" onclick="useCurrentLocation()">
-                      📡 Use My Current Location
+                      {% icon "satellite" %} Use My Current Location
                     </button>
                   </div>
                 </div>
@@ -643,7 +646,7 @@
               <!-- Shared map: shown when either field is set to manual entry -->
               <div style="grid-column:1/-1;display:none;" id="location-map-container">
                 <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
-                  🗺️ Click the map to set <span id="location-map-target-label">the location</span> precisely
+                  {% icon "map" %}️ Click the map to set <span id="location-map-target-label">the location</span> precisely
                 </label>
                 <div id="move-location-map" style="height:280px;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
                 <div style="font-size:0.75rem;color:var(--gray-400);margin-top:0.35rem;" id="location-map-coords">No location selected yet — click on the map.</div>
@@ -652,7 +655,7 @@
               <!-- Moving To -->
               <div style="grid-column:1/-1;">
                 <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
-                  🏠 Moving To
+                  {% icon "home" %} Moving To
                 </label>
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                   <div style="flex:1;min-width:200px;">
@@ -675,7 +678,7 @@
               <!-- Move Date -->
               <div>
                 <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
-                  📅 Preferred Move Date
+                  {% icon "calendar" %} Preferred Move Date
                 </label>
                 <input type="date" name="move_date" class="filter-input" required style="width:100%;" />
               </div>
@@ -683,7 +686,7 @@
               <!-- Move Time -->
               <div>
                 <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
-                  🕐 Preferred Time
+                  {% icon "clock" %} Preferred Time
                 </label>
                 <select name="move_time" class="filter-input" style="width:100%;">
                   <option value="morning">Morning (8am - 12pm)</option>
@@ -696,41 +699,41 @@
             <!-- Item Details -->
             <div style="margin-top:1rem;">
               <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.5rem;">
-                📦 Items to Move
+                {% icon "package" %} Items to Move
               </label>
 
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="furniture" />
-                  🛋️ Furniture (Sofa, Tables, Chairs)
+                  {% icon "sofa" %}️ Furniture (Sofa, Tables, Chairs)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="electronics" />
-                  💻 Electronics (TV, Computer, Appliances)
+                  {% icon "laptop" %} Electronics (TV, Computer, Appliances)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="kitchen" />
-                  🍳 Kitchen Items (Cookware, Utensils)
+                  {% icon "kitchen" %} Kitchen Items (Cookware, Utensils)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="bedroom" />
-                  🛏️ Bedroom Furniture (Beds, Mattresses)
+                  {% icon "bed" %}️ Bedroom Furniture (Beds, Mattresses)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="boxes" />
-                  📦 Boxes / Luggage
+                  {% icon "package" %} Boxes / Luggage
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="delicate" />
-                  ⚠️ Delicate Items (Glassware, Art)
+                  {% icon "warning" %}️ Delicate Items (Glassware, Art)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="heavy" />
-                  🏋️ Heavy Items (Safes, Equipment)
+                  {% icon "gym" %}️ Heavy Items (Safes, Equipment)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="other" />
-                  📋 Other (Specify in notes)
+                  {% icon "clipboard" %} Other (Specify in notes)
                 </label>
               </div>
             </div>
@@ -738,7 +741,7 @@
             <!-- Special Instructions -->
             <div style="margin-top:1rem;">
               <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
-                📝 Special Instructions
+                {% icon "edit" %} Special Instructions
               </label>
               <textarea name="special_instructions" rows="3" class="filter-input" placeholder="Any special instructions, fragile items, access issues, etc..." style="width:100%;resize:vertical;"></textarea>
             </div>
@@ -747,7 +750,7 @@
             <div style="margin-top:1rem;padding:1rem;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--gray-200);">
               <label style="display:flex;align-items:center;gap:0.75rem;font-size:0.9rem;font-weight:600;color:var(--gray-700);cursor:pointer;">
                 <input type="checkbox" name="request_mover" id="request-mover" style="width:18px;height:18px;accent-color:var(--primary);" />
-                🚛 I need someone to help me move out
+                {% icon "truck-heavy" %} I need someone to help me move out
               </label>
               <div id="mover-details" style="display:none;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--gray-200);">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
@@ -785,14 +788,14 @@
             </div>
 
             <button type="submit" class="btn btn-primary btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">
-              🚀 Submit Move Request
+              {% icon "rocket" %} Submit Move Request
             </button>
           </form>
         </div>
 
         <!-- Current Move Request Status -->
         <div class="dashboard-card" style="margin-top:1.5rem;">
-          <div class="dashboard-card-title">📋 My Move Requests</div>
+          <div class="dashboard-card-title">{% icon "clipboard" %} My Move Requests</div>
           {% if move_requests %}
             <div style="display:flex;flex-direction:column;gap:1rem;">
               {% for request in move_requests %}
@@ -806,7 +809,7 @@
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;">
                     <div>
                       <div style="font-weight:600;font-size:0.95rem;">
-                        📍 {{ request.moving_from|truncatechars:30 }} →
+                        {% icon "map-pin" %} {{ request.moving_from|truncatechars:30 }} →
                         {% if request.moving_to_property %}
                           {{ request.moving_to_property.title }}
                         {% else %}
@@ -814,22 +817,22 @@
                         {% endif %}
                       </div>
                       <div style="font-size:0.8rem;color:var(--gray-500);">
-                        📅 {{ request.move_date|date:"M d, Y" }} ·
-                        {% if request.move_time == 'morning' %}🌅 Morning
-                        {% elif request.move_time == 'afternoon' %}☀️ Afternoon
-                        {% else %}🌙 Evening{% endif %}
+                        {% icon "calendar" %} {{ request.move_date|date:"M d, Y" }} ·
+                        {% if request.move_time == 'morning' %}{% icon "sunrise" %} Morning
+                        {% elif request.move_time == 'afternoon' %}{% icon "sun" %}️ Afternoon
+                        {% else %}{% icon "moon" %} Evening{% endif %}
                       </div>
                       <div style="font-size:0.8rem;color:var(--gray-500);">
-                        📦 Items: {{ request.items_list }}
+                        {% icon "package" %} Items: {{ request.items_list }}
                       </div>
                       {% if request.request_mover %}
                         <div style="font-size:0.8rem;color:var(--gray-500);">
-                          🚛 {{ request.movers_count }} mover(s) needed · {{ request.estimated_hours }} hours
+                          {% icon "truck-heavy" %} {{ request.movers_count }} mover(s) needed · {{ request.estimated_hours }} hours
                         </div>
                       {% endif %}
                       {% if request.special_instructions %}
                         <div style="font-size:0.8rem;color:var(--gray-400);margin-top:0.25rem;">
-                          📝 {{ request.special_instructions|truncatechars:60 }}
+                          {% icon "edit" %} {{ request.special_instructions|truncatechars:60 }}
                         </div>
                       {% endif %}
                     </div>
@@ -838,15 +841,15 @@
                         {% if request.status == 'pending' %}
                           <span class="badge badge-warning">⏳ Pending</span>
                         {% elif request.status == 'approved' %}
-                          <span class="badge badge-success">✅ Approved</span>
+                          <span class="badge badge-success">{% icon "check" %} Approved</span>
                         {% elif request.status == 'matched' %}
-                          <span class="badge badge-success">🤝 Matched With Mover</span>
+                          <span class="badge badge-success">{% icon "handshake" %} Matched With Mover</span>
                         {% elif request.status == 'in_progress' %}
-                          <span class="badge badge-info">🔄 In Progress</span>
+                          <span class="badge badge-info">{% icon "refresh" %} In Progress</span>
                         {% elif request.status == 'completed' %}
-                          <span class="badge badge-primary">✔️ Completed</span>
+                          <span class="badge badge-primary">{% icon "check-heavy" %}️ Completed</span>
                         {% else %}
-                          <span class="badge badge-danger">❌ Rejected</span>
+                          <span class="badge badge-danger">{% icon "close" %} Rejected</span>
                         {% endif %}
                       </div>
                       <div style="font-size:0.7rem;color:var(--gray-400);margin-top:0.25rem;">
@@ -861,7 +864,7 @@
 
                   {% if request.request_mover and request.status == 'pending' %}
                     <div class="move-offers-panel" data-request-id="{{ request.id }}" style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px dashed var(--gray-200);">
-                      <div style="font-size:0.8rem;font-weight:600;color:var(--gray-600);margin-bottom:0.5rem;">🚚 Movers who've committed</div>
+                      <div style="font-size:0.8rem;font-weight:600;color:var(--gray-600);margin-bottom:0.5rem;">{% icon "truck" %} Movers who've committed</div>
                       <div class="move-offers-list" style="display:flex;flex-direction:column;gap:0.5rem;">
                         <div style="font-size:0.78rem;color:var(--gray-400);">Checking for movers…</div>
                       </div>
@@ -876,7 +879,7 @@
             </div>
           {% else %}
             <div style="text-align:center;padding:2rem 0;">
-              <div style="font-size:2.5rem;margin-bottom:0.5rem;">📦</div>
+              <div style="font-size:2.5rem;margin-bottom:0.5rem;">{% icon "package" %}</div>
               <p style="color:var(--gray-400);">No move requests yet</p>
               <p style="color:var(--gray-400);font-size:0.85rem;">Start planning your move above</p>
             </div>
@@ -885,7 +888,7 @@
 
         <!-- Moving Checklist -->
         <div class="dashboard-card" style="margin-top:1.5rem;">
-          <div class="dashboard-card-title">✅ Moving Checklist</div>
+          <div class="dashboard-card-title">{% icon "check" %} Moving Checklist</div>
 
           <!-- Progress -->
           <div style="margin-bottom:1.5rem;">
@@ -911,14 +914,14 @@
 
       <!-- HISTORY -->
       <div id="history" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">🕐 Moving History</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "clock" %} Moving History</h2>
         <div class="dashboard-card">
-          <div class="dashboard-card-title">📍 Previous Homes</div>
+          <div class="dashboard-card-title">{% icon "map-pin" %} Previous Homes</div>
           <div>
             {% if move_history %}
               {% for move in move_history %}
                 <div class="timeline-item">
-                  <div class="timeline-dot" style="background:rgba(37,99,235,0.1);">🏠</div>
+                  <div class="timeline-dot" style="background:rgba(37,99,235,0.1);">{% icon "home" %}</div>
                   <div>
                     <div class="timeline-date">
                       {% if move.moved_in_date %}
@@ -939,7 +942,7 @@
                     </div>
                     <div class="timeline-loc">
                       {% if move.to_property %}
-                        📍 {{ move.to_property.address }}, {{ move.to_property.city }}
+                        {% icon "map-pin" %} {{ move.to_property.address }}, {{ move.to_property.city }}
                       {% endif %}
                       {% if move.to_property.price %}
                         · KES {{ move.to_property.price }}/mo
@@ -953,7 +956,7 @@
               {% endfor %}
             {% else %}
               <div style="text-align:center;padding:2rem 0;color:var(--gray-400);">
-                <div style="font-size:3rem;margin-bottom:1rem;">🕐</div>
+                <div style="font-size:3rem;margin-bottom:1rem;">{% icon "clock" %}</div>
                 <p>No move history yet.</p>
               </div>
             {% endif %}

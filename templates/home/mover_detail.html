@@ -1,7 +1,17 @@
 {% extends "home/base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}{{ mover_profile.get_full_name }} - Mover Profile -{% endblock title %}
+
+{% block meta_description %}{{ mover_profile.get_full_name }}, verified mover on 2Hame{% if mover_profile.city %} based in {{ mover_profile.city }}{% endif %}. {{ mover_profile.bio|default:"View their profile, services, and reviews."|truncatechars:120 }}{% endblock meta_description %}
+
+{% block canonical_url %}https://2hame.com{% url 'home:mover_detail' username=mover_profile.user.username %}{% endblock canonical_url %}
+{% block og_url %}https://2hame.com{% url 'home:mover_detail' username=mover_profile.user.username %}{% endblock og_url %}
+{% block og_title %}{{ mover_profile.get_full_name }} - Verified Mover on 2Hame{% endblock og_title %}
+{% block og_description %}{{ mover_profile.bio|default:"View services, coverage area, and reviews."|truncatechars:150 }}{% endblock og_description %}
+{% block og_image %}{% if mover_profile.profile_picture %}https://2hame.com{{ mover_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock og_image %}
+{% block twitter_image %}{% if mover_profile.profile_picture %}https://2hame.com{{ mover_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock twitter_image %}
 
 {% block content %}
 <section class="section" style="padding-top:7rem;background:linear-gradient(180deg,#EFF6FF 0%,#fff 100%);">
@@ -17,7 +27,7 @@
         {% endif %}
       </div>
       <div>
-        <h1 style="font-family:var(--font-display);font-size:1.75rem;margin-bottom:0.25rem;">🚚 {{ mover_profile.get_full_name }}</h1>
+        <h1 style="font-family:var(--font-display);font-size:1.75rem;margin-bottom:0.25rem;">{% icon "truck" %} {{ mover_profile.get_full_name }}</h1>
         <p style="color:var(--gray-500);">Mover on Tuhame since {{ mover_profile.created_at|date:"F Y" }}</p>
         <div style="margin-top:0.5rem;">
           {% if trust_score %}
@@ -25,7 +35,7 @@
           {% else %}
             <span class="badge" style="background:rgba(37,99,235,0.1);color:var(--primary);font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">🆕 New Mover</span>
           {% endif %}
-          <span class="badge" style="background:var(--gray-100);color:var(--gray-600);font-weight:600;padding:0.4rem 0.75rem;border-radius:999px;margin-left:0.4rem;">✅ {{ completed_moves }} move{{ completed_moves|pluralize }} completed</span>
+          <span class="badge" style="background:var(--gray-100);color:var(--gray-600);font-weight:600;padding:0.4rem 0.75rem;border-radius:999px;margin-left:0.4rem;">{% icon "check" %} {{ completed_moves }} move{{ completed_moves|pluralize }} completed</span>
         </div>
       </div>
     </div>

@@ -6,6 +6,13 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- These pages are internal, login-required back-office views (dashboard,
+         clients, payments, contracts, bills) - never meant to be indexed or
+         shared. home/base.html's robots meta is blockified per-page for the
+         public site; this template has no such per-page mechanism and no
+         prior robots tag at all, so it's hardcoded noindex here once for
+         every page that extends AdminBase.html. -->
+    <meta name="robots" content="noindex, nofollow">
     <title>{% block title %}{% endblock title %} - Tuhame</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="{% static "2Hame/assets/vendors/mdi/css/materialdesignicons.min.css" %}">

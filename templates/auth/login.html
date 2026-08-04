@@ -1,4 +1,5 @@
 {% load static %}
+{% load icons %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -51,11 +52,11 @@
         </div>
         <div class="auth-carousel-dots" id="auth-carousel-dots"></div>
         <div style="margin-top:1.5rem;">
-          <span class="feature-pill">✅ Verified Listings</span>
-          <span class="feature-pill">📍 Interactive Maps</span>
-          <span class="feature-pill">🏅 Move Score™</span>
-          <span class="feature-pill">💳 Rent Tracking</span>
-          <span class="feature-pill">📱 Digital QR ID</span>
+          <span class="feature-pill">{% icon "check" %} Verified Listings</span>
+          <span class="feature-pill">{% icon "map-pin" %} Interactive Maps</span>
+          <span class="feature-pill">{% icon "award" %} Move Score™</span>
+          <span class="feature-pill">{% icon "card" %} Rent Tracking</span>
+          <span class="feature-pill">{% icon "mobile" %} Digital QR ID</span>
         </div>
 
         <!-- Infinitely scrolling testimonials -->
@@ -139,14 +140,14 @@
       <!-- Social Login -->
       {% comment %} <div class="social-btns" style="margin-b ottom:1.5rem;">
         <button type="button" class="social-btn" onclick="socialLogin('Google')" style="width:100%;">
-          <span style="font-size:1.1rem;">🌐</span> Continue with Google
+          <span style="font-size:1.1rem;">{% icon "globe" %}</span> Continue with Google
         </button>
         <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
           <button type="button" class="social-btn" style="flex:1;" onclick="socialLogin('Facebook')">
-            <span style="font-size:1.1rem;">📘</span> Facebook
+            <span style="font-size:1.1rem;">{% brand_icon "facebook" %}</span> Facebook
           </button>
           <button type="button" class="social-btn" style="flex:1;" onclick="socialLogin('Apple')">
-            <span style="font-size:1.1rem;">🍎</span> Apple
+            <span style="font-size:1.1rem;">{% icon "apple" %}</span> Apple
           </button>
         </div>
       </div> {% endcomment %}
@@ -160,7 +161,7 @@
         <div class="form-group">
           <label class="form-label" for="id_username">Username</label>
           <div class="form-input-icon">
-            <span class="icon">👤</span>
+            <span class="icon">{% icon "user" %}</span>
             <input type="text" id="id_username" name="username" class="form-input"
                    value="{{ form.username.value|default:'' }}"
                    placeholder="Enter your username" required />
@@ -174,11 +175,11 @@
         <div class="form-group">
           <label class="form-label" for="id_password">Password</label>
           <div class="form-input-icon" style="position:relative;">
-            <span class="icon">🔒</span>
+            <span class="icon">{% icon "lock" %}</span>
             <input type="password" id="id_password" name="password" class="form-input"
                    placeholder="Enter your password" required
                    style="padding-right:3rem;" />
-            <span class="password-toggle" onclick="togglePwd(this)">👁</span>
+            <span class="password-toggle" onclick="togglePwd(this)">{% icon "eye" %}</span>
           </div>
           {% if form.password.errors %}
             <small class="text-danger">{{ form.password.errors.0 }}</small>
@@ -213,7 +214,7 @@
 
       <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--gray-200);text-align:center;">
         <div style="font-size:0.78rem;color:var(--gray-400);">
-          🔒 Secured with 256-bit SSL encryption<br />
+          {% icon "lock" %} Secured with 256-bit SSL encryption<br />
           <span style="margin-top:0.25rem;display:block;">By signing in you agree to our <a href="#" style="color:var(--primary);">Terms</a> & <a href="#" style="color:var(--primary);">Privacy Policy</a></span>
         </div>
       </div>
@@ -221,7 +222,7 @@
       <!-- Dark mode toggle -->
       <div style="text-align:center;margin-top:1rem;">
         <button type="button" class="dark-toggle" style="background:var(--gray-100);border-radius:var(--radius-full);padding:0.4rem 1rem;font-size:0.85rem;color:var(--gray-600);border:none;cursor:pointer;" onclick="toggleDarkMode()">
-          🌙 Toggle Dark Mode
+          {% icon "moon" %} Toggle Dark Mode
         </button>
       </div>
     </div>

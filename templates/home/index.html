@@ -1,9 +1,12 @@
 {% extends "home/base.html" %}
+{% load icons %}
 
 <!-- ─── SEO BLOCKS ─── -->
-{% block meta_description %}Find or list properties on 2Hame – Kenya's leading real estate platform. Search apartments, villas, rentals & BNBs. For tenants, buyers, and property owners. Move with confidence.{% endblock meta_description %}
+{% block meta_description %}Find or list properties on 2Hame – Kenya's leading real estate platform. Search apartments, villas, rentals &amp; BNBs. For tenants, buyers, and property owners. Move with confidence.{% endblock meta_description %}
 
-{% block og_title %}2Hame – Kenya's #1 Real Estate Platform for Buyers, Sellers & Tenants{% endblock og_title %}
+{% block meta_keywords %}2Hame, real estate Kenya, property listings Kenya, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property agents, real estate investors, find movers, housing marketplace, Kenya property{% endblock meta_keywords %}
+
+{% block og_title %}2Hame – Kenya's #1 Real Estate Platform for Buyers, Sellers &amp; Tenants{% endblock og_title %}
 
 {% block og_description %}List your property for free or find your dream home on 2Hame. Connect with verified tenants, buyers, and movers across Kenya. Smart, secure, and built for you.{% endblock og_description %}
 
@@ -13,7 +16,7 @@
 
 {% block canonical_url %}https://2hame.com{% endblock canonical_url %}
 
-{% block title %}2Hame – Kenya's #1 Real Estate Platform for Buyers, Sellers & Tenants{% endblock title %}
+{% block title %}2Hame – Kenya's #1 Real Estate Platform for Buyers, Sellers &amp; Tenants{% endblock title %}
 
 <!-- ─── HOMEPAGE JSON-LD ─── -->
 {% block property_schema %}
@@ -21,38 +24,59 @@
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
+  "@id": "https://2hame.com/#webpage",
   "name": "2Hame - Kenya's Real Estate & Housing Platform",
   "description": "Find or list properties on 2Hame. Search apartments, villas, rentals, and BNBs. Connect with tenants, buyers, and verified movers across Kenya.",
   "url": "https://2hame.com",
+  "about": {
+    "@type": "Thing",
+    "name": "Kenya Real Estate"
+  },
   "mainEntity": {
     "@type": "ItemList",
     "itemListElement": [
       {
         "@type": "ListItem",
         "position": 1,
-        "name": "Rent Apartments",
-        "url": "https://2hame.com/properties/?property_type=apartment"
+        "name": "Rent Residential Properties",
+        "url": "https://2hame.com/properties/listing/?property_type=residential"
       },
       {
         "@type": "ListItem",
         "position": 2,
-        "name": "Buy Villas",
-        "url": "https://2hame.com/properties/?property_type=villa"
+        "name": "Commercial Properties",
+        "url": "https://2hame.com/properties/listing/?property_type=commercial"
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": "List Your Property",
-        "url": "https://2hame.com/list-property"
+        "url": "https://2hame.com/properties/add/"
       },
       {
         "@type": "ListItem",
         "position": 4,
         "name": "Find Movers",
-        "url": "https://2hame.com/movers"
+        "url": "https://2hame.com/movers/map/"
       }
     ]
   }
+}
+</script>
+
+<!-- Breadcrumb Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://2hame.com"
+    }
+  ]
 }
 </script>
 {% endblock property_schema %}
@@ -60,7 +84,7 @@
 {% block content %}
 
 <!-- ─── HERO ─── -->
-<section class="hero">
+<section class="hero" aria-label="Find your next home in Kenya">
   <div class="hero-carousel">
     <!-- Slide 1 - For Tenants -->
     <div class="hero-slide active" data-title="Find Your Next <em>Home</em> With Ease" data-subtitle="Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast.">
@@ -70,7 +94,7 @@
       <div class="hero-overlay"></div>
     </div>
     <!-- Slide 2 - For Property Owners -->
-    <div class="hero-slide" data-title="List Your Property & <em>Find Tenants</em> Fast" data-subtitle="Reach thousands of verified tenants and buyers. Free listings, premium exposure, and direct communication.">
+    <div class="hero-slide" data-title="List Your Property &amp; <em>Find Tenants</em> Fast" data-subtitle="Reach thousands of verified tenants and buyers. Free listings, premium exposure, and direct communication.">
       <div class="hero-bg" style="position:absolute;inset:0;">
         <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
       </div>
@@ -94,37 +118,37 @@
 
   <div class="hero-content">
     <div class="hero-badge">
-      <span>🏆</span> Kenya's #1 Smart Real Estate Platform
+      <span>{% icon "trophy" %}</span> Kenya's #1 Smart Real Estate Platform
     </div>
     <h1 class="hero-title">Find Your Next <em>Home</em> With Ease</h1>
     <p class="hero-subtitle">Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast. <strong style="color:var(--primary);">List your property for free.</strong></p>
 
     <!-- Search Bar -->
-    <form method="get" action="{% url 'home:properties' %}" class="hero-search">
-      <span class="hero-search-icon">🔍</span>
-      <input class="hero-search-input live-search" type="text" name="search" placeholder="Search by location, property name, or keyword…" value="{{ search_query }}" aria-label="Search properties" />
-      <div class="hero-search-divider"></div>
-      <select class="hero-search-select" name="property_type" aria-label="Property type">
+    <form method="get" action="{% url 'home:properties' %}" class="hero-search" role="search" aria-label="Search properties">
+      <span class="hero-search-icon" aria-hidden="true">{% icon "search" %}</span>
+      <input class="hero-search-input live-search" type="text" name="search" placeholder="Search by location, property name, or keyword…" value="{{ search_query }}" aria-label="Search properties by location or name" />
+      <div class="hero-search-divider" aria-hidden="true"></div>
+      <select class="hero-search-select" name="property_type" aria-label="Filter by property type">
         {% for type in property_types %}
           <option value="{{ type.value }}" {% if selected_type == type.value %}selected{% endif %}>{{ type.label }}</option>
         {% endfor %}
       </select>
-      <div class="hero-search-divider"></div>
+      <div class="hero-search-divider" aria-hidden="true"></div>
       <button type="submit" class="btn btn-primary btn-sm">Search</button>
     </form>
 
     <div class="hero-buttons">
-      <a href="{% url 'home:properties' %}" class="btn btn-primary btn-lg">🏘 Explore Properties</a>
-      <a href="{% url 'home:property_map' %}" class="btn btn-outline btn-lg">🗺 View Map</a>
-      <a href="#" class="btn btn-outline btn-lg">📝 List Your Property</a>
+      <a href="{% url 'home:properties' %}" class="btn btn-primary btn-lg">{% icon "neighborhood" %} Explore Properties</a>
+      <a href="{% url 'home:property_map' %}" class="btn btn-outline btn-lg">{% icon "map" %} View Map</a>
+      <a href="{% url 'edit_profile' %}" class="btn btn-outline btn-lg">{% icon "edit" %} List Your Property</a>
     </div>
   </div>
 
   <div class="hero-dots">
-    <span class="hero-dot active"></span>
-    <span class="hero-dot"></span>
-    <span class="hero-dot"></span>
-    <span class="hero-dot"></span>
+    <span class="hero-dot active" role="button" aria-label="Slide 1"></span>
+    <span class="hero-dot" role="button" aria-label="Slide 2"></span>
+    <span class="hero-dot" role="button" aria-label="Slide 3"></span>
+    <span class="hero-dot" role="button" aria-label="Slide 4"></span>
   </div>
 
   <div class="hero-stats">
@@ -148,53 +172,56 @@
 </section>
 
 <!-- ─── ABOUT ─── -->
-<section class="section" style="background:var(--light-bg);">
+<section class="section" style="background:var(--light-bg);" aria-labelledby="about-heading">
   <div class="container">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
       <div>
-        <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">🏡 About 2Hame</div>
-        <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">Built To Make Moving Simple, Not Stressful</h2>
+        <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">{% icon "home-outline" %} About 2Hame</div>
+        <h2 id="about-heading" class="section-title" style="text-align:left;margin-bottom:1rem;">Built To Make Moving Simple, Not Stressful</h2>
         <p style="color:var(--gray-500);line-height:1.7;">
           2Hame is Kenya's all-in-one real estate platform — connecting tenants, landlords, buyers, and agents directly with verified listings, transparent pricing, and the tools to search, list, and move with confidence.
         </p>
+        <p style="color:var(--gray-500);line-height:1.7;margin-top:0.5rem;">
+          Our AI-powered search, interactive maps, and exclusive 2Hame Move Score™ make it easy to compare homes. For property owners, we offer free listings, real-time analytics, secure payments, and a dedicated movers marketplace to create a seamless experience from listing to move-in.
+        </p>
         <div class="about-highlights">
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">✅</div>
+            <div class="about-highlight-icon">{% icon "check" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Verified Listings & AI Search</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Verified Listings &amp; AI Search</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Every property verified by our team with AI-powered matching and smart filters.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">🗺️</div>
+            <div class="about-highlight-icon">{% icon "map" %}️</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Map & Move Score™</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Map &amp; Move Score™</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Explore properties on live maps with neighborhood insights and our exclusive Move Score.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">🤝</div>
+            <div class="about-highlight-icon">{% icon "handshake" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Zero Middlemen + Direct Connect</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Talk directly to landlords, tenants, and verified movers — no hidden fees or intermediaries.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">📊</div>
+            <div class="about-highlight-icon">{% icon "bar-chart" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Owner Dashboard & Free Listings</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Owner Dashboard &amp; Free Listings</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">List properties for free with real-time analytics, payment processing, and performance tracking.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">🚚</div>
+            <div class="about-highlight-icon">{% icon "truck" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Movers Marketplace & Cost Calculator</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Movers Marketplace &amp; Cost Calculator</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Book verified movers and plan your budget with our comprehensive move cost calculator.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">📍</div>
+            <div class="about-highlight-icon">{% icon "map-pin" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Built For Kenya</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Local pricing, local neighbourhoods, local support — designed for Kenyans by Kenyans.</p>
@@ -225,56 +252,56 @@
 </section>
 
 <!-- ─── FOR PROPERTY OWNERS CTA ─── -->
-<section class="section" style="background:var(--white);">
+<section class="section" style="background:var(--white);" aria-labelledby="owner-heading">
   <div class="container">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
       <div>
-        <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">🏢 For Property Owners</div>
-        <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">List Your Property & <span style="color:green;">Find Tenants Fast</span></h2>
+        <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">{% icon "building" %} For Property Owners</div>
+        <h2 id="owner-heading" class="section-title" style="text-align:left;margin-bottom:1rem;">List Your Property &amp; <span style="color:green;">Find Tenants Fast</span></h2>
         <p style="color:var(--gray-500);margin-bottom:0.5rem;line-height:1.7;">
           Whether you're a landlord, real estate agent, or developer — reach thousands of verified tenants and buyers actively searching for their next home through our AI-powered search and interactive map platform.
         </p>
         <p style="color:var(--gray-500);line-height:1.7;">
-          List your property for free and get access to real-time analytics, secure payment processing, and direct communication tools.
+          List your property for free and get access to real-time analytics, secure payment processing, and direct communication tools. Track views, inquiries, and engagement metrics to understand what's working.
         </p>
         <div class="about-highlights">
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">✅</div>
+            <div class="about-highlight-icon">{% icon "check" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Free Listings & Premium Visibility</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Free Listings &amp; Premium Visibility</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">List your property for free with premium options to boost visibility among thousands of active tenants and buyers.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">📊</div>
+            <div class="about-highlight-icon">{% icon "bar-chart" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Analytics Dashboard & Performance Tracking</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Analytics Dashboard &amp; Performance Tracking</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Track views, inquiries, and engagement metrics to understand what's working and optimize your listings.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">🤝</div>
+            <div class="about-highlight-icon">{% icon "handshake" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Direct Communication & Secure Payments</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Direct Communication &amp; Secure Payments</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Connect directly with serious tenants via encrypted chat and process deposits and rent securely through our platform.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">🗺️</div>
+            <div class="about-highlight-icon">{% icon "map" %}️</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Maps & Move Score™</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Maps &amp; Move Score™</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Showcase your property on live maps with neighborhood insights and the 2Hame Move Score to attract quality tenants.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">👤</div>
+            <div class="about-highlight-icon">{% icon "user" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Digital Tenant Profiles & Verification</strong>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Digital Tenant Profiles &amp; Verification</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Access verified tenant profiles with rental history, documents, and preferences for faster decision-making.</p>
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">🚚</div>
+            <div class="about-highlight-icon">{% icon "truck" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Movers Marketplace Integration</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Connect tenants with verified movers for a seamless move-in experience — from listing to move-in day.</p>
@@ -334,16 +361,16 @@
 </section>
 
 <!-- ─── CATEGORIES ─── -->
-<section class="section" style="background:var(--light-bg);">
+<section class="section" style="background:var(--light-bg);" aria-labelledby="categories-heading">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Browse by Category</h2>
+      <h2 id="categories-heading" class="section-title">Browse by Category</h2>
       <p class="section-subtitle">Find exactly the type of home you're looking for — or list yours</p>
     </div>
     <div class="categories-grid">
       {% for category in categories %}
         <a href="{% url 'home:properties' %}?property_type={{ category.type }}" class="category-card fade-up" title="Browse {{ category.label }} in Kenya">
-          <span class="category-icon">{{ category.icon }}</span>
+          <span class="category-icon">{% icon category.icon %}</span>
           <div class="category-name">{{ category.label }}</div>
           <div class="category-count">{{ category.count|default:"0" }} listings</div>
         </a>
@@ -354,42 +381,41 @@
   </div>
 </section>
 
-
 <!-- ─── WHY 2Hame ─── -->
-<section class="section features-bg">
+<section class="section features-bg" aria-labelledby="features-heading">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title" style="color:#fff;">Why Choose 2Hame?</h2>
+      <h2 id="features-heading" class="section-title" style="color:#fff;">Why Choose 2Hame?</h2>
       <p class="section-subtitle" style="color:rgba(255,255,255,0.65);">Everything you need to find, move, and settle into your perfect home</p>
     </div>
     <div class="features-grid">
       <div class="feature-card fade-up">
-        <div class="feature-icon">✅</div>
+        <div class="feature-icon">{% icon "check" %}</div>
         <div class="feature-title">Verified Properties</div>
         <div class="feature-desc">Every listing is verified by our team to ensure accuracy, safety, and legitimacy before it appears on the platform.</div>
       </div>
       <div class="feature-card fade-up">
-        <div class="feature-icon">📞</div>
+        <div class="feature-icon">{% icon "phone" %}</div>
         <div class="feature-title">Direct Landlord Contacts</div>
         <div class="feature-desc">Connect directly with property owners via call, WhatsApp or email — zero middlemen, zero extra fees.</div>
       </div>
       <div class="feature-card fade-up">
-        <div class="feature-icon">🧠</div>
+        <div class="feature-icon">{% icon "brain" %}</div>
         <div class="feature-title">Smart Location Search</div>
         <div class="feature-desc">Our AI-powered search understands neighbourhoods, distance, and lifestyle fit to show you the most relevant homes.</div>
       </div>
       <div class="feature-card fade-up">
-        <div class="feature-icon">🗺</div>
+        <div class="feature-icon">{% icon "map" %}</div>
         <div class="feature-title">Interactive Maps</div>
         <div class="feature-desc">Explore properties on a live map with custom markers, radius search, and real-time availability filters.</div>
       </div>
       <div class="feature-card fade-up">
-        <div class="feature-icon">📊</div>
+        <div class="feature-icon">{% icon "bar-chart" %}</div>
         <div class="feature-title">Owner Analytics Dashboard</div>
         <div class="feature-desc">Track views, inquiries, and performance metrics for your listed properties — know exactly what's working.</div>
       </div>
       <div class="feature-card fade-up">
-        <div class="feature-icon">🔒</div>
+        <div class="feature-icon">{% icon "lock" %}</div>
         <div class="feature-title">Secure Communication</div>
         <div class="feature-desc">End-to-end encrypted chats, secure document sharing, and a safe environment for every conversation.</div>
       </div>
@@ -398,10 +424,10 @@
 </section>
 
 <!-- ─── FEATURED LISTINGS ─── -->
-<section class="section" style="background:var(--light-bg);">
+<section class="section" style="background:var(--light-bg);" aria-labelledby="featured-heading">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Featured Listings</h2>
+      <h2 id="featured-heading" class="section-title">Featured Listings</h2>
       <p class="section-subtitle">Hand-picked properties with exceptional value and quality</p>
     </div>
 
@@ -416,37 +442,42 @@
 
     <div class="properties-grid mobile-carousel-grid">
       {% for property in properties %}
-        <div class="property-card fade-up">
+        <article class="property-card fade-up" itemscope itemtype="https://schema.org/Product">
           <div class="property-img-wrap">
             {% if property.main_image %}
-              <div style="width:100%;height:100%;background-image:url('{{ property.main_image.url }}');background-size:cover;background-position:center;"></div>
+              <div style="width:100%;height:100%;background-image:url('{{ property.main_image.url }}');background-size:cover;background-position:center;" role="img" aria-label="{{ property.title }}"></div>
             {% else %}
-              <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
+              <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;" role="img" aria-label="{{ property.title }}"></div>
             {% endif %}
             <div class="property-badge featured">{{ property.get_property_type_display }}</div>
-            <div class="property-save" data-id="prop-{{ property.id }}">🤍</div>
-            <div class="property-move-score">🏅 Move Score: <span class="score-val">91</span></div>
+            <div class="property-save" data-id="prop-{{ property.id }}" role="button" aria-label="Save property">{% icon "heart-outline" %}</div>
+            <div class="property-move-score">{% icon "award" %} Move Score: <span class="score-val">91</span></div>
           </div>
           <div class="property-body">
-            <div class="property-name">{{ property.title }}</div>
-            <div class="property-location">📍 {{ property.address|truncatechars:40 }}</div>
+            <div class="property-name" itemprop="name">{{ property.title }}</div>
+            <div class="property-location">{% icon "map-pin" %} <span itemprop="address">{{ property.address|truncatechars:40 }}</span></div>
             <div class="property-meta">
-              <div class="property-meta-item">🛏 {{ property.bedrooms }} Beds</div>
-              <div class="property-meta-item">🚿 {{ property.bathrooms }} Baths</div>
-              <div class="property-meta-item">📐 {{ property.area_sqft }} m²</div>
+              <div class="property-meta-item">{% icon "bed" %} <span itemprop="numberOfRooms">{{ property.bedrooms }}</span> Beds</div>
+              <div class="property-meta-item">{% icon "shower" %} <span itemprop="numberOfBathroomsTotal">{{ property.bathrooms }}</span> Baths</div>
+              <div class="property-meta-item">{% icon "ruler-tri" %} <span itemprop="floorSize">{{ property.area_sqft }}</span> m²</div>
             </div>
             <div class="property-footer">
-              <div class="property-price">KES {{ property.price }} <span>/month</span></div>
-              <div class="property-rating"><span class="rating-star">⭐</span> 4.8 (42)</div>
+              <div class="property-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                <span itemprop="priceCurrency" content="KES">KES</span> <span itemprop="price">{{ property.price }}</span> <span>/month</span>
+                <meta itemprop="availability" content="https://schema.org/InStock" />
+              </div>
+              <div class="property-rating" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                <span class="rating-star">⭐</span> <span itemprop="ratingValue">4.8</span> (<span itemprop="reviewCount">42</span>)
+              </div>
             </div>
           </div>
           <div style="padding:0 1.25rem 1.25rem;">
-            <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;">View Details</a>
+            <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;" itemprop="url">View Details</a>
           </div>
-        </div>
+        </article>
       {% empty %}
         <div style="grid-column:1/-1;text-align:center;padding:4rem 2rem;background:var(--white);border-radius:var(--radius-lg);">
-          <div style="font-size:4rem;margin-bottom:1rem;">🔍</div>
+          <div style="font-size:4rem;margin-bottom:1rem;">{% icon "search" %}</div>
           <h3 style="color:var(--gray-500);margin-bottom:0.5rem;">No properties found</h3>
           <p style="color:var(--gray-400);">Try adjusting your search criteria</p>
           <a href="{% url 'home:home' %}" class="btn btn-primary" style="margin-top:1rem;">Clear Search</a>
@@ -460,35 +491,35 @@
 </section>
 
 <!-- ─── MOVE SCORE ─── -->
-<section class="section" style="background:var(--white);">
+<section class="section" style="background:var(--white);" aria-labelledby="movescore-heading">
   <div class="container">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
       <div>
-        <div class="badge badge-primary" style="margin-bottom:1rem;">🏅 Exclusive Feature</div>
-        <h2 class="section-title" style="text-align:left;margin-bottom:1rem;">2Hame Move Score™</h2>
+        <div class="badge badge-primary" style="margin-bottom:1rem;">{% icon "award" %} Exclusive Feature</div>
+        <h2 id="movescore-heading" class="section-title" style="text-align:left;margin-bottom:1rem;">2Hame Move Score™</h2>
         <p style="color:var(--gray-500);margin-bottom:1.5rem;line-height:1.7;">Every property receives a comprehensive score that helps you quickly understand how good a move it really is — before you even visit.</p>
         <div style="display:flex;flex-direction:column;gap:0.875rem;">
           <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(37,99,235,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🛡</div>
+            <div style="width:42px;height:42px;background:rgba(37,99,235,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "shield" %}</div>
             <div><strong style="font-size:0.9rem;color:var(--gray-800);">Safety Score</strong><p style="font-size:0.82rem;color:var(--gray-400);">Neighbourhood security, lighting, crime rates</p></div>
           </div>
           <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(34,197,94,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🚌</div>
+            <div style="width:42px;height:42px;background:rgba(34,197,94,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "bus" %}</div>
             <div><strong style="font-size:0.9rem;color:var(--gray-800);">Transport Access</strong><p style="font-size:0.82rem;color:var(--gray-400);">Proximity to bus stops, matatus, expressways</p></div>
           </div>
           <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(245,158,11,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🏪</div>
+            <div style="width:42px;height:42px;background:rgba(245,158,11,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "store" %}</div>
             <div><strong style="font-size:0.9rem;color:var(--gray-800);">Nearby Amenities</strong><p style="font-size:0.82rem;color:var(--gray-400);">Schools, hospitals, supermarkets, banks</p></div>
           </div>
           <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(239,68,68,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">💰</div>
-            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Cost & Value</strong><p style="font-size:0.82rem;color:var(--gray-400);">Price vs. market average, utilities included</p></div>
+            <div style="width:42px;height:42px;background:rgba(239,68,68,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "money" %}</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Cost &amp; Value</strong><p style="font-size:0.82rem;color:var(--gray-400);">Price vs. market average, utilities included</p></div>
           </div>
         </div>
       </div>
       <div>
         <div class="move-score-card">
-          <div class="move-score-title">🏅 2Hame Move Score™ — Kilimani Heights</div>
+          <div class="move-score-title">{% icon "award" %} 2Hame Move Score™ — Kilimani Heights</div>
           <div class="move-score-main">
             <div class="move-score-circle"><span class="move-score-num">91</span></div>
             <div class="move-score-bars">
@@ -520,7 +551,7 @@
             </div>
           </div>
           <div style="padding:1rem;background:rgba(255,255,255,0.05);border-radius:10px;text-align:center;">
-            <div style="color:var(--accent);font-weight:800;font-size:1.1rem;">Excellent Move ✨</div>
+            <div style="color:var(--accent);font-weight:800;font-size:1.1rem;">Excellent Move {% icon "sparkles" %}</div>
             <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:0.25rem;">Top 8% of properties in Nairobi</div>
           </div>
         </div>
@@ -530,60 +561,78 @@
 </section>
 
 <!-- ─── TESTIMONIALS ─── -->
-<section class="section" style="background:var(--light-bg);">
+<section class="section" style="background:var(--light-bg);" aria-labelledby="testimonials-heading">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">What Our Users Say</h2>
+      <h2 id="testimonials-heading" class="section-title">What Our Users Say</h2>
       <p class="section-subtitle">Real feedback from tenants, buyers, and property owners using 2Hame</p>
     </div>
     <div class="testimonials-grid">
       {% for t in testimonials %}
-        <div class="testimonial-card fade-up">
-          <div class="testimonial-quote-icon">❝</div>
-          <div class="testimonial-stars">{% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
-          <p class="testimonial-text">{{ t.comment|truncatewords:32 }}</p>
-          <div class="testimonial-footer">
-            <div class="testimonial-avatar">{{ t.reviewer_name|first|upper }}</div>
+        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
+          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+          <div class="testimonial-quote-icon">{% icon "quote" %}</div>
+          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
+            {% for i in "12345" %}
+              {% if forloop.counter <= t.rating %}
+                <span itemprop="ratingValue" content="{{ t.rating }}">{% icon "star" %}</span>
+              {% else %}
+                {% icon "star-outline" %}
+              {% endif %}
+            {% endfor %}
+          </div>
+          <p class="testimonial-text" itemprop="reviewBody">{{ t.comment|truncatewords:32 }}</p>
+          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <div class="testimonial-avatar" itemprop="name">{{ t.reviewer_name|first|upper }}</div>
             <div>
-              <div class="testimonial-name">{{ t.reviewer_name }}, {{ t.get_reviewer_type_display }}{% if t.is_verified %} ✅{% endif %}</div>
-              <div class="testimonial-location">{{ t.location }}</div>
+              <div class="testimonial-name" itemprop="name">{{ t.reviewer_name }}, {{ t.get_reviewer_type_display }}{% if t.is_verified %} {% icon "check" %}{% endif %}</div>
+              <div class="testimonial-location" itemprop="address">{{ t.location }}</div>
             </div>
           </div>
         </div>
       {% empty %}
-        <div class="testimonial-card fade-up">
-          <div class="testimonial-quote-icon">❝</div>
-          <div class="testimonial-stars">★★★★★</div>
-          <p class="testimonial-text">Finding a verified apartment used to take weeks of back and forth. With 2Hame I searched, viewed and moved in within days — no middlemen, no surprises.</p>
-          <div class="testimonial-footer">
-            <div class="testimonial-avatar">A</div>
+        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
+          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+          <div class="testimonial-quote-icon">{% icon "quote" %}</div>
+          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
+            <span itemprop="ratingValue" content="5">{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
+          </div>
+          <p class="testimonial-text" itemprop="reviewBody">Finding a verified apartment used to take weeks of back and forth. With 2Hame I searched, viewed and moved in within days — no middlemen, no surprises.</p>
+          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <div class="testimonial-avatar" itemprop="name">A</div>
             <div>
-              <div class="testimonial-name">Ann W., Tenant</div>
-              <div class="testimonial-location">Nairobi, Kenya</div>
+              <div class="testimonial-name" itemprop="name">Ann W., Tenant {% icon "check" %}</div>
+              <div class="testimonial-location" itemprop="address">Nairobi, Kenya</div>
             </div>
           </div>
         </div>
-        <div class="testimonial-card fade-up">
-          <div class="testimonial-quote-icon">❝</div>
-          <div class="testimonial-stars">★★★★★</div>
-          <p class="testimonial-text">As a landlord, listing my property and talking directly to interested tenants saved me so much time compared to the usual agent back-and-forth.</p>
-          <div class="testimonial-footer">
-            <div class="testimonial-avatar">L</div>
+        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
+          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+          <div class="testimonial-quote-icon">{% icon "quote" %}</div>
+          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
+            <span itemprop="ratingValue" content="5">{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
+          </div>
+          <p class="testimonial-text" itemprop="reviewBody">As a landlord, listing my property and talking directly to interested tenants saved me so much time compared to the usual agent back-and-forth.</p>
+          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <div class="testimonial-avatar" itemprop="name">L</div>
             <div>
-              <div class="testimonial-name">Michael K., Property Owner</div>
-              <div class="testimonial-location">Mombasa, Kenya</div>
+              <div class="testimonial-name" itemprop="name">Michael K., Property Owner {% icon "check" %}</div>
+              <div class="testimonial-location" itemprop="address">Mombasa, Kenya</div>
             </div>
           </div>
         </div>
-        <div class="testimonial-card fade-up">
-          <div class="testimonial-quote-icon">❝</div>
-          <div class="testimonial-stars">★★★★★</div>
-          <p class="testimonial-text">The interactive map made it so easy to see what's actually nearby — schools, matatu stops, supermarkets — before I even scheduled a viewing.</p>
-          <div class="testimonial-footer">
-            <div class="testimonial-avatar">T</div>
+        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
+          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+          <div class="testimonial-quote-icon">{% icon "quote" %}</div>
+          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
+            <span itemprop="ratingValue" content="5">{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
+          </div>
+          <p class="testimonial-text" itemprop="reviewBody">The interactive map made it so easy to see what's actually nearby — schools, matatu stops, supermarkets — before I even scheduled a viewing.</p>
+          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <div class="testimonial-avatar" itemprop="name">T</div>
             <div>
-              <div class="testimonial-name">David M., Tenant</div>
-              <div class="testimonial-location">Kisumu, Kenya</div>
+              <div class="testimonial-name" itemprop="name">David M., Tenant {% icon "check" %}</div>
+              <div class="testimonial-location" itemprop="address">Kisumu, Kenya</div>
             </div>
           </div>
         </div>
@@ -594,10 +643,10 @@
 
 <!-- ─── PARTNERS ─── -->
 {% if partners %}
-<section class="section" style="background:var(--white);">
+<section class="section" style="background:var(--white);" aria-labelledby="partners-heading">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Our Trusted Partners</h2>
+      <h2 id="partners-heading" class="section-title">Our Trusted Partners</h2>
       <p class="section-subtitle">Working with Kenya's leading banks, movers and service providers</p>
     </div>
     <div class="partners-marquee">

@@ -1,7 +1,10 @@
 {% extends "AdminBase.html" %}
 {% load humanize %}
+{% load icons %}
 
 {% block title %}Add Property{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
 
 {% block content %}
 
@@ -167,9 +170,9 @@
                                         </div>
                                     </div>
                                     <div class="mt-2">
-                                        <button type="button" class="btn btn-sm btn-info" onclick="searchAddress()">🔍 Search Address</button>
-                                        <button type="button" class="btn btn-sm btn-success" onclick="locateMe()">📍 My Location</button>
-                                        <button type="button" class="btn btn-sm btn-warning" onclick="clearLocation()">🗑 Clear</button>
+                                        <button type="button" class="btn btn-sm btn-info" onclick="searchAddress()">{% icon "search" %} Search Address</button>
+                                        <button type="button" class="btn btn-sm btn-success" onclick="locateMe()">{% icon "map-pin" %} My Location</button>
+                                        <button type="button" class="btn btn-sm btn-warning" onclick="clearLocation()">{% icon "trash" %} Clear</button>
                                     </div>
                                     <small class="text-muted">Click on the map to set property location. Latitude and Longitude will auto-fill.</small>
                                 </div>

@@ -1,12 +1,22 @@
 {% extends "home/base.html" %}
+{% load icons %}
 
 {% block title %}{{ user.get_full_name|default:user.username }} - Public Profile{% endblock title %}
+
+{% block meta_description %}{{ user.get_full_name|default:user.username }} on 2Hame{% if profile.city %}, {{ profile.city }}{% endif %}. {{ profile.bio|default:"View their public profile."|truncatechars:130 }}{% endblock meta_description %}
+
+{% block canonical_url %}https://2hame.com{% url 'public_profile' username=user.username %}{% endblock canonical_url %}
+{% block og_url %}https://2hame.com{% url 'public_profile' username=user.username %}{% endblock og_url %}
+{% block og_title %}{{ user.get_full_name|default:user.username }} on 2Hame{% endblock og_title %}
+{% block og_description %}{{ profile.bio|default:"View their public profile on 2Hame."|truncatechars:150 }}{% endblock og_description %}
+{% block og_image %}{% if profile.profile_picture %}https://2hame.com{{ profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock og_image %}
+{% block twitter_image %}{% if profile.profile_picture %}https://2hame.com{{ profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock twitter_image %}
 
 {% block content %}
 
 <div class="page-hero">
   <div class="container">
-    <h1>👤 Public Profile <b>{{ user.get_full_name|default:user.username }}</b></h1>
+    <h1>{% icon "user" %} Public Profile <b>{{ user.get_full_name|default:user.username }}</b></h1>
     <p>
       {% if profile.role == 'owner' %}Property Owner
       {% elif profile.role == 'mover' %}Mover
@@ -33,14 +43,14 @@
           {% endif %}
           <div class="profile-name">{{ user.get_full_name|default:user.username }}</div>
           <div class="profile-email">{{ user.email }}</div>
-          <div>📞 {{ profile.phone_number|default:"No phone set" }}</div>
+          <div>{% icon "phone" %} {{ profile.phone_number|default:"No phone set" }}</div>
           <div class="profile-verified">
-            {% if profile.role == 'owner' %}🏠 Property Owner
-            {% elif profile.role == 'mover' %}🚚 Mover
-            {% else %}🔎 House Hunter{% endif %}
+            {% if profile.role == 'owner' %}{% icon "home" %} Property Owner
+            {% elif profile.role == 'mover' %}{% icon "truck" %} Mover
+            {% else %}{% icon "search-detail" %} House Hunter{% endif %}
           </div>
           {% if is_public %}
-            <div style="margin-top:0.75rem;font-size:0.78rem;color:var(--gray-400);">🔓 Public Profile</div>
+            <div style="margin-top:0.75rem;font-size:0.78rem;color:var(--gray-400);">{% icon "unlock" %} Public Profile</div>
           {% endif %}
         </div>
       </div>
@@ -48,19 +58,19 @@
       <!-- Nav -->
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:0.75rem;">
         <div class="profile-nav-item active" data-section="overview" onclick="switchTab('overview')">
-          <span class="icon">📊</span> Overview
+          <span class="icon">{% icon "bar-chart" %}</span> Overview
         </div>
         <div class="profile-nav-item" data-section="residence" onclick="switchTab('residence')">
-          <span class="icon">🏠</span> Residence
+          <span class="icon">{% icon "home" %}</span> Residence
         </div>
         <div class="profile-nav-item" data-section="personal" onclick="switchTab('personal')">
-          <span class="icon">👤</span> Personal Info
+          <span class="icon">{% icon "user" %}</span> Personal Info
         </div>
         <div class="profile-nav-item" data-section="emergency" onclick="switchTab('emergency')">
-          <span class="icon">🚨</span> Emergency Contact
+          <span class="icon">{% icon "alert" %}</span> Emergency Contact
         </div>
         <div class="profile-nav-item" data-section="qr" onclick="switchTab('qr')">
-          <span class="icon">📱</span> QR Code
+          <span class="icon">{% icon "mobile" %}</span> QR Code
         </div>
       </div>
     </aside>
@@ -90,7 +100,7 @@
 
         <!-- Current Home -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">🏠 Current Residence</div>
+          <div class="dashboard-card-title">{% icon "home" %} Current Residence</div>
           <div style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
             <div style="width:140px;height:100px;border-radius:var(--radius);overflow:hidden;flex-shrink:0;">
               {% if current_property and current_property.main_image %}
@@ -102,11 +112,11 @@
             <div style="flex:1;">
               {% if current_property %}
                 <div style="font-weight:700;font-size:1rem;color:var(--gray-900);margin-bottom:0.5rem;">{{ current_property.title }}</div>
-                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.25rem;">📍 {{ current_property.address }}, {{ current_property.city }}</div>
-                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.75rem;">🏗 House No. {{ current_property.slug|upper }}</div>
+                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.25rem;">{% icon "map-pin" %} {{ current_property.address }}, {{ current_property.city }}</div>
+                <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.75rem;">{% icon "construction" %} House No. {{ current_property.slug|upper }}</div>
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-                  <span class="tag">📅 Move-in: {{ profile.moved_in_date|date:"M Y"|default:"N/A" }}</span>
-                  <span class="tag">🏷️ {{ current_property.get_property_type_display }}</span>
+                  <span class="tag">{% icon "calendar" %} Move-in: {{ profile.moved_in_date|date:"M Y"|default:"N/A" }}</span>
+                  <span class="tag">{% icon "tag" %}️ {{ current_property.get_property_type_display }}</span>
                 </div>
               {% else %}
                 <div style="font-weight:700;font-size:1rem;color:var(--gray-400);">No current property assigned</div>
@@ -117,7 +127,7 @@
           {% if profile.current_property and profile.current_property.owner %}
             <hr class="divider" />
             <div>
-              <strong style="font-size:0.875rem;">📞 Landlord Contact</strong>
+              <strong style="font-size:0.875rem;">{% icon "phone" %} Landlord Contact</strong>
               <div style="display:flex;align-items:center;gap:1rem;margin-top:0.75rem;flex-wrap:wrap;">
                 {% if profile.current_property.owner.profile.profile_picture %}
                   <img src="{{ profile.current_property.owner.profile.profile_picture.url }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Landlord" />
@@ -131,9 +141,9 @@
                   <div style="font-size:0.82rem;color:var(--gray-400);">Property Owner</div>
                 </div>
                 <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
-                  <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);" onclick="profileToast('Calling {{ profile.current_property.owner.profile.phone_number|default:'landlord' }}…','📞')">📞 Call</button>
-                  <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);" onclick="profileToast('Opening WhatsApp…','💬')">💬 WhatsApp</button>
-                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">✉️ Email</button>
+                  <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);" onclick="profileToast('Calling {{ profile.current_property.owner.profile.phone_number|default:'landlord' }}…','📞')">{% icon "phone" %} Call</button>
+                  <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);" onclick="profileToast('Opening WhatsApp…','💬')">{% icon "message" %} WhatsApp</button>
+                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">{% icon "mail" %}️ Email</button>
                 </div>
               </div>
             </div>
@@ -142,7 +152,7 @@
 
         <!-- Member Info -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">📋 Member Information</div>
+          <div class="dashboard-card-title">{% icon "clipboard" %} Member Information</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Member Since</div>
@@ -154,27 +164,27 @@
             </div>
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Status</div>
-              <div class="bill-status paid">✅ Verified</div>
+              <div class="bill-status paid">{% icon "check" %} Verified</div>
             </div>
           </div>
         </div>
         <!-- Contact -->
         <div class="dashboard-card">
-          <div class="dashboard-card-title">📞 Contact</div>
+          <div class="dashboard-card-title">{% icon "phone" %} Contact</div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             {% if profile.phone_number %}
-              <a href="tel:{{ profile.phone_number }}" class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);">📞 Call</a>
-              <a href="https://wa.me/{{ profile.phone_number|cut:' '|cut:'+' }}" target="_blank" class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);">💬 WhatsApp</a>
+              <a href="tel:{{ profile.phone_number }}" class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);">{% icon "phone" %} Call</a>
+              <a href="https://wa.me/{{ profile.phone_number|cut:' '|cut:'+' }}" target="_blank" class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);">{% icon "message" %} WhatsApp</a>
             {% endif %}
-            <a href="mailto:{{ user.email }}" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">✉️ Email</a>
+            <a href="mailto:{{ user.email }}" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">{% icon "mail" %}️ Email</a>
           </div>
-          <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--gray-400);">🔒 Contact info is public</div>
+          <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--gray-400);">{% icon "lock" %} Contact info is public</div>
         </div>
       </div>
 
       <!-- RESIDENCE -->
       <div id="residence" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">🏠 Residence Details</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "home" %} Residence Details</h2>
         <div class="dashboard-card">
           <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.5rem;">
             <div style="width:100%;max-width:300px;height:180px;border-radius:var(--radius-lg);overflow:hidden;">
@@ -196,7 +206,7 @@
                 </div>
               {% else %}
                 <div style="text-align:center;padding:2rem 0;color:var(--gray-400);">
-                  <div style="font-size:3rem;margin-bottom:1rem;">🏠</div>
+                  <div style="font-size:3rem;margin-bottom:1rem;">{% icon "home" %}</div>
                   <p>No current property assigned.</p>
                 </div>
               {% endif %}
@@ -207,10 +217,10 @@
 
       <!-- PERSONAL INFO -->
       <div id="personal" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">👤 Personal Information</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "user" %} Personal Information</h2>
 
         <div class="dashboard-card">
-          <div class="dashboard-card-title">📇 Basic Details</div>
+          <div class="dashboard-card-title">{% icon "id-card" %} Basic Details</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Full Name</div>
@@ -246,7 +256,7 @@
         </div>
 
         <div class="dashboard-card">
-          <div class="dashboard-card-title">💼 Professional</div>
+          <div class="dashboard-card-title">{% icon "briefcase" %} Professional</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Occupation</div>
@@ -266,9 +276,9 @@
 
       <!-- EMERGENCY -->
       <div id="emergency" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">🚨 Emergency Contact</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "alert" %} Emergency Contact</h2>
         <div class="dashboard-card" style="border-left:4px solid var(--danger);">
-          <div class="dashboard-card-title">⚠️ Important Information</div>
+          <div class="dashboard-card-title">{% icon "warning" %}️ Important Information</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Contact Name</div>
@@ -291,14 +301,14 @@
           </div>
           <hr class="divider" />
           <div style="font-size:0.78rem;color:var(--gray-500);text-align:center;">
-            ⚠️ In case of emergency, please contact the person listed above.
+            {% icon "warning" %}️ In case of emergency, please contact the person listed above.
           </div>
         </div>
       </div>
 
       <!-- QR -->
       <div id="qr" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">📱 Scan QR Code</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "mobile" %} Scan QR Code</h2>
         <div class="dashboard-card" style="max-width:480px;">
           <div class="qr-section">
             <div style="background:linear-gradient(135deg,var(--secondary) 0%,#1E3A8A 100%);border-radius:var(--radius-xl);padding:2rem;color:#fff;margin-bottom:1.5rem;">
@@ -325,12 +335,12 @@
               <div class="filter-group-title" style="margin-bottom:0.5rem;">Public Profile Link</div>
               <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                 <input type="text" id="public-url-input" value="{{ public_url }}" readonly class="filter-input" style="flex:1;min-width:0;" />
-                <button class="btn btn-primary btn-sm" onclick="copyPublicURL()">📋 Copy</button>
+                <button class="btn btn-primary btn-sm" onclick="copyPublicURL()">{% icon "clipboard" %} Copy</button>
               </div>
             </div>
 
             <div style="padding:0.875rem;background:var(--gray-50);border-radius:var(--radius);text-align:center;font-size:0.78rem;color:var(--gray-400);">
-              🔓 Anyone with this QR code can view this public profile
+              {% icon "unlock" %} Anyone with this QR code can view this public profile
             </div>
           </div>
         </div>

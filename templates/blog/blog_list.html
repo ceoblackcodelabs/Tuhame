@@ -1,50 +1,149 @@
 {% extends "home/base.html" %}
 {% load static %}
+{% load icons %}
 
-{% block title %}Blog – 2Hame Real Estate Insights{% endblock title %}
-{% block meta_description %}Renting tips, landlord guides, moving advice and market insights for Kenya's real estate scene — from the 2Hame team.{% endblock meta_description %}
-{% block meta_keywords %}Kenya real estate blog, renting tips Kenya, landlord guides, moving tips Nairobi, property market insights Kenya{% endblock meta_keywords %}
-{% block canonical_url %}https://2hame.com{% url 'blog:blog_list' %}{% endblock canonical_url %}
-{% block og_title %}2Hame Blog – Real Estate Insights for Kenya{% endblock og_title %}
-{% block og_description %}Renting tips, landlord guides, moving advice and market insights for Kenya's real estate scene.{% endblock og_description %}
+<!-- ─── SEO BLOCKS ─── -->
+{% block meta_description %}Renting tips, landlord guides, moving advice and market insights for Kenya's real estate scene — from the 2Hame team. Get expert advice on finding, listing, and moving into your perfect home.{% endblock meta_description %}
+
+{% block meta_keywords %}Kenya real estate blog, renting tips Kenya, landlord guides, moving tips Nairobi, property market insights Kenya, 2Hame blog, real estate advice Kenya{% endblock meta_keywords %}
+
 {% block og_url %}https://2hame.com{% url 'blog:blog_list' %}{% endblock og_url %}
+
+{% block og_title %}2Hame Blog – Real Estate Insights, Tips &amp; Guides for Kenya{% endblock og_title %}
+
+{% block og_description %}Expert renting tips, landlord guides, moving advice and market insights for Kenya's real estate scene. Read the 2Hame blog for practical advice.{% endblock og_description %}
+
+{% block twitter_title %}2Hame Blog – Kenya Real Estate Tips &amp; Insights{% endblock twitter_title %}
+
+{% block twitter_description %}Renting tips, landlord guides, and market insights for Kenya's real estate scene. Expert advice from the 2Hame team.{% endblock twitter_description %}
+
+{% block canonical_url %}https://2hame.com{% url 'blog:blog_list' %}{% endblock canonical_url %}
+
+{% block title %}2Hame Blog – Real Estate Tips, Guides &amp; Insights for Kenya{% endblock title %}
+
+<!-- ─── BLOG PAGE JSON-LD ─── -->
+{% block property_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": "https://2hame.com/blog/#webpage",
+  "name": "2Hame Blog – Real Estate Insights for Kenya",
+  "description": "Renting tips, landlord guides, moving advice and market insights for Kenya's real estate scene. Expert advice from the 2Hame team.",
+  "url": "https://2hame.com/blog/",
+  "about": {
+    "@type": "Thing",
+    "name": "Kenya Real Estate"
+  },
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {% for post in posts %}
+      {
+        "@type": "ListItem",
+        "position": {{ forloop.counter }},
+        "item": {
+          "@type": "BlogPosting",
+          "headline": "{{ post.title|escapejs }}",
+          "url": "{{ post.get_absolute_url }}",
+          "description": "{{ post.excerpt|default:post.content|striptags|truncatewords:25|escapejs }}",
+          "datePublished": "{{ post.published_at|date:'c' }}",
+          "dateModified": "{{ post.updated_at|date:'c' }}",
+          "author": {
+            "@type": "Person",
+            "name": "{{ post.author.get_full_name|default:post.author.username|default:'2Hame Team' }}"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "2Hame"
+          },
+          "keywords": "{{ post.tags|escapejs }}",
+          "image": "{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% endif %}"
+        }
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+
+<!-- Breadcrumb Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://2hame.com"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://2hame.com/blog/"
+    }
+  ]
+}
+</script>
+
+<!-- Blog Category Schema -->
+{% if active_category %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{{ active_category|title }} – 2Hame Blog",
+  "description": "Articles and guides about {{ active_category|title }} from the 2Hame team.",
+  "url": "https://2hame.com/blog/?category={{ active_category }}"
+}
+</script>
+{% endif %}
+{% endblock property_schema %}
 
 {% block content %}
 
-<div class="page-hero">
+<!-- ─── HERO ─── -->
+<section class="page-hero" aria-labelledby="blog-hero-heading">
   <div class="container">
-    <h1>📰 The 2Hame Blog</h1>
-    <p>Renting tips, landlord guides, and market insights for Kenya's real estate scene</p>
+    <div class="badge badge-primary" style="margin-bottom:1rem;">{% icon "newspaper" %} Insights &amp; Guides</div>
+    <h1 id="blog-hero-heading" class="section-title">The 2Hame Blog</h1>
+    <p class="section-subtitle">Renting tips, landlord guides, and market insights for Kenya's real estate scene</p>
   </div>
-</div>
+</section>
 
-<section class="section">
+<!-- ─── BLOG SECTION ─── -->
+<section class="section" aria-labelledby="blog-heading">
   <div class="container">
 
-    <form method="get" class="blog-filter-bar">
-      <div class="blog-filter-pills">
-        <a href="{% url 'blog:blog_list' %}" class="blog-pill {% if not active_category %}active{% endif %}">All</a>
+    <!-- Filter Bar -->
+    <form method="get" class="blog-filter-bar" role="search" aria-label="Filter blog posts">
+      <div class="blog-filter-pills" role="tablist" aria-label="Filter by category">
+        <a href="{% url 'blog:blog_list' %}" class="blog-pill {% if not active_category %}active{% endif %}" role="tab" aria-selected="{% if not active_category %}true{% else %}false{% endif %}">All</a>
         {% for value, label in categories %}
-          <a href="?category={{ value }}" class="blog-pill {% if active_category == value %}active{% endif %}">{{ label }}</a>
+          <a href="?category={{ value }}" class="blog-pill {% if active_category == value %}active{% endif %}" role="tab" aria-selected="{% if active_category == value %}true{% else %}false{% endif %}">{{ label }}</a>
         {% endfor %}
       </div>
       <div class="blog-search-box">
-        <input type="text" name="q" value="{{ query }}" placeholder="Search articles…" aria-label="Search articles" />
-        <button type="submit" aria-label="Search">🔍</button>
+        <input type="text" name="q" value="{{ query }}" placeholder="Search articles…" aria-label="Search articles by keyword" />
+        <button type="submit" aria-label="Search blog articles">{% icon "search" %}</button>
       </div>
     </form>
 
+    <!-- Featured Post -->
     {% if featured_post and not active_category and not query %}
-      <a href="{{ featured_post.get_absolute_url }}" class="blog-featured-card">
-        <div class="blog-featured-img" {% if featured_post.cover_image %}style="background-image:url('{{ featured_post.cover_image.url }}');"{% endif %}></div>
+      <a href="{{ featured_post.get_absolute_url }}" class="blog-featured-card" itemscope itemtype="https://schema.org/BlogPosting">
+        <div class="blog-featured-img" {% if featured_post.cover_image %}style="background-image:url('{{ featured_post.cover_image.url }}');"{% endif %} role="img" aria-label="{{ featured_post.title }}"></div>
         <div class="blog-featured-body">
-          <span class="blog-featured-eyebrow">{{ featured_post.get_category_display }}</span>
-          <h2 class="blog-featured-title">{{ featured_post.title }}</h2>
-          <p class="blog-featured-excerpt">{{ featured_post.excerpt|default:featured_post.content|striptags|truncatewords:28 }}</p>
-          <div class="blog-card-meta">
-            <span>{{ featured_post.author.get_full_name|default:featured_post.author.username|default:"2Hame Team" }}</span>
+          <span class="blog-featured-eyebrow" itemprop="articleSection">{{ featured_post.get_category_display }}</span>
+          <h2 class="blog-featured-title" itemprop="headline">{{ featured_post.title }}</h2>
+          <p class="blog-featured-excerpt" itemprop="description">{{ featured_post.excerpt|default:featured_post.content|striptags|truncatewords:28 }}</p>
+          <div class="blog-card-meta" itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <span itemprop="name">{{ featured_post.author.get_full_name|default:featured_post.author.username|default:"2Hame Team" }}</span>
             <span>•</span>
-            <span>{{ featured_post.published_at|date:"M d, Y" }}</span>
+            <span itemprop="datePublished">{{ featured_post.published_at|date:"M d, Y" }}</span>
             <span>•</span>
             <span>{{ featured_post.reading_time_minutes }} min read</span>
           </div>
@@ -52,24 +151,25 @@
       </a>
     {% endif %}
 
+    <!-- Blog Grid -->
     <div class="blog-grid">
       {% for post in posts %}
-        <a href="{{ post.get_absolute_url }}" class="blog-card fade-up">
+        <a href="{{ post.get_absolute_url }}" class="blog-card fade-up" itemscope itemtype="https://schema.org/BlogPosting">
           <div class="blog-card-img">
             {% if post.cover_image %}
-              <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" loading="lazy" />
+              <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" loading="lazy" itemprop="image" />
             {% else %}
-              <div class="blog-card-img-placeholder">📰</div>
+              <div class="blog-card-img-placeholder" role="img" aria-label="Blog post placeholder">{% icon "newspaper" %}</div>
             {% endif %}
-            <span class="blog-card-category">{{ post.get_category_display }}</span>
+            <span class="blog-card-category" itemprop="articleSection">{{ post.get_category_display }}</span>
           </div>
           <div class="blog-card-body">
-            <h3 class="blog-card-title">{{ post.title }}</h3>
-            <p class="blog-card-excerpt">{{ post.excerpt|default:post.content|striptags|truncatewords:22 }}</p>
-            <div class="blog-card-meta">
-              <span>{{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
+            <h3 class="blog-card-title" itemprop="headline">{{ post.title }}</h3>
+            <p class="blog-card-excerpt" itemprop="description">{{ post.excerpt|default:post.content|striptags|truncatewords:22 }}</p>
+            <div class="blog-card-meta" itemprop="author" itemscope itemtype="https://schema.org/Person">
+              <span itemprop="name">{{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
               <span>•</span>
-              <span>{{ post.published_at|date:"M d, Y" }}</span>
+              <span itemprop="datePublished">{{ post.published_at|date:"M d, Y" }}</span>
               <span>•</span>
               <span>{{ post.reading_time_minutes }} min read</span>
             </div>
@@ -77,25 +177,44 @@
         </a>
       {% empty %}
         <div class="blog-empty-state">
-          <div style="font-size:3rem;">📝</div>
+          <div style="font-size:3rem;" aria-hidden="true">{% icon "edit" %}</div>
           <h3>{% if query or active_category %}No articles match your filter{% else %}No articles yet{% endif %}</h3>
           <p>{% if query or active_category %}Try a different search or category.{% else %}Check back soon — we're working on our first posts.{% endif %}</p>
         </div>
       {% endfor %}
     </div>
 
+    <!-- Pagination -->
     {% if is_paginated %}
-      <div class="blog-pagination">
+      <nav class="blog-pagination" aria-label="Pagination">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}{% if query %}&q={{ query }}{% endif %}">← Newer</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}{% if query %}&q={{ query }}{% endif %}" aria-label="Previous page">← Newer</a>
         {% endif %}
         <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}{% if query %}&q={{ query }}{% endif %}">Older →</a>
+          <a href="?page={{ page_obj.next_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}{% if query %}&q={{ query }}{% endif %}" aria-label="Next page">Older →</a>
         {% endif %}
-      </div>
+      </nav>
     {% endif %}
 
+  </div>
+</section>
+
+<!-- ─── NEWSLETTER SIGNUP ─── -->
+<section class="section" style="background:var(--primary);padding:3rem 0;" aria-labelledby="newsletter-heading">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
+      <div>
+        <h2 id="newsletter-heading" style="color:#fff;font-size:1.6rem;font-weight:700;margin-bottom:0.5rem;">Get Real Estate Tips in Your Inbox</h2>
+        <p style="color:rgba(255,255,255,0.8);font-size:0.95rem;">Subscribe to our newsletter for weekly renting tips, landlord advice, and market insights.</p>
+      </div>
+      <form method="post" action="{% url 'blog:newsletter_subscribe' %}" style="display:flex;gap:0.5rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <input type="email" name="email" placeholder="Your email address" aria-label="Email address for newsletter" style="flex:1;padding:0.75rem 1rem;border:none;border-radius:var(--radius);font-size:0.95rem;" required />
+        <button type="submit" class="btn btn-accent">Subscribe</button>
+      </form>
+    </div>
   </div>
 </section>
 

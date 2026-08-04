@@ -1,6 +1,9 @@
 {% extends "AdminBase.html" %}
+{% load icons %}
 
 {% block title %}{{ title }}{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
 
 {% block content %}
 
@@ -10,7 +13,7 @@
             <div class="col-lg-6 mx-auto grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body text-center">
-                        <div style="font-size:4rem;margin-bottom:1rem;">💳</div>
+                        <div style="font-size:4rem;margin-bottom:1rem;">{% icon "card" %}</div>
                         <h4 class="card-title">Mark Bill as Paid</h4>
                         <p class="card-description">Confirm payment for this bill</p>
 

@@ -1,8 +1,18 @@
 {% extends "home/base.html" %}
 {% load static %}
 {% load humanize %}
+{% load icons %}
 
 {% block title %}{{ owner_profile.get_full_name }} - Property Owner -{% endblock title %}
+
+{% block meta_description %}{{ owner_profile.get_full_name }}, verified property owner on 2Hame{% if owner_profile.city %} based in {{ owner_profile.city }}{% endif %}. Browse their active property listings.{% endblock meta_description %}
+
+{% block canonical_url %}https://2hame.com{% url 'home:owner_portfolio' username=owner_profile.user.username %}{% endblock canonical_url %}
+{% block og_url %}https://2hame.com{% url 'home:owner_portfolio' username=owner_profile.user.username %}{% endblock og_url %}
+{% block og_title %}{{ owner_profile.get_full_name }} - Property Owner on 2Hame{% endblock og_title %}
+{% block og_description %}{{ owner_profile.bio|default:"Browse active property listings from this verified owner."|truncatechars:150 }}{% endblock og_description %}
+{% block og_image %}{% if owner_profile.profile_picture %}https://2hame.com{{ owner_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock og_image %}
+{% block twitter_image %}{% if owner_profile.profile_picture %}https://2hame.com{{ owner_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock twitter_image %}
 
 {% block content %}
 <section class="section" style="padding-top:7rem;background:linear-gradient(180deg,#EFF6FF 0%,#fff 100%);">
@@ -18,13 +28,13 @@
         {% endif %}
       </div>
       <div>
-        <h1 style="font-family:var(--font-display);font-size:1.75rem;margin-bottom:0.25rem;">🏠 {{ owner_profile.get_full_name }}</h1>
+        <h1 style="font-family:var(--font-display);font-size:1.75rem;margin-bottom:0.25rem;">{% icon "home" %} {{ owner_profile.get_full_name }}</h1>
         <p style="color:var(--gray-500);">Property Owner on Tuhame since {{ owner_profile.created_at|date:"F Y" }}</p>
         <div style="margin-top:0.5rem;">
           {% if owner_profile.is_verified_owner %}
-            <span class="badge" style="background:rgba(34,197,94,0.12);color:#16A34A;font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">✅ Verified Owner</span>
+            <span class="badge" style="background:rgba(34,197,94,0.12);color:#16A34A;font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">{% icon "check" %} Verified Owner</span>
           {% endif %}
-          <span class="badge" style="background:var(--gray-100);color:var(--gray-600);font-weight:600;padding:0.4rem 0.75rem;border-radius:999px;margin-left:0.4rem;">🏘 {{ total_properties }} listing{{ total_properties|pluralize }}</span>
+          <span class="badge" style="background:var(--gray-100);color:var(--gray-600);font-weight:600;padding:0.4rem 0.75rem;border-radius:999px;margin-left:0.4rem;">{% icon "neighborhood" %} {{ total_properties }} listing{{ total_properties|pluralize }}</span>
         </div>
       </div>
     </div>
@@ -44,12 +54,12 @@
                 {% if property.main_image %}
                   <img src="{{ property.main_image.url }}" alt="{{ property.title }}" style="width:100%;height:100%;object-fit:cover;" />
                 {% else %}
-                  <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;">🏠</div>
+                  <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;">{% icon "home" %}</div>
                 {% endif %}
               </div>
               <div style="padding:1rem;">
                 <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;color:var(--gray-800);">{{ property.title }}</div>
-                <div style="font-size:0.8rem;color:var(--gray-400);margin-bottom:0.5rem;">📍 {{ property.city }}{% if property.state %}, {{ property.state }}{% endif %}</div>
+                <div style="font-size:0.8rem;color:var(--gray-400);margin-bottom:0.5rem;">{% icon "map-pin" %} {{ property.city }}{% if property.state %}, {{ property.state }}{% endif %}</div>
                 <div style="font-weight:700;color:var(--primary);">KES {{ property.price|floatformat:0|intcomma }}</div>
               </div>
             </a>
@@ -58,7 +68,7 @@
       </div>
     {% else %}
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:3rem;text-align:center;color:var(--gray-400);">
-        <div style="font-size:2.5rem;margin-bottom:0.75rem;">🏘</div>
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">{% icon "neighborhood" %}</div>
         This owner doesn't have any active listings right now.
       </div>
     {% endif %}

@@ -1,4 +1,5 @@
 {% extends "AdminBase.html" %}
+{% load icons %}
 
 {% block title %}Owner Verification Queue{% endblock title %}
 
@@ -53,9 +54,9 @@
                                         <td><strong>{{ profile.get_full_name }}</strong></td>
                                         <td>
                                             {% if profile.role == 'owner' %}
-                                                <label class="badge badge-info">🏠 Owner</label>
+                                                <label class="badge badge-info">{% icon "home" %} Owner</label>
                                             {% else %}
-                                                <label class="badge badge-warning">🚚 Mover</label>
+                                                <label class="badge badge-warning">{% icon "truck" %} Mover</label>
                                             {% endif %}
                                         </td>
                                         <td>{{ profile.user.username }}</td>
@@ -135,7 +136,7 @@
                                     {% for profile in recently_reviewed %}
                                     <tr>
                                         <td>{{ profile.get_full_name }}</td>
-                                        <td>{% if profile.role == 'owner' %}🏠 Owner{% else %}🚚 Mover{% endif %}</td>
+                                        <td>{% if profile.role == 'owner' %}{% icon "home" %} Owner{% else %}{% icon "truck" %} Mover{% endif %}</td>
                                         <td>
                                             {% if profile.verification_status == 'approved' %}
                                                 <label class="badge badge-success">Approved</label>

@@ -1,8 +1,15 @@
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db import IntegrityError
 from django.db.models import F
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
 
-from .models import BlogPost, CATEGORY_CHOICES
+from .models import BlogPost, CATEGORY_CHOICES, NewsletterSubscriber
 
 
 class BlogListView(ListView):
@@ -54,3 +61,40 @@ class BlogDetailView(DetailView):
             is_published=True, category=post.category
         ).exclude(pk=post.pk)[:3]
         return context
+
+
+@require_POST
+def newsletter_subscribe(request):
+    email = (request.POST.get('email') or '').strip()
+
+    next_url = request.POST.get('next', '')
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        redirect_target = next_url
+    else:
+        redirect_target = reverse('blog:blog_list')
+
+    if not email:
+        messages.error(request, "Please enter an email address to subscribe.")
+        return redirect(redirect_target)
+
+    try:
+        validate_email(email)
+    except ValidationError:
+        messages.error(request, "That doesn't look like a valid email address.")
+        return redirect(redirect_target)
+
+    try:
+        subscriber, created = NewsletterSubscriber.objects.get_or_create(
+            email__iexact=email, defaults={'email': email}
+        )
+    except IntegrityError:
+        created = False
+
+    if created:
+        messages.success(request, "You're subscribed! Watch your inbox for real estate tips.")
+    else:
+        messages.info(request, "That email is already subscribed.")
+
+    return redirect(redirect_target)

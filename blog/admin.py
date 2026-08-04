@@ -1,37 +1,68 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import BlogPost
+from .models import BlogPost, NewsletterSubscriber
 
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    list_display = ('cover_preview', 'title', 'category', 'author', 'is_published', 'published_at', 'views_count')
-    list_editable = ('is_published',)
-    list_filter = ('category', 'is_published', 'published_at')
-    search_fields = ('title', 'excerpt', 'tags', 'content')
-    prepopulated_fields = {'slug': ('title',)}
-    # date_hierarchy = 'published_at'
-    readonly_fields = ('views_count', 'created_at', 'updated_at')
+    """
+    Default admin.site.register(BlogPost) put every field - including the
+    CKEditor5 'content' widget - into one wide "aligned" fieldset. Django
+    admin's aligned layout floats each field's label/input; a widget as
+    tall/wide as CKEditor breaks that float flow, which visually hides
+    (or shoves far down/behind) whatever fields and the Save row come
+    after it. Splitting the form into explicit fieldsets - with the editor
+    isolated in its own, non-"aligned" fieldset - fixes that at the root,
+    instead of just patching around it with CSS.
+    """
 
-    class Media:
-        css = {'all': ('blog/admin_ckeditor_fix.css',)}
+    list_display = ('title', 'category', 'is_published', 'author', 'published_at', 'views_count')
+    list_filter = ('is_published', 'category', 'published_at')
+    search_fields = ('title', 'excerpt', 'tags', 'seo_title', 'seo_description')
+    list_editable = ('is_published',)
+    # date_hierarchy = 'published_at'
+    ordering = ('-published_at',)
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('views_count', 'created_at', 'updated_at')
+    save_on_top = True
 
     fieldsets = (
-        (None, {'fields': ('title', 'slug', 'author', 'category', 'tags')}),
-        ('Content', {'fields': ('cover_image', 'excerpt', 'content')}),
-        ('SEO', {'fields': ('seo_title', 'seo_description', 'seo_keywords'), 'classes': ('collapse',)}),
-        ('Publishing', {'fields': ('is_published', 'published_at', 'views_count')}),
-        ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
+        ('Post', {
+            'fields': ('title', 'slug', 'author', 'cover_image', 'excerpt'),
+        }),
+        # Isolated on its own so the CKEditor widget can't break the
+        # aligned-fieldset float layout of the fields around it.
+        ('Content', {
+            'fields': ('content',),
+            'classes': ('wide',),
+        }),
+        ('Organization', {
+            'fields': ('category', 'tags'),
+        }),
+        ('SEO', {
+            'fields': ('seo_title', 'seo_description', 'seo_keywords'),
+            'description': 'Leave blank to fall back to the post title / excerpt.',
+        }),
+        ('Publishing', {
+            'fields': ('is_published', 'published_at', 'views_count', 'created_at', 'updated_at'),
+        }),
     )
 
-    def cover_preview(self, obj):
-        if obj.cover_image:
-            return format_html('<img src="{}" style="height:36px;width:56px;object-fit:cover;border-radius:4px;" />', obj.cover_image.url)
-        return '—'
-    cover_preview.short_description = 'Cover'
+    class Media:
+        css = {
+            'all': ('blog/admin-fix.css',),
+        }
 
     def save_model(self, request, obj, form, change):
         if not obj.author_id:
             obj.author = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    list_display = ('email', 'is_active', 'subscribed_at')
+    list_filter = ('is_active',)
+    search_fields = ('email',)
+    ordering = ('-subscribed_at',)

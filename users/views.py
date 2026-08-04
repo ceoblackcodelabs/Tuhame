@@ -427,7 +427,7 @@ class OwnerQRCardView(LoginRequiredMixin, View):
         return render(request, 'auth/qr_business_card.html', {
             'card_type': 'owner',
             'card_title': 'Verified Property Owner',
-            'card_icon': '🏠',
+            'card_icon': 'home',
             'portfolio_url': portfolio_url,
             'qr_code': qr_code,
         })
@@ -452,7 +452,7 @@ class MoverQRCardView(LoginRequiredMixin, View):
         return render(request, 'auth/qr_business_card.html', {
             'card_type': 'mover',
             'card_title': 'Verified Mover',
-            'card_icon': '🚚',
+            'card_icon': 'truck',
             'portfolio_url': portfolio_url,
             'qr_code': qr_code,
         })

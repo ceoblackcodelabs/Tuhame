@@ -52,3 +52,29 @@ That's it — no settings.py edits, no gunicorn to think about.
 `.env` locally just needs `DEBUG=True` and `DB_ENGINE` left unset (it
 defaults to SQLite). Everything else in `.env.example` is optional for
 local work.
+
+## Concurrency ("load balancing") on shared hosting
+
+There's no nginx/HAProxy layer in front of the app on cPanel — Passenger
+itself is what spreads requests across multiple worker processes. That's
+the lever you actually have here, not a separate load balancer:
+
+- cPanel's "Setup Python App" screen (or its generated `.htaccess`) sets
+  `PassengerMinInstances` / a max pool size for the app. Increasing the
+  min instances is what lets the app handle more than one request at a
+  time under load, instead of queuing behind a single process.
+- **Set `REDIS_URL` once you run more than one instance.** Without it,
+  caching (`CACHES` in `settings.py`) falls back to an in-memory cache
+  that's local to each process — so with 2+ instances, a session or
+  cached value written by one worker won't be visible to a request
+  handled by another, which shows up as intermittent/flaky-looking
+  behavior. A shared Redis (many cPanel hosts offer one, or use a
+  managed Redis add-on) fixes that.
+- The DB pooling (`CONN_MAX_AGE`, `CONN_HEALTH_CHECKS`) already in
+  `settings.py` means each worker reuses its DB connection instead of
+  reconnecting every request — that scales fine with more instances.
+
+If you outgrow shared hosting, moving to a VPS with nginx in front of a
+few Gunicorn/Passenger workers is the natural next step, and this
+project's settings (SITE_URL, ALLOWED_HOSTS, static/media handling)
+already work in that setup without further changes.

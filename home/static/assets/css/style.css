@@ -45,6 +45,16 @@
   --nav-height: 84px;
 }
 
+/* Dark/light logo swap - see .theme-logo-light / .theme-logo-dark on the
+   <img> tags in templates/home/base.html (nav logo + mobile menu logo).
+   Both images are always in the DOM; this just shows/hides the right one.
+   Not used on the footer logo - the footer's background is always dark
+   (see .footer below) regardless of site theme, so it always uses the
+   light/white logo directly rather than swapping. */
+.theme-logo-dark { display: none; }
+[data-theme="dark"] .theme-logo-light { display: none; }
+[data-theme="dark"] .theme-logo-dark { display: inline-block; }
+
 /* Dark Mode */
 [data-theme="dark"] {
   --light-bg: #18191A;
@@ -96,6 +106,17 @@ body {
   object-fit: contain;
   flex-shrink: 0;
 }
+
+/*
+ * Light/dark logo swap. logo.png (dark navy wordmark) is the light-theme
+ * version; logo-dark-mode.png (white wordmark, same teal/orange accents)
+ * is shown once [data-theme="dark"] is set on <html> by main.js's dark
+ * mode toggle. Both images are always in the DOM (no extra request when
+ * switching, no flash of the wrong logo) - CSS just shows one at a time.
+ * Not used on the footer logo, which sits on an always-dark background
+ * (see .footer background) regardless of site theme, so it's hardcoded
+ * to the white logo-dark-mode.png instead of swapping.
+ */
 
 a { text-decoration: none; color: inherit; }
 img { max-width: 100%; display: block; }

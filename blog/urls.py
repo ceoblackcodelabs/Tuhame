@@ -6,5 +6,6 @@ app_name = 'blog'
 
 urlpatterns = [
     path('', views.BlogListView.as_view(), name='blog_list'),
+    path('subscribe/', views.newsletter_subscribe, name='newsletter_subscribe'),
     path('<slug:slug>/', views.BlogDetailView.as_view(), name='blog_detail'),
 ]

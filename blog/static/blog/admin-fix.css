@@ -1,0 +1,40 @@
+/*
+ * Defensive layout fix for the CKEditor5 widget inside Django Admin.
+ * blog/admin.py already isolates the "content" field into its own
+ * fieldset (the real fix - it removes the widget from the aligned/
+ * float-based layout entirely). This stylesheet is a second safety
+ * net so the form never visually breaks even if that changes later.
+ */
+
+/* The CKEditor field's own fieldset: let it take the full row and
+   never get clipped by a fixed height. */
+.field-content {
+    clear: both;
+    width: 100%;
+    overflow: visible;
+}
+
+.field-content .ck-editor-container {
+    max-width: 100%;
+}
+
+/* CKEditor5's own editing area: cap it so a very long post can't push
+   the rest of the page (and the Save row) far off-screen, but still
+   let it grow if content is long. */
+.field-content .ck-editor__editable {
+    min-height: 320px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Belt-and-suspenders: make sure nothing after the editor's fieldset
+   ever ends up tucked behind it. */
+fieldset.module {
+    clear: both;
+}
+
+.submit-row {
+    clear: both;
+    position: relative;
+    z-index: 1;
+}

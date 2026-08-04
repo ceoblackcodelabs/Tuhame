@@ -1,87 +1,210 @@
 {% extends "home/base.html" %}
 {% load static %}
+{% load icons %}
 
-{% block title %}Contact Us -{% endblock title %}
+<!-- ─── SEO BLOCKS ─── -->
+{% block meta_description %}Contact 2Hame – Kenya's leading real estate platform. Get help with property listings, account support, or list your property. We're here to help you find, move, and settle.{% endblock meta_description %}
+
+{% block meta_keywords %}contact 2Hame, real estate support Kenya, property listing help, Nairobi real estate, 2Hame contact, property owner support{% endblock meta_keywords %}
+
+{% block og_title %}Contact 2Hame – Kenya's Real Estate Support &amp; Help{% endblock og_title %}
+
+{% block og_description %}Have questions about property listings, your account, or want to list your property? Contact 2Hame's support team. We're here to help you find, move, and settle.{% endblock og_description %}
+
+{% block twitter_title %}Contact 2Hame – Real Estate Support in Kenya{% endblock twitter_title %}
+
+{% block twitter_description %}Questions about listings or need help with your account? Reach out to 2Hame's friendly support team.{% endblock twitter_description %}
+
+{% block canonical_url %}https://2hame.com/contact/{% endblock canonical_url %}
+
+{% block og_url %}https://2hame.com/contact/{% endblock og_url %}
+
+{% block title %}Contact 2Hame – Get Help with Properties, Listings &amp; Support in Kenya{% endblock title %}
+
+<!-- ─── CONTACT PAGE JSON-LD ─── -->
+{% block property_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "@id": "https://2hame.com/contact/#webpage",
+  "name": "Contact 2Hame – Real Estate Support in Kenya",
+  "description": "Contact 2Hame for help with property listings, account support, or to list your property. We're here to help you find, move, and settle.",
+  "url": "https://2hame.com/contact/",
+  "about": {
+    "@type": "Thing",
+    "name": "Customer Support"
+  }
+}
+</script>
+
+<!-- Contact Point Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ContactPoint",
+  "contactType": "customer service",
+  "telephone": "+254799804185",
+  "email": "info@2hame.com",
+  "availableLanguage": ["English", "Swahili"],
+  "hoursAvailable": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "opens": "08:00",
+    "closes": "18:00"
+  }
+}
+</script>
+
+<!-- Organization Schema with Contact Details -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "RealEstateAgent",
+  "name": "2Hame",
+  "url": "https://2hame.com",
+  "telephone": "+254799804185",
+  "email": "info@2hame.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Nairobi",
+    "addressCountry": "KE"
+  },
+  "openingHours": ["Mo-Fr 08:00-18:00", "Sa 09:00-14:00"],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+254799804185",
+    "contactType": "customer service",
+    "availableLanguage": ["English", "Swahili"]
+  }
+}
+</script>
+
+<!-- Breadcrumb Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://2hame.com"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Contact",
+      "item": "https://2hame.com/contact/"
+    }
+  ]
+}
+</script>
+{% endblock property_schema %}
 
 {% block content %}
 
-<div class="page-hero">
+<!-- ─── HERO ─── -->
+<section class="page-hero" aria-labelledby="contact-hero-heading">
   <div class="container">
-    <div class="badge badge-primary" style="margin-bottom:1rem;">✉️ Get In Touch</div>
-    <h1 class="section-title">We'd Love To Hear From You</h1>
+    <div class="badge badge-primary" style="margin-bottom:1rem;">{% icon "mail" %}️ Get In Touch</div>
+    <h1 id="contact-hero-heading" class="section-title">We'd Love To Hear From You</h1>
     <p class="section-subtitle">Questions about a listing, need help with your account, or want to list your property? Send us a message.</p>
   </div>
-</div>
+</section>
 
-<br>
-<br>
-<br>
+<br><br>
 
-<section class="section" style="padding-top:0;">
+<!-- ─── CONTACT SECTION ─── -->
+<section class="section" style="padding-top:0;" aria-labelledby="contact-heading">
   <div class="container">
     <div style="display:grid;grid-template-columns:1.1fr 1.4fr;gap:3rem;align-items:flex-start;" class="move-score-section-grid">
 
       <!-- Contact info -->
       <div>
         <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2rem;margin-bottom:1.5rem;">
-          <h3 style="font-family:var(--font-display);font-size:1.15rem;margin-bottom:1.5rem;">Contact Information</h3>
+          <h2 id="contact-heading" style="font-family:var(--font-display);font-size:1.15rem;margin-bottom:1.5rem;">Contact Information</h2>
 
-          <div style="display:flex;gap:1rem;margin-bottom:1.5rem;align-items:flex-start;">
-            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(37,99,235,0.1);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📍</div>
+          <div itemscope itemtype="https://schema.org/PostalAddress" style="display:flex;gap:1rem;margin-bottom:1.5rem;align-items:flex-start;">
+            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(37,99,235,0.1);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.2rem;" aria-hidden="true">{% icon "map-pin" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Our Office</strong>
-              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">Westlands, Nairobi, Kenya</p>
+              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;" itemprop="addressLocality">Westlands, Nairobi, Kenya</p>
+              <meta itemprop="addressCountry" content="KE" />
             </div>
           </div>
 
           <div style="display:flex;gap:1rem;margin-bottom:1.5rem;align-items:flex-start;">
-            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(34,197,94,0.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📞</div>
+            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(34,197,94,0.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.2rem;" aria-hidden="true">{% icon "phone" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Phone</strong>
-              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">+254768075539</p>
+              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">
+                <a href="tel:+254799804185" aria-label="Call 2Hame at +254 799 804 185">+254 799 804 185</a>
+              </p>
             </div>
           </div>
 
           <div style="display:flex;gap:1rem;margin-bottom:1.5rem;align-items:flex-start;">
-            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(124,58,237,0.1);color:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">✉️</div>
+            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(124,58,237,0.1);color:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:1.2rem;" aria-hidden="true">{% icon "mail" %}️</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Email</strong>
-              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">info@2hame.com</p>
+              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">
+                <a href="mailto:info@2hame.com" aria-label="Email 2Hame at info@2hame.com">info@2hame.com</a>
+              </p>
             </div>
           </div>
 
           <div style="display:flex;gap:1rem;align-items:flex-start;">
-            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(217,119,6,0.1);color:#D97706;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🕑</div>
+            <div style="width:44px;height:44px;flex-shrink:0;border-radius:12px;background:rgba(217,119,6,0.1);color:#D97706;display:flex;align-items:center;justify-content:center;font-size:1.2rem;" aria-hidden="true">{% icon "clock-alt" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Working Hours</strong>
-              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">Mon - Fri: 8:00 AM - 6:00 PM<br>Sat: 9:00 AM - 2:00 PM</p>
+              <p style="font-size:0.85rem;color:var(--gray-400);margin-top:0.2rem;">
+                <span itemprop="openingHours">Mon - Fri: 8:00 AM - 6:00 PM</span><br>
+                <span itemprop="openingHours">Sat: 9:00 AM - 2:00 PM</span>
+              </p>
             </div>
           </div>
         </div>
 
+        <!-- Quick response promise -->
+        <div style="background:var(--light-bg);border-radius:var(--radius-lg);padding:1.5rem;border:1px solid var(--gray-200);margin-bottom:1.5rem;">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span style="font-size:1.5rem;">{% icon "zap" %}</span>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Quick Response</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.2rem;">We typically respond within 1-2 business hours during working hours.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- For property owners CTA -->
         <div style="background:var(--primary);border-radius:var(--radius-lg);padding:1.75rem;color:#fff;">
-          <h4 style="font-family:var(--font-display);margin-bottom:0.5rem;">Looking to list a property?</h4>
+          <h3 style="font-family:var(--font-display);margin-bottom:0.5rem;font-size:1.1rem;">Looking to list a property?</h3>
           <p style="font-size:0.85rem;color:rgba(255,255,255,0.85);margin-bottom:1rem;">
             Switch your account to Property Owner from your profile — our team will verify you and get you set up.
           </p>
-          <a href="{% url 'edit_profile' %}" class="btn btn-accent btn-sm">Become an Owner →</a>
+          <a href="{% url 'edit_profile' %}" class="btn btn-accent btn-sm" aria-label="Become a property owner on 2Hame">Become an Owner →</a>
         </div>
       </div>
 
       <!-- Contact form -->
-      <div class="contact-form-card" style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2.5rem;">
-
+      <div class="contact-form-card" style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2.5rem;" aria-label="Contact form">
+        <h2 style="font-family:var(--font-display);font-size:1.15rem;margin-bottom:1.5rem;">Send Us a Message</h2>
+        <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1.5rem;">
+          Fill in the form and we'll get back to you as soon as possible.
+        </p>
 
         <form method="post" novalidate>
           {% csrf_token %}
           <div class="contact-form-row">
             <div class="form-group">
-              <label class="form-label" for="{{ form.name.id_for_label }}">Full Name</label>
+              <label class="form-label" for="{{ form.name.id_for_label }}">Full Name <span style="color:#DC2626;">*</span></label>
               {{ form.name }}
               {% if form.name.errors %}<div style="color:#DC2626;font-size:0.78rem;margin-top:0.3rem;">{{ form.name.errors.0 }}</div>{% endif %}
             </div>
             <div class="form-group">
-              <label class="form-label" for="{{ form.email.id_for_label }}">Email Address</label>
+              <label class="form-label" for="{{ form.email.id_for_label }}">Email Address <span style="color:#DC2626;">*</span></label>
               {{ form.email }}
               {% if form.email.errors %}<div style="color:#DC2626;font-size:0.78rem;margin-top:0.3rem;">{{ form.email.errors.0 }}</div>{% endif %}
             </div>
@@ -93,15 +216,22 @@
               {{ form.phone }}
             </div>
             <div class="form-group">
-              <label class="form-label" for="{{ form.subject.id_for_label }}">Subject</label>
+              <label class="form-label" for="{{ form.subject.id_for_label }}">Subject <span style="color:#DC2626;">*</span></label>
               {{ form.subject }}
+              {% if form.subject.errors %}<div style="color:#DC2626;font-size:0.78rem;margin-top:0.3rem;">{{ form.subject.errors.0 }}</div>{% endif %}
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="{{ form.message.id_for_label }}">Message</label>
+            <label class="form-label" for="{{ form.message.id_for_label }}">Message <span style="color:#DC2626;">*</span></label>
             {{ form.message }}
             {% if form.message.errors %}<div style="color:#DC2626;font-size:0.78rem;margin-top:0.3rem;">{{ form.message.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- Optional: Add a simple spam prevention -->
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;font-size:0.85rem;color:var(--gray-500);">
+            <span>{% icon "lock" %}</span>
+            <span>Your information is secure and will not be shared with third parties.</span>
           </div>
 
           <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:0.5rem;">
@@ -112,4 +242,5 @@
     </div>
   </div>
 </section>
+
 {% endblock content %}

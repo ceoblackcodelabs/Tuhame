@@ -4,8 +4,14 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as serve_static
+from django.views.generic import TemplateView
 
 urlpatterns = [
+    path(
+        'robots.txt',
+        TemplateView.as_view(template_name='robots.txt', content_type='text/plain'),
+        name='robots_txt',
+    ),
     path('admin/', admin.site.urls),
     path("", include('home.urls')),
     path('properties/', include('properties.urls')),

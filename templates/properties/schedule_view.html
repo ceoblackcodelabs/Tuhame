@@ -1,7 +1,10 @@
 {% extends "AdminBase.html" %}
 {% load humanize %}
+{% load icons %}
 
 {% block title %}Viewing Schedule{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
 
 {% block content %}
 
@@ -172,8 +175,8 @@
                                     <td>{{ viewing.full_name }}</td>
                                     <td>
                                         <div style="font-size:0.85rem;">
-                                            <div>📧 {{ viewing.email|truncatechars:20 }}</div>
-                                            <div>📱 {{ viewing.phone_number }}</div>
+                                            <div>{% icon "email" %} {{ viewing.email|truncatechars:20 }}</div>
+                                            <div>{% icon "mobile" %} {{ viewing.phone_number }}</div>
                                         </div>
                                     </td>
                                     <td>
@@ -184,24 +187,24 @@
                                     </td>
                                     <td>
                                         {% if viewing.preferred_time == 'morning' %}
-                                            🌅 Morning
+                                            {% icon "sunrise" %} Morning
                                         {% elif viewing.preferred_time == 'afternoon' %}
-                                            ☀️ Afternoon
+                                            {% icon "sun" %}️ Afternoon
                                         {% elif viewing.preferred_time == 'evening' %}
-                                            🌙 Evening
+                                            {% icon "moon" %} Evening
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if viewing.status == 'pending' %}
                                             <label class="badge badge-warning">⏳ Pending</label>
                                         {% elif viewing.status == 'confirmed' %}
-                                            <label class="badge badge-success">✅ Confirmed</label>
+                                            <label class="badge badge-success">{% icon "check" %} Confirmed</label>
                                         {% elif viewing.status == 'completed' %}
-                                            <label class="badge badge-info">✔️ Completed</label>
+                                            <label class="badge badge-info">{% icon "check-heavy" %}️ Completed</label>
                                         {% elif viewing.status == 'cancelled' %}
-                                            <label class="badge badge-danger">❌ Cancelled</label>
+                                            <label class="badge badge-danger">{% icon "close" %} Cancelled</label>
                                         {% elif viewing.status == 'no_show' %}
-                                            <label class="badge badge-secondary">🚫 No Show</label>
+                                            <label class="badge badge-secondary">{% icon "blocked" %} No Show</label>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -235,7 +238,7 @@
                                 {% empty %}
                                 <tr>
                                     <td colspan="9" class="text-center py-4">
-                                        <div style="font-size:2rem;margin-bottom:0.5rem;">📅</div>
+                                        <div style="font-size:2rem;margin-bottom:0.5rem;">{% icon "calendar" %}</div>
                                         <p style="color:var(--gray-500);">No viewing requests found.</p>
                                     </td>
                                 </tr>
@@ -336,11 +339,11 @@
                                             <div class="flex-grow">
                                                 <h6 class="preview-subject">{{ viewing.full_name }} requested viewing for <strong>{{ viewing.property.title|truncatechars:30 }}</strong></h6>
                                                 <p class="text-muted mb-0">
-                                                    📅 {{ viewing.preferred_date|date:"M d, Y" }}
-                                                    {% if viewing.preferred_time == 'morning' %}🌅 Morning
-                                                    {% elif viewing.preferred_time == 'afternoon' %}☀️ Afternoon
-                                                    {% else %}🌙 Evening{% endif %}
-                                                    · 📱 {{ viewing.phone_number }}
+                                                    {% icon "calendar" %} {{ viewing.preferred_date|date:"M d, Y" }}
+                                                    {% if viewing.preferred_time == 'morning' %}{% icon "sunrise" %} Morning
+                                                    {% elif viewing.preferred_time == 'afternoon' %}{% icon "sun" %}️ Afternoon
+                                                    {% else %}{% icon "moon" %} Evening{% endif %}
+                                                    · {% icon "mobile" %} {{ viewing.phone_number }}
                                                 </p>
                                             </div>
                                             <div class="mr-auto text-sm-right pt-2 pt-sm-0">

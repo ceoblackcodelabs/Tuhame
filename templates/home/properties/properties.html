@@ -1,4 +1,5 @@
 {% extends "home/base.html" %}
+{% load icons %}
 
 <!-- ─── SEO BLOCKS ─── -->
 {% block meta_description %}Browse thousands of verified properties for rent and sale across Kenya. Find apartments, villas, rentals, and BNBs with interactive maps, Move Scores, and real-time availability on 2Hame.{% endblock meta_description %}
@@ -11,7 +12,9 @@
 
 {% block twitter_description %}Find your dream home with verified listings, Move Scores, and neighborhood insights. Filter by price, location, and property type.{% endblock twitter_description %}
 
-{% block canonical_url %}https://2hame.com/properties/{% endblock canonical_url %}
+{% block canonical_url %}https://2hame.com{% url 'home:properties' %}{% endblock canonical_url %}
+
+{% block og_url %}https://2hame.com{% url 'home:properties' %}{% endblock og_url %}
 
 {% block title %}Properties for Rent & Sale in Kenya – 2Hame Real Estate{% endblock title %}
 
@@ -60,7 +63,7 @@
 
 <div class="page-hero">
   <div class="container">
-    <h1>🏘 Browse Properties</h1>
+    <h1>{% icon "neighborhood" %} Browse Properties</h1>
     <p>Explore verified homes across Kenya — with AI-powered search, interactive maps, and Property Management</p>
   </div>
 </div>
@@ -78,13 +81,13 @@
       <form method="get" id="filter-form">
         <!-- Location -->
         <div class="filter-group">
-          <div class="filter-group-title">📍 Location</div>
+          <div class="filter-group-title">{% icon "map-pin" %} Location</div>
           <input type="text" name="location" class="filter-input" placeholder="City, area or postcode…" value="{{ current_location }}" />
         </div>
 
         <!-- Property Type -->
         <div class="filter-group">
-          <div class="filter-group-title">🏠 Property Type</div>
+          <div class="filter-group-title">{% icon "home" %} Property Type</div>
           <div class="filter-chips">
             <span class="filter-chip {% if current_property_type == 'All' %}active{% endif %}" onclick="setFilter('property_type', 'All')">All</span>
             {% for type in property_types %}
@@ -98,7 +101,7 @@
 
         <!-- Price Range -->
         <div class="filter-group">
-          <div class="filter-group-title">💰 Price Range (KES/month)</div>
+          <div class="filter-group-title">{% icon "money" %} Price Range (KES/month)</div>
           <div class="price-range-wrap">
             <input type="range" id="price-slider" min="0" max="500000"
                    value="{{ current_max_price|default:200000 }}" step="5000"
@@ -116,7 +119,7 @@
 
         <!-- Bedrooms -->
         <div class="filter-group">
-          <div class="filter-group-title">🛏 Bedrooms</div>
+          <div class="filter-group-title">{% icon "bed" %} Bedrooms</div>
           <div class="filter-chips">
             <span class="filter-chip {% if current_bedrooms == 'Any' %}active{% endif %}" onclick="setFilter('bedrooms', 'Any')">Any</span>
             <span class="filter-chip {% if current_bedrooms == 'Studio' %}active{% endif %}" onclick="setFilter('bedrooms', 'Studio')">Studio</span>
@@ -131,7 +134,7 @@
 
         <!-- Bathrooms -->
         <div class="filter-group">
-          <div class="filter-group-title">🚿 Bathrooms</div>
+          <div class="filter-group-title">{% icon "shower" %} Bathrooms</div>
           <div class="filter-chips">
             <span class="filter-chip {% if current_bathrooms == 'Any' %}active{% endif %}" onclick="setFilter('bathrooms', 'Any')">Any</span>
             <span class="filter-chip {% if current_bathrooms == '1' %}active{% endif %}" onclick="setFilter('bathrooms', '1')">1</span>
@@ -145,7 +148,7 @@
 
         <!-- Availability -->
         <div class="filter-group">
-          <div class="filter-group-title">✅ Availability</div>
+          <div class="filter-group-title">{% icon "check" %} Availability</div>
           <div class="filter-chips">
             <span class="filter-chip {% if current_availability == 'available' %}active{% endif %}" onclick="setFilter('availability', 'available')">Available Now</span>
             <span class="filter-chip {% if current_availability == 'coming_soon' %}active{% endif %}" onclick="setFilter('availability', 'coming_soon')">Coming Soon</span>
@@ -156,7 +159,7 @@
 
         <!-- Amenities -->
         <div class="filter-group">
-          <div class="filter-group-title">✨ Amenities</div>
+          <div class="filter-group-title">{% icon "sparkles" %} Amenities</div>
           <div style="display:flex;flex-direction:column;gap:0.5rem;">
             {% for amenity in all_amenities %}
               <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--gray-600);cursor:pointer;">
@@ -203,9 +206,9 @@
           </select>
           <div class="view-toggles">
             <div class="view-toggle active" data-view="grid" title="Grid view">⊞</div>
-            <div class="view-toggle" data-view="list" title="List view">☰</div>
+            <div class="view-toggle" data-view="list" title="List view">{% icon "menu" %}</div>
           </div>
-          <a href="{% url 'home:property_map' %}" class="btn btn-outline-dark btn-sm">🗺 Map View</a>
+          <a href="{% url 'home:property_map' %}" class="btn btn-outline-dark btn-sm">{% icon "map" %} Map View</a>
         </div>
       </div>
 
@@ -221,16 +224,16 @@
               <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
             {% endif %}
             <div class="property-badge featured">{{ property.get_property_type_display }}</div>
-            <div class="property-save" data-id="{{ property.id }}" onclick="toggleSave(this, {{ property.id }}); event.stopPropagation();">🤍</div>
-            <div class="property-move-score">🏅 Move Score: <span class="score-val">{{ property.move_score|default:"91" }}</span></div>
+            <div class="property-save" data-id="{{ property.id }}" onclick="toggleSave(this, {{ property.id }}); event.stopPropagation();">{% icon "heart-outline" %}</div>
+            <div class="property-move-score">{% icon "award" %} Move Score: <span class="score-val">{{ property.move_score|default:"91" }}</span></div>
           </div>
           <div class="property-body">
             <div class="property-name">{{ property.title }}</div>
-            <div class="property-location">📍 {{ property.address|truncatechars:30 }}</div>
+            <div class="property-location">{% icon "map-pin" %} {{ property.address|truncatechars:30 }}</div>
             <div class="property-meta">
-              <div class="property-meta-item">🛏 {{ property.bedrooms }}</div>
-              <div class="property-meta-item">🚿 {{ property.bathrooms }}</div>
-              <div class="property-meta-item">📐 {{ property.area_sqft }} m²</div>
+              <div class="property-meta-item">{% icon "bed" %} {{ property.bedrooms }}</div>
+              <div class="property-meta-item">{% icon "shower" %} {{ property.bathrooms }}</div>
+              <div class="property-meta-item">{% icon "ruler-tri" %} {{ property.area_sqft }} m²</div>
             </div>
             <div class="property-footer">
               <div class="property-price">KES {{ property.price }} <span>/mo</span></div>
@@ -239,12 +242,12 @@
           </div>
           <div class="property-card-actions">
             <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary btn-sm" style="flex:1;justify-content:center;">View Details</a>
-            <button class="btn btn-sm property-save" data-id="{{ property.id }}" onclick="toggleSave(this, {{ property.id }}); event.stopPropagation();" style="border:1.5px solid var(--gray-200);border-radius:var(--radius-full);color:var(--gray-500);">🤍</button>
+            <button class="btn btn-sm property-save" data-id="{{ property.id }}" onclick="toggleSave(this, {{ property.id }}); event.stopPropagation();" style="border:1.5px solid var(--gray-200);border-radius:var(--radius-full);color:var(--gray-500);">{% icon "heart-outline" %}</button>
           </div>
         </div>
         {% empty %}
         <div style="grid-column:1/-1;text-align:center;padding:4rem 2rem;">
-          <div style="font-size:4rem;margin-bottom:1rem;">🔍</div>
+          <div style="font-size:4rem;margin-bottom:1rem;">{% icon "search" %}</div>
           <h3 style="color:var(--gray-500);margin-bottom:0.5rem;">No properties found</h3>
           <p style="color:var(--gray-400);">Try adjusting your filters or search criteria</p>
           <button class="btn btn-primary" style="margin-top:1rem;" onclick="clearFilters()">Clear Filters</button>

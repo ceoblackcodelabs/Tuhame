@@ -103,3 +103,16 @@ class BlogPost(models.Model):
             from Tuhame.image_utils import optimize_image_field
             optimize_image_field(self.cover_image, max_dimension=1600)
         super().save(*args, **kwargs)
+
+
+class NewsletterSubscriber(models.Model):
+    """Backs the blog's newsletter signup form (templates/blog/blog_list.html)."""
+    email = models.EmailField(unique=True)
+    is_active = models.BooleanField(default=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-subscribed_at']
+
+    def __str__(self):
+        return self.email

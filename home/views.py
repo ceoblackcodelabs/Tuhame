@@ -100,18 +100,24 @@ class HomeView(ListView):
         return context
 
     def get_category_icon(self, property_type):
-        """Get icon for property type"""
+        """
+        Icon name (used with the {% icon %} template tag) for a property
+        type. Keyed on properties.models.PropertyType's actual choices -
+        the old version used emoji and included keys ('apartment',
+        'rental', 'villa') that were never real PropertyType values, while
+        missing real ones ('hotel', 'school'), so those silently always
+        fell back to the default icon.
+        """
         icons = {
-            'apartment': '🏠',
-            'rental': '🏡',
-            'villa': '🏘',
-            'bnb': '🛏',
-            'commercial': '🏢',
-            'residential': '🏠',
-            'land': '🌳',
-            'industrial': '🏭',
+            'bnb': 'bed',
+            'hotel': 'hotel',
+            'school': 'school',
+            'residential': 'home',
+            'commercial': 'building',
+            'land': 'trees',
+            'industrial': 'factory',
         }
-        return icons.get(property_type, '🏠')
+        return icons.get(property_type, 'home')
 
 
 class PropertiesListView(ListView):

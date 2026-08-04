@@ -1,34 +1,48 @@
 {% extends "home/base.html" %}
 {% load static %}
+{% load icons %}
 
-{% block title %}{{ post.display_title }} – 2Hame Blog{% endblock title %}
-{% block meta_description %}{{ post.meta_description }}{% endblock meta_description %}
+<!-- ─── SEO BLOCKS ─── -->
+{% block title %}{{ post.display_title }} – 2Hame Real Estate Blog{% endblock title %}
+
+{% block meta_description %}{{ post.meta_description|default:post.excerpt|default:post.content|striptags|truncatewords:25 }}{% endblock meta_description %}
+
 {% block meta_keywords %}{{ post.seo_keywords|default:post.tags }}{% endblock meta_keywords %}
+
 {% block canonical_url %}https://2hame.com{{ post.get_absolute_url }}{% endblock canonical_url %}
 
-{% block og_title %}{{ post.display_title }}{% endblock og_title %}
-{% block og_description %}{{ post.meta_description }}{% endblock og_description %}
+{% block og_title %}{{ post.display_title }} – 2Hame Blog{% endblock og_title %}
+
+{% block og_description %}{{ post.meta_description|default:post.excerpt|default:post.content|striptags|truncatewords:30 }}{% endblock og_description %}
+
 {% block og_type %}article{% endblock og_type %}
+
 {% block og_url %}https://2hame.com{{ post.get_absolute_url }}{% endblock og_url %}
-{% block og_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/all.png' %}{% endif %}{% endblock og_image %}
 
-{% block twitter_title %}{{ post.display_title }}{% endblock twitter_title %}
-{% block twitter_description %}{{ post.meta_description }}{% endblock twitter_description %}
-{% block twitter_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/all.png' %}{% endif %}{% endblock twitter_image %}
+{% block og_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endif %}{% endblock og_image %}
 
+{% block twitter_title %}{{ post.display_title }} – 2Hame Blog{% endblock twitter_title %}
+
+{% block twitter_description %}{{ post.meta_description|default:post.excerpt|default:post.content|striptags|truncatewords:30 }}{% endblock twitter_description %}
+
+{% block twitter_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endif %}{% endblock twitter_image %}
+
+<!-- ─── ARTICLE SCHEMA ─── -->
 {% block property_schema %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": {{ post.display_title|escapejs }},
-  "description": {{ post.meta_description|escapejs }},
+  "@id": "https://2hame.com{{ post.get_absolute_url }}#article",
+  "headline": "{{ post.display_title|escapejs }}",
+  "description": "{{ post.meta_description|default:post.excerpt|default:post.content|striptags|truncatewords:30|escapejs }}",
   "datePublished": "{{ post.published_at|date:'c' }}",
   "dateModified": "{{ post.updated_at|date:'c' }}",
+  "wordCount": {{ post.content|striptags|wordcount }},
   {% if post.cover_image %}"image": "https://2hame.com{{ post.cover_image.url }}",{% endif %}
   "author": {
     "@type": "Person",
-    "name": {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team"|escapejs }}
+    "name": "{{ post.author.get_full_name|default:post.author.username|default:"2Hame Team"|escapejs }}"
   },
   "publisher": {
     "@type": "Organization",
@@ -38,82 +52,330 @@
       "url": "https://2hame.com/static/assets/img/all.png"
     }
   },
-  "mainEntityOfPage": "https://2hame.com{{ post.get_absolute_url }}"
+  "mainEntityOfPage": "https://2hame.com{{ post.get_absolute_url }}",
+  "keywords": "{{ post.tags|escapejs }}",
+  "articleSection": "{{ post.get_category_display|escapejs }}"
 }
 </script>
+
+<!-- Breadcrumb Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://2hame.com"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://2hame.com/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ post.get_category_display }}",
+      "item": "https://2hame.com/blog/?category={{ post.category }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "{{ post.display_title|truncatechars:60 }}",
+      "item": "https://2hame.com{{ post.get_absolute_url }}"
+    }
+  ]
+}
+</script>
+
+<!-- Author Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://2hame.com{% if post.author %}{% url 'public_profile' username=post.author.username %}{% else %}/author/team{% endif %}#person",
+  "name": "{{ post.author.get_full_name|default:post.author.username|default:'2Hame Team' }}",
+  {% if post.author.get_full_name %}
+  "givenName": "{{ post.author.first_name }}",
+  "familyName": "{{ post.author.last_name }}",
+  {% endif %}
+  "jobTitle": "Content Creator",
+  "worksFor": {
+    "@type": "Organization",
+    "name": "2Hame"
+  }
+}
+</script>
+
+<!-- FAQ Schema (if applicable - optional) -->
+{% if post.tags|lower|cut:" "|slice:":4" == "faq" %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "{{ post.title }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{ post.excerpt|default:post.content|striptags|truncatewords:50 }}"
+      }
+    }
+  ]
+}
+</script>
+{% endif %}
 {% endblock property_schema %}
 
 {% block content %}
 
-<div class="blog-article-hero">
-  <div class="blog-article-hero-inner">
-    <div class="blog-article-breadcrumb">
-      <a href="{% url 'blog:blog_list' %}">Blog</a> / {{ post.get_category_display }}
+<!-- ─── ARTICLE HERO ─── -->
+<article class="blog-article" itemscope itemtype="https://schema.org/Article">
+  <header class="blog-article-hero" aria-labelledby="article-title">
+    <div class="blog-article-hero-inner">
+      <nav class="blog-article-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'blog:blog_list' %}">Blog</a> /
+        <a href="{% url 'blog:blog_list' %}?category={{ post.category }}">{{ post.get_category_display }}</a>
+      </nav>
+      <span class="blog-article-eyebrow" itemprop="articleSection">{{ post.get_category_display }}</span>
+      <h1 class="blog-article-title" id="article-title" itemprop="headline">{{ post.title }}</h1>
+      <div class="blog-article-meta" itemprop="author" itemscope itemtype="https://schema.org/Person">
+        <span itemprop="name">{% icon "signature" %}️ {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
+        <span>•</span>
+        <span itemprop="datePublished">{{ post.published_at|date:"F j, Y" }}</span>
+        <span>•</span>
+        <span>{{ post.reading_time_minutes }} min read</span>
+        <span>•</span>
+        <span>{% icon "eye" %} {{ post.views_count }} views</span>
+      </div>
+      {% if post.tags %}
+      <div class="blog-article-tags">
+        {% for tag in post.tag_list %}
+          <span class="blog-article-tag">#{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
-    <span class="blog-article-eyebrow">{{ post.get_category_display }}</span>
-    <h1 class="blog-article-title">{{ post.title }}</h1>
-    <div class="blog-article-meta">
-      <span>✍️ {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
-      <span>•</span>
-      <span>{{ post.published_at|date:"F j, Y" }}</span>
-      <span>•</span>
-      <span>{{ post.reading_time_minutes }} min read</span>
-      <span>•</span>
-      <span>👁 {{ post.views_count }} views</span>
+  </header>
+
+  <!-- ─── COVER IMAGE ─── -->
+  {% if post.cover_image %}
+  <div class="blog-article-cover">
+    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" itemprop="image" loading="eager" />
+  </div>
+  {% endif %}
+
+  <!-- ─── ARTICLE CONTENT ─── -->
+  <div class="blog-article-body">
+    <div class="blog-article-content" itemprop="articleBody">
+      {{ post.content|safe }}
     </div>
-  </div>
-</div>
 
-{% if post.cover_image %}
-<div class="blog-article-cover">
-  <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" />
-</div>
-{% endif %}
+    <!-- ─── TABLE OF CONTENTS (if applicable) ─── -->
+    {% if post.content|striptags|wordcount > 800 %}
+    <details class="blog-toc">
+      <summary>{% icon "bookmark" %} Table of Contents</summary>
+      <div id="toc"></div>
+    </details>
+    {% endif %}
 
-<div class="blog-article-body">
-  <div class="blog-article-content">
-    {{ post.content|safe }}
-  </div>
+    <!-- ─── SHARE BUTTONS ─── -->
+    <div class="blog-share-row">
+      <span class="blog-share-label">Share this article:</span>
+      <a class="blog-share-btn" title="Share on WhatsApp" target="_blank" rel="noopener noreferrer"
+         href="https://wa.me/?text={{ post.title|urlencode }}%20https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% icon "message" %}</a>
+      <a class="blog-share-btn" title="Share on X (Twitter)" target="_blank" rel="noopener noreferrer"
+         href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}&via=2hamehousing">{% icon "bird" %}</a>
+      <a class="blog-share-btn" title="Share on Facebook" target="_blank" rel="noopener noreferrer"
+         href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% icon "book" %}</a>
+      <a class="blog-share-btn" title="Share on LinkedIn" target="_blank" rel="noopener noreferrer"
+         href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% icon "briefcase" %}</a>
+      <button type="button" class="blog-share-btn" title="Copy link" onclick="navigator.clipboard.writeText(window.location.href); showToast && showToast('Link copied!','🔗');">{% icon "link" %}</button>
+    </div>
 
-  <div class="blog-share-row">
-    <span class="blog-share-label">Share:</span>
-    <a class="blog-share-btn" title="Share on WhatsApp" target="_blank" rel="noopener"
-       href="https://wa.me/?text={{ post.title|urlencode }}%20https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">💬</a>
-    <a class="blog-share-btn" title="Share on X" target="_blank" rel="noopener"
-       href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">🐦</a>
-    <a class="blog-share-btn" title="Share on Facebook" target="_blank" rel="noopener"
-       href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">📘</a>
-    <button type="button" class="blog-share-btn" title="Copy link" onclick="navigator.clipboard.writeText(window.location.href); showToast && showToast('Link copied!','🔗');">🔗</button>
-  </div>
-</div>
-
-{% if related_posts %}
-<div class="blog-related">
-  <h2>More in {{ post.get_category_display }}</h2>
-  <div class="blog-related-grid">
-    {% for rp in related_posts %}
-      <a href="{{ rp.get_absolute_url }}" class="blog-card">
-        <div class="blog-card-img">
-          {% if rp.cover_image %}
-            <img src="{{ rp.cover_image.url }}" alt="{{ rp.title }}" loading="lazy" />
+    <!-- ─── AUTHOR BIO ─── -->
+    <div class="blog-author-bio" itemscope itemtype="https://schema.org/Person">
+      <div class="blog-author-avatar">
+        {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team"|first|upper }}
+      </div>
+      <div>
+        <div class="blog-author-name" itemprop="name">
+          {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}
+        </div>
+        <div class="blog-author-title">{{ post.author.profile.role|default:"Content Creator" }}</div>
+        <p class="blog-author-desc">
+          {% if post.author.get_full_name %}
+            Writing about real estate, renting tips, and property insights for 2Hame.
           {% else %}
-            <div class="blog-card-img-placeholder">📰</div>
+            The 2Hame team shares expert advice on finding, listing, and moving into your perfect home in Kenya.
           {% endif %}
-          <span class="blog-card-category">{{ rp.get_category_display }}</span>
-        </div>
-        <div class="blog-card-body">
-          <h3 class="blog-card-title">{{ rp.title }}</h3>
-          <p class="blog-card-excerpt">{{ rp.excerpt|default:rp.content|striptags|truncatewords:18 }}</p>
-          <div class="blog-card-meta">
-            <span>{{ rp.published_at|date:"M d, Y" }}</span>
-            <span>•</span>
-            <span>{{ rp.reading_time_minutes }} min read</span>
-          </div>
-        </div>
-      </a>
-    {% endfor %}
+        </p>
+      </div>
+    </div>
   </div>
-</div>
+</article>
+
+<!-- ─── RELATED POSTS ─── -->
+{% if related_posts %}
+<section class="blog-related" aria-labelledby="related-heading">
+  <div class="container">
+    <h2 id="related-heading" class="section-title">More in {{ post.get_category_display }}</h2>
+    <div class="blog-related-grid">
+      {% for rp in related_posts %}
+        <a href="{{ rp.get_absolute_url }}" class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+          <div class="blog-card-img">
+            {% if rp.cover_image %}
+              <img src="{{ rp.cover_image.url }}" alt="{{ rp.title }}" loading="lazy" itemprop="image" />
+            {% else %}
+              <div class="blog-card-img-placeholder" role="img" aria-label="Blog post placeholder">{% icon "newspaper" %}</div>
+            {% endif %}
+            <span class="blog-card-category" itemprop="articleSection">{{ rp.get_category_display }}</span>
+          </div>
+          <div class="blog-card-body">
+            <h3 class="blog-card-title" itemprop="headline">{{ rp.title }}</h3>
+            <p class="blog-card-excerpt" itemprop="description">{{ rp.excerpt|default:rp.content|striptags|truncatewords:18 }}</p>
+            <div class="blog-card-meta" itemprop="author" itemscope itemtype="https://schema.org/Person">
+              <span itemprop="name">{{ rp.author.get_full_name|default:rp.author.username|default:"2Hame Team" }}</span>
+              <span>•</span>
+              <span itemprop="datePublished">{{ rp.published_at|date:"M d, Y" }}</span>
+              <span>•</span>
+              <span>{{ rp.reading_time_minutes }} min read</span>
+            </div>
+          </div>
+        </a>
+      {% empty %}
+        <p>No related posts found.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
 {% endif %}
+
+<!-- ─── NEWSLETTER SIGNUP ─── -->
+<section class="section" style="background:var(--primary);padding:3rem 0;" aria-labelledby="newsletter-heading">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
+      <div>
+        <h2 id="newsletter-heading" style="color:#fff;font-size:1.6rem;font-weight:700;margin-bottom:0.5rem;">Get More Real Estate Tips</h2>
+        <p style="color:rgba(255,255,255,0.8);font-size:0.95rem;">Subscribe to our newsletter for weekly renting tips, landlord advice, and market insights.</p>
+      </div>
+      <form method="post" action="{% url 'blog:newsletter_subscribe' %}" style="display:flex;gap:0.5rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <input type="email" name="email" placeholder="Your email address" aria-label="Email address for newsletter" style="flex:1;padding:0.75rem 1rem;border:none;border-radius:var(--radius);font-size:0.95rem;" required />
+        <button type="submit" class="btn btn-accent">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TOC SCRIPT ─── -->
+{% if post.content|striptags|wordcount > 800 %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const content = document.querySelector('.blog-article-content');
+  if (!content) return;
+  const headings = content.querySelectorAll('h2, h3');
+  if (headings.length < 3) return;
+  const toc = document.getElementById('toc');
+  if (!toc) return;
+  let html = '<ul>';
+  headings.forEach(h => {
+    const level = h.tagName.toLowerCase();
+    const text = h.textContent;
+    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    h.id = id;
+    const indent = level === 'h3' ? ' style="padding-left:1.2rem;"' : '';
+    html += `<li${indent}><a href="#${id}">${text}</a></li>`;
+  });
+  html += '</ul>';
+  toc.innerHTML = html;
+});
+</script>
+{% endif %}
+
+<style>
+.blog-toc {
+  background: var(--light-bg);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  margin-bottom: 2rem;
+  border: 1px solid var(--gray-200);
+}
+.blog-toc summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+.blog-toc ul {
+  list-style: none;
+  padding: 0.5rem 0 0 0;
+  margin: 0;
+}
+.blog-toc ul li {
+  padding: 0.3rem 0;
+}
+.blog-toc ul li a {
+  color: var(--primary);
+  text-decoration: none;
+}
+.blog-toc ul li a:hover {
+  text-decoration: underline;
+}
+.blog-author-bio {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--light-bg);
+  border-radius: var(--radius);
+  margin-top: 2rem;
+  border: 1px solid var(--gray-200);
+}
+.blog-author-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.blog-author-name {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+.blog-author-title {
+  font-size: 0.82rem;
+  color: var(--gray-400);
+}
+.blog-author-desc {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-top: 0.3rem;
+}
+.blog-article-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+.blog-article-tag {
+  background: rgba(37,99,235,0.1);
+  color: var(--primary);
+  padding: 0.15rem 0.65rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+</style>
 
 {% endblock content %}

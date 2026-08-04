@@ -1,4 +1,5 @@
 {% load static %}
+{% load icons %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -65,7 +66,7 @@
 {% if not is_mover %}
 <div class="role-banner" id="role-banner">
   <span class="dismiss" onclick="document.getElementById('role-banner').remove();">&times;</span>
-  🚚 You're browsing as a guest. <a href="{% url 'edit_profile' %}">Switch to the Mover role</a> to commit to move requests.
+  {% icon "truck" %} You're browsing as a guest. <a href="{% url 'edit_profile' %}">Switch to the Mover role</a> to commit to move requests.
 </div>
 {% endif %}
 
@@ -82,12 +83,12 @@
               Tuhame
             </a>
           </div>
-          <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.1rem;margin:0.75rem 0 0.25rem;">🚚 Movers Marketplace</h2>
+          <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.1rem;margin:0.75rem 0 0.25rem;">{% icon "truck" %} Movers Marketplace</h2>
           <p style="font-size:0.8rem;color:var(--gray-400,#9ca3af);margin-bottom:0.75rem;">Browse move requests, or see other movers on the map.</p>
 
           <div class="marketplace-tabs">
-            <button class="marketplace-tab active" id="tab-requests" onclick="switchTab('requests')">📦 Move Requests</button>
-            <button class="marketplace-tab" id="tab-movers" onclick="switchTab('movers')">🚚 Movers Nearby</button>
+            <button class="marketplace-tab active" id="tab-requests" onclick="switchTab('requests')">{% icon "package" %} Move Requests</button>
+            <button class="marketplace-tab" id="tab-movers" onclick="switchTab('movers')">{% icon "truck" %} Movers Nearby</button>
           </div>
 
           <div class="mover-filter-row" id="movers-filter-row" style="display:none;">
@@ -103,7 +104,7 @@
 
           <div class="map-results-bar">
             <span style="font-size:0.8rem;color:var(--gray-400);" id="results-count">Loading requests…</span>
-            <button class="locate-inline-btn" onclick="refreshRequests()">🔄 Refresh</button>
+            <button class="locate-inline-btn" onclick="refreshRequests()">{% icon "refresh" %} Refresh</button>
           </div>
         </div>
 
@@ -124,8 +125,8 @@
       </button>
       <div id="leaflet-map"></div>
       <div class="map-loading-shimmer" id="map-loading-shimmer"><span>Loading map…</span></div>
-      <div class="map-info-banner" id="map-info-banner">🚚 Open move requests near you</div>
-      <button class="locate-btn" onclick="locateMe()" title="Find my location">📍</button>
+      <div class="map-info-banner" id="map-info-banner">{% icon "truck" %} Open move requests near you</div>
+      <button class="locate-btn" onclick="locateMe()" title="Find my location">{% icon "map-pin" %}</button>
     </div>
 
   </div>

@@ -1,7 +1,10 @@
 <!-- apps/profiles/templates/profiles/edit_profile.html -->
 {% extends "home/base.html" %}
+{% load icons %}
 
 {% block title %}Edit Profile{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
 
 {% block inject_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -313,7 +316,7 @@
 
 <div class="page-hero">
   <div class="container">
-    <h1>✏️ Edit Profile</h1>
+    <h1>{% icon "pencil" %}️ Edit Profile</h1>
     <p>Update your personal information</p>
   </div>
 </div>
@@ -353,7 +356,7 @@
         <div style="font-size:0.8rem;color:var(--gray-400);margin-bottom:1.25rem;">{{ user.email }}</div>
 
         <label class="edit-avatar-upload-label" for="{{ form.profile_picture.id_for_label }}">
-          📷 Change Photo
+          {% icon "camera" %} Change Photo
           {{ form.profile_picture }}
         </label>
         <br>
@@ -392,7 +395,7 @@
         <!-- Account Role -->
         <div class="edit-section-card">
           <div class="edit-section-title">
-            <span class="edit-section-icon">🎭</span> Account Role
+            <span class="edit-section-icon">{% icon "category" %}</span> Account Role
           </div>
           <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1rem;">
             Choose how you use 2Hame. <strong>House Hunter</strong> if you're looking for a place to move into.
@@ -406,11 +409,11 @@
           </div>
           {% if user.profile.role == 'owner' %}
             {% if user.profile.is_verified_owner %}
-              <p style="font-size:0.8rem;color:var(--accent, #22C55E);margin-top:0.5rem;">✅ You're a verified property owner.</p>
+              <p style="font-size:0.8rem;color:var(--accent, #22C55E);margin-top:0.5rem;">{% icon "check" %} You're a verified property owner.</p>
             {% elif user.profile.verification_status == 'pending' %}
               <p style="font-size:0.8rem;color:#D97706;margin-top:0.5rem;">⏳ Your owner verification is pending review.</p>
             {% elif user.profile.verification_status == 'rejected' %}
-              <p style="font-size:0.8rem;color:#DC2626;margin-top:0.5rem;">❌ Your previous owner request was rejected. Saving this form will not automatically resubmit it — use "Request Verification Again" on your profile page.</p>
+              <p style="font-size:0.8rem;color:#DC2626;margin-top:0.5rem;">{% icon "close" %} Your previous owner request was rejected. Saving this form will not automatically resubmit it — use "Request Verification Again" on your profile page.</p>
             {% endif %}
           {% endif %}
         </div>
@@ -418,7 +421,7 @@
         <!-- Mover Portfolio (shown only for the Mover role) -->
         <div class="edit-section-card" id="mover-portfolio-section" style="{% if user.profile.role != 'mover' %}display:none;{% endif %}">
           <div class="edit-section-title">
-            <span class="edit-section-icon">🚚</span> Mover Portfolio
+            <span class="edit-section-icon">{% icon "truck" %}</span> Mover Portfolio
           </div>
           <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1rem;">
             This is your public profile — house hunters see this (and your trust score) when they browse movers on the map.
@@ -445,11 +448,11 @@
 
           <div style="margin-top:1rem;">
             <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.35rem;">
-              📍 Your Base Location <span style="font-weight:400;color:var(--gray-400);">(shown to hunters browsing the map)</span>
+              {% icon "map-pin" %} Your Base Location <span style="font-weight:400;color:var(--gray-400);">(shown to hunters browsing the map)</span>
             </label>
             <div style="display:flex;gap:0.6rem;margin-bottom:0.6rem;flex-wrap:wrap;">
               {{ form.mover_base_label }}
-              <button type="button" class="btn btn-sm" style="background:var(--gray-100);border:1px solid var(--gray-300);white-space:nowrap;flex-shrink:0;" onclick="useMoverCurrentLocation()">📡 Use Current Location</button>
+              <button type="button" class="btn btn-sm" style="background:var(--gray-100);border:1px solid var(--gray-300);white-space:nowrap;flex-shrink:0;" onclick="useMoverCurrentLocation()">{% icon "satellite" %} Use Current Location</button>
             </div>
             <div id="mover-base-map" style="height:260px;width:100%;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
             <div style="font-size:0.75rem;color:var(--gray-400);margin-top:0.35rem;">Click the map to set your base — hunters will see roughly this location.</div>
@@ -461,7 +464,7 @@
         <!-- Personal Information -->
         <div class="edit-section-card">
           <div class="edit-section-title">
-            <span class="edit-section-icon">👤</span> Personal Information
+            <span class="edit-section-icon">{% icon "user" %}</span> Personal Information
           </div>
           <div class="edit-grid">
             <div class="edit-field full-width">
@@ -485,7 +488,7 @@
         <!-- Contact Information -->
         <div class="edit-section-card">
           <div class="edit-section-title">
-            <span class="edit-section-icon">📞</span> Contact Information
+            <span class="edit-section-icon">{% icon "phone" %}</span> Contact Information
           </div>
           <div class="edit-grid">
             <div class="edit-field">
@@ -529,7 +532,7 @@
         <!-- Professional Information -->
         <div class="edit-section-card">
           <div class="edit-section-title">
-            <span class="edit-section-icon">💼</span> Professional Information
+            <span class="edit-section-icon">{% icon "briefcase" %}</span> Professional Information
           </div>
           <div class="edit-grid">
             <div class="edit-field">
@@ -548,7 +551,7 @@
         <!-- Emergency Contact -->
         <div class="edit-section-card">
           <div class="edit-section-title">
-            <span class="edit-section-icon">🚨</span> Emergency Contact
+            <span class="edit-section-icon">{% icon "alert" %}</span> Emergency Contact
           </div>
           <div class="edit-grid">
             <div class="edit-field">
@@ -572,7 +575,7 @@
         <!-- Preferences -->
         <div class="edit-section-card">
           <div class="edit-section-title">
-            <span class="edit-section-icon">⚙️</span> Preferences
+            <span class="edit-section-icon">{% icon "settings" %}️</span> Preferences
           </div>
           <div class="edit-grid">
             <div class="edit-field">
@@ -599,7 +602,7 @@
         <!-- Actions -->
         <div class="edit-actions-bar">
           <a href="{% url 'my_profile' %}" class="btn btn-outline-dark">Cancel</a>
-          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+          <button type="submit" class="btn btn-primary">{% icon "save" %} Save Changes</button>
         </div>
 
       </div>
