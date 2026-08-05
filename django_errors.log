@@ -1,8 +1,12 @@
-2026-08-04 09:52:26,336 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
-2026-08-04 09:52:26,341 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
-2026-08-04 10:56:00,974 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
-2026-08-04 10:56:00,975 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
-2026-08-04 10:58:14,048 [ERROR] django.request: Internal Server Error: /users/login/
+2026-08-05 00:56:08,755 [ERROR] django.request: Internal Server Error: /properties/properties/
+Traceback (most recent call last):
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py", line 2128, in get_prep_value
+    return int(value)
+           ^^^^^^^^^^
+TypeError: int() argument must be a string, a bytes-like object or a real number, not 'SimpleLazyObject'
+
+The above exception was the direct cause of the following exception:
+
 Traceback (most recent call last):
   File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
     response = get_response(request)
@@ -13,54 +17,41 @@ Traceback (most recent call last):
   File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/views/generic/base.py", line 105, in view
     return self.dispatch(request, *args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/Tuhame/users/views.py", line 53, in dispatch
-    return super().dispatch(request, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/views/generic/base.py", line 144, in dispatch
     return handler(request, *args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/views/generic/edit.py", line 151, in post
-    return self.form_valid(form)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/Tuhame/users/views.py", line 62, in form_valid
-    login(self.request, user)
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/contrib/auth/__init__.py", line 197, in login
-    user_logged_in.send(sender=user.__class__, request=request, user=user)
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/dispatch/dispatcher.py", line 189, in send
-    response = receiver(signal=self, sender=sender, **named)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/contrib/auth/models.py", line 24, in update_last_login
-    user.save(update_fields=["last_login"])
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/contrib/auth/base_user.py", line 65, in save
-    super().save(*args, **kwargs)
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/base.py", line 902, in save
-    self.save_base(
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/base.py", line 1023, in save_base
-    post_save.send(
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/dispatch/dispatcher.py", line 189, in send
-    response = receiver(signal=self, sender=sender, **named)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/Tuhame/users/signals.py", line 20, in save_user_profile
-    instance.profile.save()
-  File "/home/blacksheep/CODES/venv/Tuhame/users/models.py", line 169, in save
-    optimize_image_field(self.profile_picture, max_dimension=600)
-  File "/home/blacksheep/CODES/venv/Tuhame/Tuhame/image_utils.py", line 35, in optimize_image_field
-    if not image_field or not hasattr(image_field, "file"):
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/fields/files.py", line 51, in _get_file
-    self._file = self.storage.open(self.name, "rb")
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/core/files/storage/base.py", line 22, in open
-    return self._open(name, mode)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/core/files/storage/filesystem.py", line 81, in _open
-    return File(open(self.path(name), mode))
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: '/home/blacksheep/CODES/venv/Tuhame/media/profiles/pictures/photo_2026-01-19_10-33-56.jpg'
-2026-08-04 10:58:14,051 [ERROR] django.server: "POST /users/login/ HTTP/1.1" 500 20030
-2026-08-04 11:01:17,917 [ERROR] django.request: Internal Server Error: /api/check-saved/
-2026-08-04 11:01:17,918 [ERROR] django.request: Internal Server Error: /api/check-saved/
-2026-08-04 11:01:17,918 [ERROR] django.request: Internal Server Error: /api/check-saved/
-2026-08-04 11:01:17,918 [ERROR] django.server: "GET /api/check-saved/?property_id=prop-58 HTTP/1.1" 500 78
-2026-08-04 11:01:17,919 [ERROR] django.server: "GET /api/check-saved/?property_id=prop-57 HTTP/1.1" 500 78
-2026-08-04 11:01:17,919 [ERROR] django.server: "GET /api/check-saved/?property_id=prop-59 HTTP/1.1" 500 78
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/views/generic/list.py", line 158, in get
+    self.object_list = self.get_queryset()
+                       ^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/Tuhame/properties/views.py", line 28, in get_queryset
+    queryset = queryset.filter(owner=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/query.py", line 1495, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/query.py", line 1513, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/query.py", line 1523, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/sql/query.py", line 1648, in add_q
+    clause, _ = self._add_q(q_object, can_reuse)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/sql/query.py", line 1680, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/sql/query.py", line 1590, in build_filter
+    condition = self.build_lookup(lookups, col, value)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/sql/query.py", line 1417, in build_lookup
+    lookup = lookup_class(lhs, rhs)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/lookups.py", line 38, in __init__
+    self.rhs = self.get_prep_lookup()
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/fields/related_lookups.py", line 112, in get_prep_lookup
+    self.rhs = target_field.get_prep_value(self.rhs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py", line 2130, in get_prep_value
+    raise e.__class__(
+TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x713d2dbf3dd0>>.
+2026-08-05 00:56:08,786 [ERROR] django.server: "GET /properties/properties/ HTTP/1.1" 500 18318

@@ -740,6 +740,16 @@ class ChecklistDeleteView(LoginRequiredMixin, View):
             'percentage': percentage,
         })
 
+class TermsOfServiceView(TemplateView):
+    template_name = 'home/legal/terms.html'
+    extra_context = {'last_updated': 'August 2026'}
+
+
+class PrivacyPolicyView(TemplateView):
+    template_name = 'home/legal/privacy.html'
+    extra_context = {'last_updated': 'August 2026'}
+
+
 class ContactView(View):
     """Public Contact Us page - anyone can submit, no login required"""
     template_name = 'home/contact.html'

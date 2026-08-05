@@ -116,3 +116,36 @@ class NewsletterSubscriber(models.Model):
 
     def __str__(self):
         return self.email
+
+
+class BlogComment(models.Model):
+    """A comment on a BlogPost. Requires a logged-in user (ties to the
+    site's existing accounts rather than accepting anonymous name/email
+    input, which cuts down on spam)."""
+    post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blog_comments')
+    content = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(
+        default=True,
+        help_text='Uncheck to hide this comment from the public post page without deleting it.',
+    )
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.author} on {self.post}: {self.content[:40]}'
+
+
+class BlogLike(models.Model):
+    """One like per (post, user) pair."""
+    post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blog_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('post', 'user')
+
+    def __str__(self):
+        return f'{self.user} likes {self.post}'

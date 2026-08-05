@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import BlogPost, NewsletterSubscriber
+from .models import BlogComment, BlogLike, BlogPost, NewsletterSubscriber
 
 
 @admin.register(BlogPost)
@@ -66,3 +66,24 @@ class NewsletterSubscriberAdmin(admin.ModelAdmin):
     list_filter = ('is_active',)
     search_fields = ('email',)
     ordering = ('-subscribed_at',)
+
+
+@admin.register(BlogComment)
+class BlogCommentAdmin(admin.ModelAdmin):
+    list_display = ('author', 'post', 'short_content', 'is_approved', 'created_at')
+    list_filter = ('is_approved', 'created_at')
+    list_editable = ('is_approved',)
+    search_fields = ('content', 'author__username', 'post__title')
+    autocomplete_fields = ('post',)
+    ordering = ('-created_at',)
+
+    def short_content(self, obj):
+        return obj.content[:60] + ('…' if len(obj.content) > 60 else '')
+    short_content.short_description = 'Comment'
+
+
+@admin.register(BlogLike)
+class BlogLikeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'post', 'created_at')
+    search_fields = ('user__username', 'post__title')
+    ordering = ('-created_at',)

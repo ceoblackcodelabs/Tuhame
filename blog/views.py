@@ -1,15 +1,18 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import IntegrityError
 from django.db.models import F
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
 
-from .models import BlogPost, CATEGORY_CHOICES, NewsletterSubscriber
+from .forms import BlogCommentForm
+from .models import BlogComment, BlogLike, BlogPost, CATEGORY_CHOICES, NewsletterSubscriber
 
 
 class BlogListView(ListView):
@@ -57,10 +60,69 @@ class BlogDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = self.object
+
         context['related_posts'] = BlogPost.objects.filter(
             is_published=True, category=post.category
         ).exclude(pk=post.pk)[:3]
+
+        # Sidebar: recent posts sitewide (not just same category) and the
+        # category list, so a reader can keep browsing without scrolling
+        # all the way down to the related-posts row.
+        context['sidebar_recent_posts'] = BlogPost.objects.filter(
+            is_published=True
+        ).exclude(pk=post.pk).select_related('author')[:5]
+        context['sidebar_categories'] = CATEGORY_CHOICES
+
+        context['comments'] = post.comments.filter(is_approved=True).select_related('author', 'author__profile')
+        context['comment_count'] = context['comments'].count()
+        context['comment_form'] = BlogCommentForm()
+
+        context['like_count'] = post.likes.count()
+        if self.request.user.is_authenticated:
+            context['user_has_liked'] = post.likes.filter(user=self.request.user).exists()
+        else:
+            context['user_has_liked'] = False
+
         return context
+
+
+@login_required
+@require_POST
+def add_comment(request, slug):
+    post = get_object_or_404(BlogPost, slug=slug, is_published=True)
+    form = BlogCommentForm(request.POST)
+
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.post = post
+        comment.author = request.user
+        comment.save()
+        messages.success(request, 'Your comment was posted.')
+    else:
+        for error in form.errors.get('content', []):
+            messages.error(request, error)
+
+    return redirect(post.get_absolute_url() + '#comments')
+
+
+@login_required
+@require_POST
+def toggle_like(request, slug):
+    post = get_object_or_404(BlogPost, slug=slug, is_published=True)
+    like, created = BlogLike.objects.get_or_create(post=post, user=request.user)
+
+    if not created:
+        like.delete()
+        liked = False
+    else:
+        liked = True
+
+    like_count = post.likes.count()
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'liked': liked, 'like_count': like_count})
+
+    return redirect(post.get_absolute_url())
 
 
 @require_POST

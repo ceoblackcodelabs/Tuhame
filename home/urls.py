@@ -11,6 +11,8 @@ urlpatterns = [
     path("property/map-list/", PropertyMapSearchListView.as_view(), name="property_map"),
     path('property/map-data/', PropertyMapDataView.as_view(), name='property_map_data'),
     path("contact/", ContactView.as_view(), name="contact"),
+    path("terms/", TermsOfServiceView.as_view(), name="terms_of_service"),
+    path("privacy/", PrivacyPolicyView.as_view(), name="privacy_policy"),
 
     # Review URLs
     path('property/listing/<slug:slug>/review/submit/', SubmitReviewView.as_view(), name='submit_review'),

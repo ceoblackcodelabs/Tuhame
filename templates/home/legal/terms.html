@@ -1,0 +1,99 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Terms of Service - 2Hame{% endblock title %}
+{% block meta_description %}The terms and conditions for using 2Hame's property listing, rental, and mover marketplace platform in Kenya.{% endblock meta_description %}
+{% block canonical_url %}https://2hame.com/terms/{% endblock canonical_url %}
+{% block og_url %}https://2hame.com/terms/{% endblock og_url %}
+{% block og_title %}Terms of Service - 2Hame{% endblock og_title %}
+{% block robots %}index, follow{% endblock robots %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="container legal-container">
+    <h1 class="legal-title">Terms of Service</h1>
+    <p class="legal-updated">Last updated: {{ last_updated }}</p>
+
+    <div class="legal-notice">
+      This is a standard template covering the basics of operating a property
+      listing and mover marketplace. It is not a substitute for advice from a
+      qualified lawyer familiar with Kenyan consumer, data protection, and
+      real estate law - have it reviewed before relying on it.
+    </div>
+
+    <p>These Terms of Service ("Terms") govern your access to and use of the
+      2Hame website, mobile experience, and related services (the
+      "Platform"), operated in Kenya. By creating an account or using the
+      Platform, you agree to these Terms. If you do not agree, do not use
+      the Platform.</p>
+
+    <h2>1. Who can use 2Hame</h2>
+    <p>You must be at least 18 years old and able to form a binding contract
+      under Kenyan law to create an account. If you are listing a property
+      or offering moving services, you confirm that you have the legal
+      right to do so - as the owner, an authorized agent, or under a valid
+      moving/logistics permit or license where required.</p>
+
+    <h2>2. Accounts</h2>
+    <p>You are responsible for the accuracy of the information you provide
+      and for keeping your login credentials confidential. You are
+      responsible for all activity that happens under your account. Tell us
+      right away if you suspect unauthorized access.</p>
+
+    <h2>3. Property listings</h2>
+    <p>2Hame is a platform that connects property owners, house hunters, and
+      movers - we are not a party to any tenancy, sale, or service agreement
+      formed between users. Owners are responsible for the accuracy of
+      their listings (price, availability, condition, photos) and for
+      complying with applicable Kenyan landlord-tenant and property law.
+      2Hame may remove listings that are inaccurate, fraudulent, duplicated,
+      or that otherwise violate these Terms, at our discretion.</p>
+
+    <h2>4. Mover marketplace</h2>
+    <p>Movers listed on the Platform are independent service providers, not
+      employees or agents of 2Hame. 2Hame does not guarantee the quality,
+      safety, or legality of services performed by movers, and is not a
+      party to the agreement between a house hunter and a mover. Verify a
+      mover's credentials, insurance, and reviews before booking.</p>
+
+    <h2>5. Payments</h2>
+    <p>Where the Platform facilitates payments (including via M-Pesa or
+      other supported methods), you agree to provide accurate payment
+      information and authorize the charges you initiate. Fees, where
+      applicable, will be disclosed before you complete a transaction.
+      Refunds are handled per the specific policy shown at the time of
+      payment, where one applies.</p>
+
+    <h2>6. Acceptable use</h2>
+    <p>You agree not to: post false, misleading, or fraudulent listings;
+      harass, discriminate against, or scam other users; scrape or misuse
+      the Platform's data; attempt to bypass security measures; or use the
+      Platform for any unlawful purpose. We may suspend or terminate
+      accounts that violate this section.</p>
+
+    <h2>7. Content you submit</h2>
+    <p>You retain ownership of content you submit (listings, photos, blog
+      comments, reviews). By posting it, you grant 2Hame a non-exclusive,
+      royalty-free license to display, reproduce, and distribute that
+      content on the Platform for the purpose of operating and promoting
+      the service.</p>
+
+    <h2>8. Disclaimers</h2>
+    <p>The Platform is provided "as is." 2Hame makes no warranty that
+      listings are accurate, that movers or owners will perform as
+      described, or that the Platform will be uninterrupted or error-free.
+      To the fullest extent permitted by Kenyan law, 2Hame disclaims
+      liability for disputes, losses, or damages arising from transactions
+      or interactions between users.</p>
+
+    <h2>9. Changes to these Terms</h2>
+    <p>We may update these Terms from time to time. Material changes will
+      be announced on the Platform. Continued use after a change takes
+      effect means you accept the updated Terms.</p>
+
+    <h2>10. Contact</h2>
+    <p>Questions about these Terms can be sent through our
+      <a href="{% url 'home:contact' %}">Contact page</a>.</p>
+  </div>
+</section>
+{% endblock content %}

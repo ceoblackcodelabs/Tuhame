@@ -38,3 +38,41 @@ fieldset.module {
     position: relative;
     z-index: 1;
 }
+
+/*
+ * CKEditor5 renders its floating UI (dropdown menus, the image-upload
+ * progress bar, the link-edit balloon, etc.) into a wrapper it appends
+ * directly to <body>: <div class="ck-body-wrapper">. That wrapper is
+ * supposed to have zero footprint (position: absolute/fixed, 0 width/
+ * height) so it never affects page layout - but that styling isn't in
+ * django-ckeditor-5's bundled CSS at all (checked the package directly -
+ * it's not there). CKEditor5's JS injects its own <style> tags for this
+ * at runtime instead. That's normally fine, but it means the page has NO
+ * fallback: if that JS hiccups for any reason (slow network, a script
+ * blocked by an ad/privacy extension, a JS error elsewhere on the page
+ * halting execution before CKEditor finishes initializing), this wrapper
+ * has no CSS at all and falls back to being a plain block-level element -
+ * still normally invisible when empty, but any panel that gets appended
+ * into it while in that state has nothing constraining it, and CKEditor5
+ * gives its panels a very high z-index by design (so they show above the
+ * rest of the editor) - which is exactly the shape of "one big overlay
+ * blocking everything below a certain point" reports.
+ *
+ * This forces the wrapper itself to always be zero-footprint and fixed
+ * to the viewport regardless of whether CKEditor5's own runtime styling
+ * loaded. It does NOT touch its children's own display/visibility -
+ * those still open and close normally; this only guarantees the wrapper
+ * they live in can never occupy in-flow space or paint a background over
+ * the page itself.
+ */
+.ck-body-wrapper {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}

@@ -367,7 +367,7 @@
         <div style="margin-bottom:1.25rem;">
           <label class="form-checkbox" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
             {{ form.agree_terms }}
-            <span>I agree to the <a href="#" style="color:var(--primary);">Terms of Service</a> and <a href="#" style="color:var(--primary);">Privacy Policy</a></span>
+            <span>I agree to the <a href="{% url 'home:terms_of_service' %}" target="_blank" style="color:var(--primary);">Terms of Service</a> and <a href="{% url 'home:privacy_policy' %}" target="_blank" style="color:var(--primary);">Privacy Policy</a></span>
           </label>
           {% if form.agree_terms.errors %}
             <div class="text-danger">{{ form.agree_terms.errors.0 }}</div>

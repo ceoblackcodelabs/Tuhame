@@ -284,8 +284,8 @@
             <li><a href="#">→ Help Center</a></li>
             <li><a href="#">→ Safety Tips</a></li>
             <li><a href="#">→ Report an Issue</a></li>
-            <li><a href="#">→ Privacy Policy</a></li>
-            <li><a href="#">→ Terms of Service</a></li>
+            <li><a href="{% url 'home:privacy_policy' %}">→ Privacy Policy</a></li>
+            <li><a href="{% url 'home:terms_of_service' %}">→ Terms of Service</a></li>
             <li><a href="#">→ Sitemap</a></li>
           </ul>
         </div>
@@ -298,17 +298,19 @@
           </ul>
           <div class="footer-heading">Newsletter</div>
           <p style="font-size:0.85rem;margin-bottom:0.5rem;">Get new listings &amp; housing tips weekly.</p>
-          <div class="footer-newsletter-form">
-            <input type="email" class="footer-newsletter-input" placeholder="Your email" aria-label="Email for newsletter" />
-            <button class="btn btn-primary btn-sm">Join</button>
-          </div>
+          <form method="post" action="{% url 'blog:newsletter_subscribe' %}" class="footer-newsletter-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}" />
+            <input type="email" name="email" class="footer-newsletter-input" placeholder="Your email" aria-label="Email for newsletter" required />
+            <button type="submit" class="btn btn-primary btn-sm">Join</button>
+          </form>
         </div>
       </div>
       <div class="footer-bottom">
         <p>© 2025 2Hame. All rights reserved. Powered by <strong style="color:var(--primary);"><a href="https://blackcodelab.com" target="_blank" rel="noopener noreferrer">BlackCodeLabs</a></strong></p>
         <div class="footer-bottom-links">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
+          <a href="{% url 'home:privacy_policy' %}">Privacy</a>
+          <a href="{% url 'home:terms_of_service' %}">Terms</a>
           <a href="#">Cookies</a>
         </div>
       </div>

@@ -152,6 +152,15 @@
         <span>{{ post.reading_time_minutes }} min read</span>
         <span>•</span>
         <span>{% icon "eye" %} {{ post.views_count }} views</span>
+        <span>•</span>
+        <span>
+          <form method="post" action="{% url 'blog:toggle_like' slug=post.slug %}" class="blog-like-form" data-like-form data-post-slug="{{ post.slug }}">
+            {% csrf_token %}
+            <button type="submit" class="blog-like-btn{% if user_has_liked %} liked{% endif %}" data-like-btn {% if not user.is_authenticated %}title="Log in to like this post"{% endif %}>
+              {% icon "heart" filled=user_has_liked %} <span data-like-count>{{ like_count }}</span>
+            </button>
+          </form>
+        </span>
       </div>
       {% if post.tags %}
       <div class="blog-article-tags">
@@ -170,7 +179,8 @@
   </div>
   {% endif %}
 
-  <!-- ─── ARTICLE CONTENT ─── -->
+  <!-- ─── ARTICLE CONTENT + SIDEBAR ─── -->
+  <div class="blog-article-layout">
   <div class="blog-article-body">
     <div class="blog-article-content" itemprop="articleBody">
       {{ post.content|safe }}
@@ -190,11 +200,11 @@
       <a class="blog-share-btn" title="Share on WhatsApp" target="_blank" rel="noopener noreferrer"
          href="https://wa.me/?text={{ post.title|urlencode }}%20https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% icon "message" %}</a>
       <a class="blog-share-btn" title="Share on X (Twitter)" target="_blank" rel="noopener noreferrer"
-         href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}&via=2hamehousing">{% icon "bird" %}</a>
+         href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}&via=2hamehousing">{% brand_icon "x-twitter" %}</a>
       <a class="blog-share-btn" title="Share on Facebook" target="_blank" rel="noopener noreferrer"
-         href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% icon "book" %}</a>
+         href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% brand_icon "facebook" %}</a>
       <a class="blog-share-btn" title="Share on LinkedIn" target="_blank" rel="noopener noreferrer"
-         href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% icon "briefcase" %}</a>
+         href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2F2hame.com{{ post.get_absolute_url|urlencode }}">{% brand_icon "linkedin" %}</a>
       <button type="button" class="blog-share-btn" title="Copy link" onclick="navigator.clipboard.writeText(window.location.href); showToast && showToast('Link copied!','🔗');">{% icon "link" %}</button>
     </div>
 
@@ -217,6 +227,74 @@
         </p>
       </div>
     </div>
+
+    <!-- ─── COMMENTS ─── -->
+    <div class="blog-comments" id="comments">
+      <h2 class="blog-comments-heading">{% icon "message" %} {{ comment_count }} Comment{{ comment_count|pluralize }}</h2>
+
+      {% if user.is_authenticated %}
+      <form method="post" action="{% url 'blog:add_comment' slug=post.slug %}" class="blog-comment-form">
+        {% csrf_token %}
+        {{ comment_form.content }}
+        <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+      </form>
+      {% else %}
+      <div class="blog-comment-login-prompt">
+        <a href="{% url 'login' %}?next={{ request.path }}%23comments">Log in</a> to join the discussion.
+      </div>
+      {% endif %}
+
+      <div class="blog-comment-list">
+        {% for comment in comments %}
+        <div class="blog-comment">
+          <div class="blog-comment-avatar">{{ comment.author.get_full_name|default:comment.author.username|first|upper }}</div>
+          <div class="blog-comment-body">
+            <div class="blog-comment-meta">
+              <span class="blog-comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+              <span class="blog-comment-date">{{ comment.created_at|timesince }} ago</span>
+            </div>
+            <p class="blog-comment-text">{{ comment.content|linebreaksbr }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <p class="blog-comment-empty">No comments yet - be the first to share your thoughts.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="blog-sidebar">
+    <div class="blog-sidebar-widget">
+      <h3 class="blog-sidebar-heading">Recent Posts</h3>
+      <div class="blog-sidebar-posts">
+        {% for rp in sidebar_recent_posts %}
+        <a href="{{ rp.get_absolute_url }}" class="blog-sidebar-post">
+          {% if rp.cover_image %}
+            <img src="{{ rp.cover_image.url }}" alt="{{ rp.title }}" class="blog-sidebar-post-img" loading="lazy" />
+          {% else %}
+            <div class="blog-sidebar-post-img blog-sidebar-post-img-placeholder">{% icon "book" %}</div>
+          {% endif %}
+          <div>
+            <div class="blog-sidebar-post-title">{{ rp.display_title|default:rp.title|truncatechars:60 }}</div>
+            <div class="blog-sidebar-post-date">{{ rp.published_at|date:"M j, Y" }}</div>
+          </div>
+        </a>
+        {% empty %}
+        <p class="blog-comment-empty">No other posts yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="blog-sidebar-widget">
+      <h3 class="blog-sidebar-heading">Categories</h3>
+      <ul class="blog-sidebar-categories">
+        {% for value, label in sidebar_categories %}
+        <li><a href="{% url 'blog:blog_list' %}?category={{ value }}">{{ label }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </aside>
   </div>
 </article>
 
@@ -257,17 +335,17 @@
 {% endif %}
 
 <!-- ─── NEWSLETTER SIGNUP ─── -->
-<section class="section" style="background:var(--primary);padding:3rem 0;" aria-labelledby="newsletter-heading">
+<section class="blog-newsletter-section" aria-labelledby="newsletter-heading">
   <div class="container">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
+    <div class="blog-newsletter-grid">
       <div>
-        <h2 id="newsletter-heading" style="color:#fff;font-size:1.6rem;font-weight:700;margin-bottom:0.5rem;">Get More Real Estate Tips</h2>
-        <p style="color:rgba(255,255,255,0.8);font-size:0.95rem;">Subscribe to our newsletter for weekly renting tips, landlord advice, and market insights.</p>
+        <h2 id="newsletter-heading" class="blog-newsletter-heading">Get More Real Estate Tips</h2>
+        <p class="blog-newsletter-copy">Subscribe to our newsletter for weekly renting tips, landlord advice, and market insights.</p>
       </div>
-      <form method="post" action="{% url 'blog:newsletter_subscribe' %}" style="display:flex;gap:0.5rem;">
+      <form method="post" action="{% url 'blog:newsletter_subscribe' %}" class="blog-newsletter-form">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.path }}" />
-        <input type="email" name="email" placeholder="Your email address" aria-label="Email address for newsletter" style="flex:1;padding:0.75rem 1rem;border:none;border-radius:var(--radius);font-size:0.95rem;" required />
+        <input type="email" name="email" placeholder="Your email address" aria-label="Email address for newsletter" class="blog-newsletter-input" required />
         <button type="submit" class="btn btn-accent">Subscribe</button>
       </form>
     </div>

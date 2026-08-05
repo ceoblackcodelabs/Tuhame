@@ -1,0 +1,88 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy - 2Hame{% endblock title %}
+{% block meta_description %}How 2Hame collects, uses, and protects your personal data on our property listing and mover marketplace platform.{% endblock meta_description %}
+{% block canonical_url %}https://2hame.com/privacy/{% endblock canonical_url %}
+{% block og_url %}https://2hame.com/privacy/{% endblock og_url %}
+{% block og_title %}Privacy Policy - 2Hame{% endblock og_title %}
+{% block robots %}index, follow{% endblock robots %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="container legal-container">
+    <h1 class="legal-title">Privacy Policy</h1>
+    <p class="legal-updated">Last updated: {{ last_updated }}</p>
+
+    <div class="legal-notice">
+      This is a standard template, not a substitute for advice from a
+      lawyer familiar with Kenya's Data Protection Act, 2019. Have it
+      reviewed - and confirm it matches what the Platform actually does -
+      before relying on it.
+    </div>
+
+    <p>This Privacy Policy explains how 2Hame ("we", "us") collects, uses,
+      and protects personal data when you use our website and services
+      (the "Platform"), in line with the Data Protection Act, 2019 of
+      Kenya.</p>
+
+    <h2>1. Information we collect</h2>
+    <p>Account information (name, email, phone number, profile photo);
+      listing information (property or service details, photos, location);
+      payment information necessary to process transactions (e.g. M-Pesa
+      transaction references - we do not store your M-Pesa PIN or full
+      payment credentials); and usage information (pages viewed, device and
+      browser information, approximate location for map-based search).</p>
+
+    <h2>2. How we use it</h2>
+    <p>To operate the Platform (create your account, show your listings,
+      connect you with movers or house hunters); to process payments you
+      initiate; to send service communications (booking confirmations,
+      account notices) and, where you've opted in, our newsletter; to keep
+      the Platform secure and prevent fraud; and to improve the service
+      based on how it's used.</p>
+
+    <h2>3. Sharing</h2>
+    <p>We share information with other users as necessary for the Platform
+      to function - for example, a property owner sees the contact details
+      of an interested house hunter who reaches out, and a mover you
+      contact can see the details relevant to your move request. We share
+      data with service providers who help us operate the Platform (e.g.
+      payment processors, hosting, email delivery), bound by confidentiality
+      obligations. We do not sell your personal data.</p>
+
+    <h2>4. Your rights</h2>
+    <p>Under the Data Protection Act, 2019, you have the right to access
+      the personal data we hold about you, request correction of
+      inaccurate data, request deletion of your data (subject to legal or
+      legitimate business retention needs), and object to certain
+      processing, including marketing communications - you can unsubscribe
+      from the newsletter at any time via the link in any email or by
+      contacting us.</p>
+
+    <h2>5. Data retention</h2>
+    <p>We retain account and transaction data for as long as your account
+      is active and as needed to comply with legal obligations, resolve
+      disputes, and enforce our agreements.</p>
+
+    <h2>6. Security</h2>
+    <p>We use reasonable technical and organizational measures to protect
+      your data, including encrypted connections and access controls. No
+      method of transmission or storage is 100% secure, and we can't
+      guarantee absolute security.</p>
+
+    <h2>7. Cookies</h2>
+    <p>We use cookies and similar technologies to keep you logged in,
+      remember your preferences (like light/dark mode), and understand how
+      the Platform is used.</p>
+
+    <h2>8. Changes to this policy</h2>
+    <p>We may update this policy from time to time. Material changes will
+      be announced on the Platform.</p>
+
+    <h2>9. Contact</h2>
+    <p>Questions about this policy, or to exercise your data rights, reach
+      us via our <a href="{% url 'home:contact' %}">Contact page</a>.</p>
+  </div>
+</section>
+{% endblock content %}
