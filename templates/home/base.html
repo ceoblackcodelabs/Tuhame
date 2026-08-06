@@ -196,7 +196,7 @@
                 <div class="profile-dropdown-email">{{ request.user.email }}</div>
               </div>
               <a href="{% url 'my_profile' %}" class="profile-dropdown-item" role="menuitem">{% icon "user" %} Profile</a>
-              <a href="{% url 'edit_profile' %}" class="profile-dropdown-item" role="menuitem">{% icon "pencil" %}️ Edit Profile</a>
+              <a href="{% url 'edit_profile' %}" class="profile-dropdown-item" role="menuitem">{% icon "pencil" %} Edit Profile</a>
               <div class="profile-dropdown-divider"></div>
               <a href="{% url 'logout' %}" class="profile-dropdown-item profile-dropdown-danger" role="menuitem">{% icon "door" %} Logout</a>
             {% else %}
@@ -222,7 +222,7 @@
     <a href="{% url 'home:home' %}">{% icon "home" %} Home</a>
     <a href="{% url 'home:properties' %}">{% icon "neighborhood" %} Properties</a>
     <a href="{% url 'home:property_map' %}">{% icon "map" %} Map Search</a>
-    <a href="{% url 'home:contact' %}">{% icon "mail" %}️ Contact</a>
+    <a href="{% url 'home:contact' %}">{% icon "mail" %} Contact</a>
     <a href="{% url 'blog:blog_list' %}">{% icon "newspaper" %} Blog</a>
     <a href="{% url 'home:mover_map' %}">{% icon "truck" %} Movers Marketplace</a>
     <a href="{% url 'my_profile' %}">{% icon "user" %} Profile</a>
@@ -261,7 +261,7 @@
             <a href="https://x.com/2hamehousing" aria-label="Twitter/X" rel="noopener noreferrer">{% brand_icon "x-twitter" %}</a>
             <a href="https://instagram.com/2hame_housing" aria-label="Instagram" rel="noopener noreferrer">{% brand_icon "instagram" %}</a>
             <a href="https://linkedin.com/company/2hame_housing" aria-label="LinkedIn" rel="noopener noreferrer">{% brand_icon "linkedin" %}</a>
-            <a href="#" aria-label="YouTube" rel="noopener noreferrer">▶️</a>
+            <a href="#" aria-label="YouTube" rel="noopener noreferrer">▶</a>
           </div>
         </div>
         <div>
@@ -294,7 +294,7 @@
           <ul class="footer-links" style="margin-bottom:1.25rem;">
             <li><a href="#">{% icon "map-pin" %} Nairobi, Kenya</a></li>
             <li><a href="tel:+254799804185">{% icon "phone" %} +254 799804185</a></li>
-            <li><a href="mailto:info@2Hame.com">{% icon "mail" %}️ info@2Hame.com</a></li>
+            <li><a href="mailto:info@2Hame.com">{% icon "mail" %} info@2Hame.com</a></li>
           </ul>
           <div class="footer-heading">Newsletter</div>
           <p style="font-size:0.85rem;margin-bottom:0.5rem;">Get new listings &amp; housing tips weekly.</p>

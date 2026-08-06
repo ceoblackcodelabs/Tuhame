@@ -189,18 +189,18 @@
                                         {% if viewing.preferred_time == 'morning' %}
                                             {% icon "sunrise" %} Morning
                                         {% elif viewing.preferred_time == 'afternoon' %}
-                                            {% icon "sun" %}️ Afternoon
+                                            {% icon "sun" %} Afternoon
                                         {% elif viewing.preferred_time == 'evening' %}
                                             {% icon "moon" %} Evening
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if viewing.status == 'pending' %}
-                                            <label class="badge badge-warning">⏳ Pending</label>
+                                            <label class="badge badge-warning">{% icon "hourglass" %} Pending</label>
                                         {% elif viewing.status == 'confirmed' %}
                                             <label class="badge badge-success">{% icon "check" %} Confirmed</label>
                                         {% elif viewing.status == 'completed' %}
-                                            <label class="badge badge-info">{% icon "check-heavy" %}️ Completed</label>
+                                            <label class="badge badge-info">{% icon "check-heavy" %} Completed</label>
                                         {% elif viewing.status == 'cancelled' %}
                                             <label class="badge badge-danger">{% icon "close" %} Cancelled</label>
                                         {% elif viewing.status == 'no_show' %}
@@ -341,7 +341,7 @@
                                                 <p class="text-muted mb-0">
                                                     {% icon "calendar" %} {{ viewing.preferred_date|date:"M d, Y" }}
                                                     {% if viewing.preferred_time == 'morning' %}{% icon "sunrise" %} Morning
-                                                    {% elif viewing.preferred_time == 'afternoon' %}{% icon "sun" %}️ Afternoon
+                                                    {% elif viewing.preferred_time == 'afternoon' %}{% icon "sun" %} Afternoon
                                                     {% else %}{% icon "moon" %} Evening{% endif %}
                                                     · {% icon "mobile" %} {{ viewing.phone_number }}
                                                 </p>

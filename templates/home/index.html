@@ -193,7 +193,7 @@
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">{% icon "map" %}️</div>
+            <div class="about-highlight-icon">{% icon "map" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Map &amp; Move Score™</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Explore properties on live maps with neighborhood insights and our exclusive Move Score.</p>
@@ -287,7 +287,7 @@
             </div>
           </div>
           <div class="about-highlight-item">
-            <div class="about-highlight-icon">{% icon "map" %}️</div>
+            <div class="about-highlight-icon">{% icon "map" %}</div>
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Interactive Maps &amp; Move Score™</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Showcase your property on live maps with neighborhood insights and the 2Hame Move Score to attract quality tenants.</p>
@@ -466,9 +466,11 @@
                 <span itemprop="priceCurrency" content="KES">KES</span> <span itemprop="price">{{ property.price }}</span> <span>/month</span>
                 <meta itemprop="availability" content="https://schema.org/InStock" />
               </div>
+              {% if property.review_count %}
               <div class="property-rating" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-                <span class="rating-star">⭐</span> <span itemprop="ratingValue">4.8</span> (<span itemprop="reviewCount">42</span>)
+                <span class="rating-star">{% icon "star" filled=True size=14 %}</span> <span itemprop="ratingValue">{{ property.avg_rating|floatformat:1 }}</span> (<span itemprop="reviewCount">{{ property.review_count }}</span>)
               </div>
+              {% endif %}
             </div>
           </div>
           <div style="padding:0 1.25rem 1.25rem;">

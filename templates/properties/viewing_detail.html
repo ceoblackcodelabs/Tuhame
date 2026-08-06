@@ -73,11 +73,11 @@
                             <div class="d-flex align-items-center align-self-start">
                                 <h3 class="mb-0">
                                     {% if viewing.status == 'pending' %}
-                                        <span class="badge badge-warning" style="font-size:0.9rem;padding:0.4rem 1rem;">⏳ Pending</span>
+                                        <span class="badge badge-warning" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "hourglass" %} Pending</span>
                                     {% elif viewing.status == 'confirmed' %}
                                         <span class="badge badge-success" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "check" %} Confirmed</span>
                                     {% elif viewing.status == 'completed' %}
-                                        <span class="badge badge-info" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "check-heavy" %}️ Completed</span>
+                                        <span class="badge badge-info" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "check-heavy" %} Completed</span>
                                     {% elif viewing.status == 'cancelled' %}
                                         <span class="badge badge-danger" style="font-size:0.9rem;padding:0.4rem 1rem;">{% icon "close" %} Cancelled</span>
                                     {% else %}
@@ -196,7 +196,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="info-item">
-                                <div class="info-label">{% icon "cityscape" %}️ City, State</div>
+                                <div class="info-label">{% icon "cityscape" %} City, State</div>
                                 <div class="info-value">{{ property.city }}, {{ property.state }}</div>
                             </div>
                         </div>
@@ -216,7 +216,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="info-item">
-                                <div class="info-label">{% icon "tag" %}️ Type</div>
+                                <div class="info-label">{% icon "tag" %} Type</div>
                                 <div class="info-value">{{ property.get_property_type_display }}</div>
                             </div>
                         </div>
@@ -242,7 +242,7 @@
                             <div class="detail-label">{% icon "clock" %} Preferred Time</div>
                             <div class="detail-value">
                                 {% if viewing.preferred_time == 'morning' %}{% icon "sunrise" %} Morning (8am - 12pm)
-                                {% elif viewing.preferred_time == 'afternoon' %}{% icon "sun" %}️ Afternoon (12pm - 5pm)
+                                {% elif viewing.preferred_time == 'afternoon' %}{% icon "sun" %} Afternoon (12pm - 5pm)
                                 {% else %}{% icon "moon" %} Evening (5pm - 7pm){% endif %}
                             </div>
                         </div>
@@ -253,12 +253,12 @@
                                 {{ viewing.scheduled_datetime|date:"l, F d, Y H:i" }}
                             </div>
                             {% if viewing.status == 'confirmed' and viewing.scheduled_datetime > now %}
-                                <span class="badge badge-info mt-1">⏰ Upcoming</span>
+                                <span class="badge badge-info mt-1">{% icon "alarm-clock" %} Upcoming</span>
                             {% endif %}
                         </div>
                         {% else %}
                         <div class="detail-item" style="border-left:3px solid #ffc107;padding-left:0.75rem;">
-                            <div class="detail-label">⏳ Scheduled Date & Time</div>
+                            <div class="detail-label">{% icon "hourglass" %} Scheduled Date & Time</div>
                             <div class="detail-value text-muted">
                                 Not scheduled yet
                             </div>

@@ -316,7 +316,7 @@
 
 <div class="page-hero">
   <div class="container">
-    <h1>{% icon "pencil" %}️ Edit Profile</h1>
+    <h1>{% icon "pencil" %} Edit Profile</h1>
     <p>Update your personal information</p>
   </div>
 </div>
@@ -411,7 +411,7 @@
             {% if user.profile.is_verified_owner %}
               <p style="font-size:0.8rem;color:var(--accent, #22C55E);margin-top:0.5rem;">{% icon "check" %} You're a verified property owner.</p>
             {% elif user.profile.verification_status == 'pending' %}
-              <p style="font-size:0.8rem;color:#D97706;margin-top:0.5rem;">⏳ Your owner verification is pending review.</p>
+              <p style="font-size:0.8rem;color:#D97706;margin-top:0.5rem;">{% icon "hourglass" %} Your owner verification is pending review.</p>
             {% elif user.profile.verification_status == 'rejected' %}
               <p style="font-size:0.8rem;color:#DC2626;margin-top:0.5rem;">{% icon "close" %} Your previous owner request was rejected. Saving this form will not automatically resubmit it — use "Request Verification Again" on your profile page.</p>
             {% endif %}
@@ -575,7 +575,7 @@
         <!-- Preferences -->
         <div class="edit-section-card">
           <div class="edit-section-title">
-            <span class="edit-section-icon">{% icon "settings" %}️</span> Preferences
+            <span class="edit-section-icon">{% icon "settings" %}</span> Preferences
           </div>
           <div class="edit-grid">
             <div class="edit-field">

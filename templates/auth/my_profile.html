@@ -83,7 +83,7 @@
                 {% icon "home" %} My Owner QR Card
               </a>
             {% elif profile.verification_status == 'pending' %}
-              <div class="profile-verified" style="color:#D97706;">⏳ Verification Pending</div>
+              <div class="profile-verified" style="color:#D97706;">{% icon "hourglass" %} Verification Pending</div>
               <p style="font-size:0.78rem;color:var(--gray-400);margin-top:0.35rem;">
                 We're reviewing your request to become a property owner. This usually takes 1-2 business days.
               </p>
@@ -109,7 +109,7 @@
                 {% icon "truck" %} My Mover QR Card
               </a>
             {% elif profile.verification_status == 'pending' %}
-              <div class="profile-verified" style="color:#D97706;">⏳ Verification Pending</div>
+              <div class="profile-verified" style="color:#D97706;">{% icon "hourglass" %} Verification Pending</div>
               <p style="font-size:0.78rem;color:var(--gray-400);margin-top:0.35rem;">
                 We're reviewing your request to become a mover. This usually takes 1-2 business days.
               </p>
@@ -131,7 +131,7 @@
             <div class="profile-verified">{% icon "search-detail" %} House Hunter</div>
           {% endif %}
 
-          <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">{% icon "pencil" %}️ Edit Profile</a>
+          <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark btn-sm" style="margin-top:1rem;width:100%;justify-content:center;">{% icon "pencil" %} Edit Profile</a>
         </div>
       </div>
 
@@ -150,7 +150,7 @@
           <span class="icon">{% icon "card" %}</span> Rent & Bills
         </div>
         <div class="profile-nav-item" data-section="saved" onclick="switchTab('saved')">
-          <span class="icon">{% icon "heart" %}️</span> Saved Properties
+          <span class="icon">{% icon "heart" %}</span> Saved Properties
         </div>
         <div class="profile-nav-item" data-section="planner" onclick="switchTab('planner')">
           <span class="icon">{% icon "package" %}</span> Move Planner
@@ -304,7 +304,7 @@
                 <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
                   <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);" onclick="profileToast('Calling {{ profile.current_property.owner.profile.phone_number|default:'landlord' }}…','📞')">{% icon "phone" %} Call</button>
                   <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);" onclick="profileToast('Opening WhatsApp…','💬')">{% icon "message" %} WhatsApp</button>
-                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">{% icon "mail" %}️ Email</button>
+                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">{% icon "mail" %} Email</button>
                 </div>
               </div>
             </div>
@@ -355,14 +355,14 @@
                               {% if qr_code_data %}
                                   {% icon "check" %} Active
                               {% else %}
-                                  ⏳ Not Generated
+                                  {% icon "hourglass" %} Not Generated
                               {% endif %}
                           </div>
                       </div>
                   </div>
                   <div class="qr-btns" style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
                       {% if qr_code_data %}
-                          <button class="btn btn-primary" onclick="downloadQR()">⬇️ Download QR</button>
+                          <button class="btn btn-primary" onclick="downloadQR()">{% icon "download" %} Download QR</button>
                           <button class="btn btn-outline-dark" onclick="shareQR()">{% icon "upload" %} Share</button>
                           <a href="{% url 'regenerate_qr' %}" class="btn btn-outline-warning">{% icon "refresh" %} Regenerate QR</a>
                       {% endif %}
@@ -470,7 +470,7 @@
                           {% endif %}
                         </span>
                       {% elif bill.status == 'pending' %}
-                        <span class="bill-status pending">⏳ Pending</span>
+                        <span class="bill-status pending">{% icon "hourglass" %} Pending</span>
                       {% elif bill.status == 'overdue' %}
                         <span class="bill-status overdue">{% icon "exclaim" %} Overdue</span>
                       {% elif bill.status == 'processing' %}
@@ -568,7 +568,7 @@
 
       <!-- SAVED PROPERTIES -->
       <div id="saved" class="profile-section" style="display:none;">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "heart" %}️ Saved Properties</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "heart" %} Saved Properties</h2>
         {% if saved_properties %}
           <div class="properties-grid mobile-carousel-grid" style="grid-template-columns:repeat(2,1fr);">
             {% for property in saved_properties %}
@@ -579,14 +579,18 @@
                   {% else %}
                     <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&auto=format&fit=crop&q=80');background-size:cover;"></div>
                   {% endif %}
-                  <div class="property-save saved" data-id="fav-{{ property.property.id }}">{% icon "heart" %}️</div>
+                  <div class="property-save saved" data-id="fav-{{ property.property.id }}">{% icon "heart" %}</div>
                 </div>
                 <div class="property-body">
                   <div class="property-name">{{ property.property.title }}</div>
                   <div class="property-location">{% icon "map-pin" %} {{ property.property.city }}, {{ property.property.state }}</div>
                   <div class="property-footer">
                     <div class="property-price">KES {{ property.property.price }} <span>/mo</span></div>
-                    <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
+                    {% if property.review_count %}
+                      <div class="property-rating"><span class="rating-star">{% icon "star" filled=True size=14 %}</span>{{ property.avg_rating|floatformat:1 }}</div>
+                    {% else %}
+                      <div class="property-rating" style="color:var(--gray-400);">New</div>
+                    {% endif %}
                   </div>
                 </div>
                 <div style="padding:0 1rem 1rem;"><a href="{% url "home:about_property" property.property.slug %}" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View</a></div>
@@ -595,7 +599,7 @@
           </div>
         {% else %}
           <div class="dashboard-card" style="text-align:center;padding:3rem 2rem;">
-            <div style="font-size:3rem;margin-bottom:1rem;">{% icon "heart" %}️</div>
+            <div style="font-size:3rem;margin-bottom:1rem;">{% icon "heart" %}</div>
             <h3 style="color:var(--gray-500);">No saved properties yet</h3>
             <p style="color:var(--gray-400);">Browse properties and save your favorites!</p>
             <a href="{% url 'home:properties' %}" class="btn btn-primary" style="margin-top:1rem;">Browse Properties</a>
@@ -646,7 +650,7 @@
               <!-- Shared map: shown when either field is set to manual entry -->
               <div style="grid-column:1/-1;display:none;" id="location-map-container">
                 <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:0.25rem;">
-                  {% icon "map" %}️ Click the map to set <span id="location-map-target-label">the location</span> precisely
+                  {% icon "map" %} Click the map to set <span id="location-map-target-label">the location</span> precisely
                 </label>
                 <div id="move-location-map" style="height:280px;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
                 <div style="font-size:0.75rem;color:var(--gray-400);margin-top:0.35rem;" id="location-map-coords">No location selected yet — click on the map.</div>
@@ -705,7 +709,7 @@
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="furniture" />
-                  {% icon "sofa" %}️ Furniture (Sofa, Tables, Chairs)
+                  {% icon "sofa" %} Furniture (Sofa, Tables, Chairs)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="electronics" />
@@ -717,7 +721,7 @@
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="bedroom" />
-                  {% icon "bed" %}️ Bedroom Furniture (Beds, Mattresses)
+                  {% icon "bed" %} Bedroom Furniture (Beds, Mattresses)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="boxes" />
@@ -725,11 +729,11 @@
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="delicate" />
-                  {% icon "warning" %}️ Delicate Items (Glassware, Art)
+                  {% icon "warning" %} Delicate Items (Glassware, Art)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="heavy" />
-                  {% icon "gym" %}️ Heavy Items (Safes, Equipment)
+                  {% icon "gym" %} Heavy Items (Safes, Equipment)
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--gray-600);cursor:pointer;">
                   <input type="checkbox" name="items" value="other" />
@@ -819,7 +823,7 @@
                       <div style="font-size:0.8rem;color:var(--gray-500);">
                         {% icon "calendar" %} {{ request.move_date|date:"M d, Y" }} ·
                         {% if request.move_time == 'morning' %}{% icon "sunrise" %} Morning
-                        {% elif request.move_time == 'afternoon' %}{% icon "sun" %}️ Afternoon
+                        {% elif request.move_time == 'afternoon' %}{% icon "sun" %} Afternoon
                         {% else %}{% icon "moon" %} Evening{% endif %}
                       </div>
                       <div style="font-size:0.8rem;color:var(--gray-500);">
@@ -839,7 +843,7 @@
                     <div style="text-align:right;flex-shrink:0;">
                       <div>
                         {% if request.status == 'pending' %}
-                          <span class="badge badge-warning">⏳ Pending</span>
+                          <span class="badge badge-warning">{% icon "hourglass" %} Pending</span>
                         {% elif request.status == 'approved' %}
                           <span class="badge badge-success">{% icon "check" %} Approved</span>
                         {% elif request.status == 'matched' %}
@@ -847,7 +851,7 @@
                         {% elif request.status == 'in_progress' %}
                           <span class="badge badge-info">{% icon "refresh" %} In Progress</span>
                         {% elif request.status == 'completed' %}
-                          <span class="badge badge-primary">{% icon "check-heavy" %}️ Completed</span>
+                          <span class="badge badge-primary">{% icon "check-heavy" %} Completed</span>
                         {% else %}
                           <span class="badge badge-danger">{% icon "close" %} Rejected</span>
                         {% endif %}

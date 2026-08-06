@@ -237,7 +237,11 @@
             </div>
             <div class="property-footer">
               <div class="property-price">KES {{ property.price }} <span>/mo</span></div>
-              <div class="property-rating"><span class="rating-star">⭐</span>4.8 (42)</div>
+              {% if property.review_count %}
+                <div class="property-rating"><span class="rating-star">{% icon "star" filled=True size=14 %}</span>{{ property.avg_rating|floatformat:1 }} ({{ property.review_count }})</div>
+              {% else %}
+                <div class="property-rating" style="color:var(--gray-400);">New</div>
+              {% endif %}
             </div>
           </div>
           <div class="property-card-actions">

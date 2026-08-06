@@ -1,16 +1,29 @@
 # config/urls.py
 from django.contrib import admin
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as serve_static
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView, TemplateView
 
 urlpatterns = [
     path(
         'robots.txt',
         TemplateView.as_view(template_name='robots.txt', content_type='text/plain'),
         name='robots_txt',
+    ),
+    # Google (and many other crawlers/tools) request /favicon.ico at the
+    # domain root directly - they don't parse <link rel="icon"> out of
+    # <head> for this check. Without this route, that request 404s even
+    # though the favicon itself works fine for browsers, which is exactly
+    # why Search Console can fail to pick it up while the tab icon looks
+    # correct. staticfiles_storage.url() resolves to the same
+    # cache-busted, hashed path {% static %} produces elsewhere.
+    path(
+        'favicon.ico',
+        RedirectView.as_view(url=staticfiles_storage.url('assets/images/favicon.ico'), permanent=True),
+        name='favicon',
     ),
     path('admin/', admin.site.urls),
     path("", include('home.urls')),

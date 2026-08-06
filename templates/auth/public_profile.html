@@ -116,7 +116,7 @@
                 <div style="font-size:0.875rem;color:var(--gray-500);margin-bottom:0.75rem;">{% icon "construction" %} House No. {{ current_property.slug|upper }}</div>
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                   <span class="tag">{% icon "calendar" %} Move-in: {{ profile.moved_in_date|date:"M Y"|default:"N/A" }}</span>
-                  <span class="tag">{% icon "tag" %}️ {{ current_property.get_property_type_display }}</span>
+                  <span class="tag">{% icon "tag" %} {{ current_property.get_property_type_display }}</span>
                 </div>
               {% else %}
                 <div style="font-weight:700;font-size:1rem;color:var(--gray-400);">No current property assigned</div>
@@ -143,7 +143,7 @@
                 <div style="margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;">
                   <button class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);" onclick="profileToast('Calling {{ profile.current_property.owner.profile.phone_number|default:'landlord' }}…','📞')">{% icon "phone" %} Call</button>
                   <button class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);" onclick="profileToast('Opening WhatsApp…','💬')">{% icon "message" %} WhatsApp</button>
-                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">{% icon "mail" %}️ Email</button>
+                  <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="profileToast('Opening email to {{ profile.current_property.owner.email }}…','✉️')">{% icon "mail" %} Email</button>
                 </div>
               </div>
             </div>
@@ -176,7 +176,7 @@
               <a href="tel:{{ profile.phone_number }}" class="btn btn-sm" style="background:#EEF2FF;color:var(--primary);">{% icon "phone" %} Call</a>
               <a href="https://wa.me/{{ profile.phone_number|cut:' '|cut:'+' }}" target="_blank" class="btn btn-sm" style="background:#F0FDF4;color:var(--accent-dark);">{% icon "message" %} WhatsApp</a>
             {% endif %}
-            <a href="mailto:{{ user.email }}" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">{% icon "mail" %}️ Email</a>
+            <a href="mailto:{{ user.email }}" class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">{% icon "mail" %} Email</a>
           </div>
           <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--gray-400);">{% icon "lock" %} Contact info is public</div>
         </div>
@@ -278,7 +278,7 @@
       <div id="emergency" class="profile-section" style="display:none;">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1.5rem;">{% icon "alert" %} Emergency Contact</h2>
         <div class="dashboard-card" style="border-left:4px solid var(--danger);">
-          <div class="dashboard-card-title">{% icon "warning" %}️ Important Information</div>
+          <div class="dashboard-card-title">{% icon "warning" %} Important Information</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div>
               <div style="font-size:0.78rem;color:var(--gray-400);margin-bottom:0.25rem;">Contact Name</div>
@@ -301,7 +301,7 @@
           </div>
           <hr class="divider" />
           <div style="font-size:0.78rem;color:var(--gray-500);text-align:center;">
-            {% icon "warning" %}️ In case of emergency, please contact the person listed above.
+            {% icon "warning" %} In case of emergency, please contact the person listed above.
           </div>
         </div>
       </div>

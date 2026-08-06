@@ -8,6 +8,7 @@ from django.conf import settings
 import uuid
 
 from django.urls import reverse
+from django.db.models import Avg, Count
 from home.models import ViewingSchedule, SavedProperty
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -315,7 +316,10 @@ class MyProfileView(LoginRequiredMixin, DetailView):
         # Get saved properties
         saved_properties = SavedProperty.objects.filter(
             user=self.request.user
-        ).select_related('property').order_by('-saved_at')
+        ).select_related('property').annotate(
+            avg_rating=Avg('property__reviews__rating'),
+            review_count=Count('property__reviews', distinct=True),
+        ).order_by('-saved_at')
 
         context['saved_properties'] = saved_properties
         context['saved_properties_count'] = saved_properties.count()

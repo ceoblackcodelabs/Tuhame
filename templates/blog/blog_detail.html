@@ -145,7 +145,7 @@
       <span class="blog-article-eyebrow" itemprop="articleSection">{{ post.get_category_display }}</span>
       <h1 class="blog-article-title" id="article-title" itemprop="headline">{{ post.title }}</h1>
       <div class="blog-article-meta" itemprop="author" itemscope itemtype="https://schema.org/Person">
-        <span itemprop="name">{% icon "signature" %}️ {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
+        <span itemprop="name">{% icon "signature" %} {{ post.author.get_full_name|default:post.author.username|default:"2Hame Team" }}</span>
         <span>•</span>
         <span itemprop="datePublished">{{ post.published_at|date:"F j, Y" }}</span>
         <span>•</span>

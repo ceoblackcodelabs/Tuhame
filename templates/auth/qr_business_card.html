@@ -43,7 +43,7 @@
       <div style="padding:1.5rem;">
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
           {% if qr_code %}
-            <a href="{{ qr_code }}" download="{{ card_type }}-qr-card.png" class="btn btn-primary btn-sm">⬇️ Download QR</a>
+            <a href="{{ qr_code }}" download="{{ card_type }}-qr-card.png" class="btn btn-primary btn-sm">{% icon "download" %} Download QR</a>
           {% endif %}
           <a href="{{ portfolio_url }}" target="_blank" class="btn btn-outline-dark btn-sm">{% icon "link" %} View My Public Page</a>
           <a href="{% url 'my_profile' %}" class="btn btn-outline-dark btn-sm">← Back to Profile</a>

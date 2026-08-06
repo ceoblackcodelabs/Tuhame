@@ -118,7 +118,12 @@ ICONS = {
     # Extra icons for real Property/Blog category types (not sourced from
     # an emoji - added directly for home/views.py's category icon map).
     'factory': '<path d="M12 16h.01" />\n  <path d="M16 16h.01" />\n  <path d="M3 19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5a.5.5 0 0 0-.769-.422l-4.462 2.844A.5.5 0 0 1 15 10.5v-2a.5.5 0 0 0-.769-.422L9.77 10.922A.5.5 0 0 1 9 10.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z" />\n  <path d="M8 16h.01" />',
+    'maximize': '<path d="M8 3H5a2 2 0 0 0-2 2v3" />\n  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />\n  <path d="M3 16v3a2 2 0 0 0 2 2h3" />\n  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />',
     'hotel': '<path d="M10 22v-6.57" />\n  <path d="M12 11h.01" />\n  <path d="M12 7h.01" />\n  <path d="M14 15.43V22" />\n  <path d="M15 16a5 5 0 0 0-6 0" />\n  <path d="M16 11h.01" />\n  <path d="M16 7h.01" />\n  <path d="M8 11h.01" />\n  <path d="M8 7h.01" />\n  <rect x="4" y="2" width="16" height="20" rx="2" />',
     'warehouse-2': '<path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11" />\n  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 1.132-1.803l7.95-3.974a2 2 0 0 1 1.837 0l7.948 3.974A2 2 0 0 1 22 8z" />\n  <path d="M6 13h12" />\n  <path d="M6 17h12" />',
     'trees': '<path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z" />\n  <path d="M7 16v6" />\n  <path d="M13 19v3" />\n  <path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5" />',
+    'download': '<path d="M12 15V3" />\n  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />\n  <path d="m7 10 5 5 5-5" />',
+    'hourglass': '<path d="M5 22h14" />\n  <path d="M5 2h14" />\n  <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />\n  <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />',
+    'timer': '<line x1="10" x2="14" y1="2" y2="2" />\n  <line x1="12" x2="15" y1="14" y2="11" />\n  <circle cx="12" cy="14" r="8" />',
+    'alarm-clock': '<circle cx="12" cy="13" r="8" />\n  <path d="M12 9v4l2 2" />\n  <path d="M5 3 2 6" />\n  <path d="m22 6-3-3" />\n  <path d="M6.38 18.7 4 21" />\n  <path d="M17.64 18.67 20 21" />',
 }

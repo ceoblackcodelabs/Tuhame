@@ -46,7 +46,10 @@ class HomeView(ListView):
         # Slice LAST, after all filters - filtering a sliced queryset raises
         # an AssertionError in Django, which was crashing the homepage
         # whenever a property_type filter was combined with the featured list.
-        return queryset.order_by('-created_at')[:6]
+        return queryset.annotate(
+            avg_rating=Avg('reviews__rating'),
+            review_count=Count('reviews', distinct=True),
+        ).order_by('-created_at')[:6]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -211,7 +214,10 @@ class PropertiesListView(ListView):
                 booking_count=Count('bookings')
             ).order_by('-booking_count')
 
-        return queryset.distinct()
+        return queryset.distinct().annotate(
+            avg_rating=Avg('reviews__rating'),
+            review_count=Count('reviews', distinct=True),
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -269,8 +275,9 @@ class PropertiesDetailView(DetailView):
         ).exclude(
             id=property_obj.id
         ).filter(
-            Q(city=property_obj.city) |
-            Q(property_type=property_obj.property_type)
+            Q(city=property_obj.city) | Q(property_type=property_obj.property_type)
+        ).annotate(
+            avg_rating=Avg('reviews__rating')
         )[:3]
 
         context['similar_properties'] = similar_properties
@@ -332,6 +339,7 @@ class PropertiesDetailView(DetailView):
 
             total = review_count
             context['avg_rating'] = avg_rating
+            context['avg_rating_rounded'] = round(avg_rating)
             context['rating_5_pct'] = (rating_counts.get(5, 0) / total * 100) if total > 0 else 0
             context['rating_4_pct'] = (rating_counts.get(4, 0) / total * 100) if total > 0 else 0
             context['rating_3_pct'] = (rating_counts.get(3, 0) / total * 100) if total > 0 else 0
@@ -339,6 +347,7 @@ class PropertiesDetailView(DetailView):
             context['rating_1_pct'] = (rating_counts.get(1, 0) / total * 100) if total > 0 else 0
         else:
             context['avg_rating'] = 0
+            context['avg_rating_rounded'] = 0
             context['rating_5_pct'] = 0
             context['rating_4_pct'] = 0
             context['rating_3_pct'] = 0

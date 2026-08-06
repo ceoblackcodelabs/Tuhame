@@ -31,7 +31,7 @@
         <p style="color:var(--gray-500);">Mover on Tuhame since {{ mover_profile.created_at|date:"F Y" }}</p>
         <div style="margin-top:0.5rem;">
           {% if trust_score %}
-            <span class="badge" style="background:rgba(34,197,94,0.12);color:#16A34A;font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">⭐ Trust Score: {{ trust_score }}/100</span>
+            <span class="badge" style="background:rgba(34,197,94,0.12);color:#16A34A;font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">{% icon "star" %} Trust Score: {{ trust_score }}/100</span>
           {% else %}
             <span class="badge" style="background:rgba(37,99,235,0.1);color:var(--primary);font-weight:700;padding:0.4rem 0.75rem;border-radius:999px;">🆕 New Mover</span>
           {% endif %}

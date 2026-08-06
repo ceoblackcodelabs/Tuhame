@@ -88,56 +88,35 @@
     <span>{{ property.title }}</span>
   </div>
 
-  <!-- Photo Gallery — Desktop/Tablet Grid -->
-  <div class="property-gallery" id="property-gallery-grid">
-    <div class="gallery-main" onclick="openLightbox(0)">
-      {% if property.main_image %}
-        <img class="gallery-img" src="{{ property.main_image.url }}" alt="{{ property.title }}" style="width:100%;height:100%;object-fit:cover;" />
-      {% else %}
-        <img class="gallery-img" src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&auto=format&fit=crop&q=80" alt="Main view" style="width:100%;height:100%;object-fit:cover;" />
+  <!-- Photo Gallery — main image + thumbnail row, same on every screen size -->
+  <div class="property-gallery-new">
+    <div class="gallery-main-frame" onclick="openLightbox(currentGalleryIndex)">
+      <img id="gallery-main-img" class="gallery-main-photo"
+           src="{% if all_property_images %}{{ all_property_images.0.url }}{% else %}https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&auto=format&fit=crop&q=80{% endif %}"
+           alt="{{ property.title }}" id="gallery-main-alt" />
+      {% if all_property_images|length > 1 %}
+        <div class="gallery-main-counter"><span id="gallery-current">1</span> / {{ all_property_images|length }}</div>
       {% endif %}
+      <button type="button" class="gallery-expand-btn" onclick="event.stopPropagation(); openLightbox(currentGalleryIndex);" aria-label="View full size">{% icon "maximize" %}</button>
     </div>
-    {% for image in property.images.all|slice:":3" %}
-      <div class="{% if forloop.last and property.images.count > 3 %}gallery-more{% endif %}" onclick="openLightbox({{ forloop.counter }})">
-        <img class="gallery-img" src="{{ image.image.url }}" alt="{{ image.caption|default:property.title }}" style="width:100%;height:100%;object-fit:cover;" />
-      </div>
-    {% empty %}
-      <div onclick="openLightbox(1)">
-        <img class="gallery-img" src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&auto=format&fit=crop&q=80" alt="Living room" style="width:100%;height:100%;object-fit:cover;" />
-      </div>
-      <div onclick="openLightbox(2)">
-        <img class="gallery-img" src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&auto=format&fit=crop&q=80" alt="Kitchen" style="width:100%;height:100%;object-fit:cover;" />
-      </div>
-      <div class="gallery-more" onclick="openLightbox(3)">
-        <img class="gallery-img" src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&auto=format&fit=crop&q=80" alt="More photos" style="width:100%;height:100%;object-fit:cover;" />
-      </div>
-    {% endfor %}
-  </div>
 
-  <!-- Photo Gallery — Phone Carousel (every photo, swipeable) -->
-  <div class="property-gallery-carousel" id="property-gallery-carousel">
-    <div class="carousel-track" id="carousel-track">
+    {% if all_property_images|length > 1 %}
+    <div class="gallery-thumb-row" id="gallery-thumb-row">
       {% for img in all_property_images %}
-        <div class="carousel-slide" onclick="openLightbox({{ forloop.counter0 }})">
-          <img src="{{ img.url }}" alt="{{ img.caption }}" {% if not forloop.first %}loading="lazy"{% endif %} style="width:100%;height:100%;object-fit:cover;" />
-        </div>
-      {% empty %}
-        <div class="carousel-slide">
-          <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&auto=format&fit=crop&q=80" alt="{{ property.title }}" style="width:100%;height:100%;object-fit:cover;" />
-        </div>
+        <button type="button" class="gallery-thumb{% if forloop.first %} active{% endif %}" data-index="{{ forloop.counter0 }}" onclick="setGalleryImage({{ forloop.counter0 }})" aria-label="View photo {{ forloop.counter }} of {{ all_property_images|length }}">
+          <img src="{{ img.url }}" alt="{{ img.caption }}" {% if not forloop.first %}loading="lazy"{% endif %} />
+        </button>
       {% endfor %}
     </div>
-    {% if all_property_images|length > 1 %}
-      <div class="carousel-counter"><span id="carousel-current">1</span> / {{ all_property_images|length }}</div>
     {% endif %}
-    <button type="button" class="carousel-viewall-btn" onclick="openLightbox(0)">{% icon "image" %} View All Photos</button>
   </div>
 
   {{ all_property_images|json_script:"gallery-data" }}
 
-  <!-- Photo Lightbox (shared by grid + carousel) -->
+  <!-- Photo Lightbox (shared with the thumbnail-row gallery above) -->
   <div id="photo-lightbox" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Property photos" hidden>
     <button type="button" class="lightbox-close" onclick="closeLightbox()" aria-label="Close">{% icon "x" %}</button>
+
     <button type="button" class="lightbox-nav lightbox-prev" onclick="lightboxStep(-1)" aria-label="Previous photo">‹</button>
     <div class="lightbox-stage">
       <img id="lightbox-img" src="" alt="" />
@@ -169,8 +148,16 @@
         <div>
           <div class="detail-price">KES {{ property.price }}<span>/month</span></div>
           <div style="display:flex;align-items:center;gap:0.35rem;justify-content:flex-end;margin-top:0.5rem;">
-            <span style="color:var(--warning);">⭐⭐⭐⭐⭐</span>
-            <span style="font-size:0.85rem;color:var(--gray-500);">4.8 (42 reviews)</span>
+            {% if property.reviews.count %}
+              <span style="color:var(--warning);display:inline-flex;gap:1px;">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= avg_rating_rounded %}{% icon "star" filled=True size=14 %}{% else %}{% icon "star" size=14 %}{% endif %}
+                {% endfor %}
+              </span>
+              <span style="font-size:0.85rem;color:var(--gray-500);">{{ avg_rating|floatformat:1 }} ({{ property.reviews.count }} review{{ property.reviews.count|pluralize }})</span>
+            {% else %}
+              <span style="font-size:0.85rem;color:var(--gray-500);">No reviews yet</span>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -323,9 +310,9 @@
               {{ avg_rating|floatformat:1 }}
             </div>
             <div style="color:var(--warning);font-size:1.1rem;margin:0.25rem 0;">
-              {% with avg_rating|floatformat:0 as stars %}
-                {% for i in "12345" %}⭐{% endfor %}
-              {% endwith %}
+              {% for i in "12345" %}
+                {% if forloop.counter <= avg_rating_rounded %}{% icon "star" filled=True %}{% else %}{% icon "star" %}{% endif %}
+              {% endfor %}
             </div>
             <div style="font-size:0.78rem;color:var(--gray-400);">{{ property.reviews.count }} review{{ property.reviews.count|pluralize }}</div>
           </div>
@@ -334,7 +321,7 @@
               {% with n|add:0 as star %}
                 <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.35rem;">
                   <span style="font-size:0.78rem;color:var(--gray-500);width:10px;text-align:right;flex-shrink:0;">{{ n }}</span>
-                  <span style="color:var(--warning);font-size:0.75rem;flex-shrink:0;">⭐</span>
+                  <span style="color:var(--warning);font-size:0.75rem;flex-shrink:0;">{% icon "star" filled=True size=12 %}</span>
                   <div style="flex:1;background:var(--gray-200);border-radius:var(--radius-full);height:6px;overflow:hidden;">
                     <div style="height:100%;background:var(--warning);border-radius:var(--radius-full);width:{% if n == '5' %}{{ rating_5_pct }}{% elif n == '4' %}{{ rating_4_pct }}{% elif n == '3' %}{{ rating_3_pct }}{% elif n == '2' %}{{ rating_2_pct }}{% else %}{{ rating_1_pct }}{% endif %}%;transition:width 0.6s ease;"></div>
                   </div>
@@ -348,7 +335,7 @@
       <!-- Write a Review -->
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;">
         <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--gray-900);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
-          {% icon "signature" %}️ Write a Review
+          {% icon "signature" %} Write a Review
         </div>
 
         {% if user.is_authenticated %}
@@ -362,10 +349,10 @@
                   <div style="font-size:0.8rem;color:var(--gray-400);">Your {{ user_review.rating }}-star review was posted on {{ user_review.created_at|date:"F d, Y" }}</div>
                 </div>
                 <div style="display:flex;gap:0.5rem;margin-left:auto;flex-wrap:wrap;">
-                  <a href="{% url 'home:edit_review' property.slug %}" class="btn btn-sm btn-outline-dark">{% icon "pencil" %}️ Edit Review</a>
+                  <a href="{% url 'home:edit_review' property.slug %}" class="btn btn-sm btn-outline-dark">{% icon "pencil" %} Edit Review</a>
                   <form method="post" action="{% url 'home:delete_review' property.slug %}" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete your review?')">{% icon "trash" %}️ Delete</button>
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete your review?')">{% icon "trash" %} Delete</button>
                   </form>
                 </div>
               </div>
@@ -567,7 +554,7 @@
           {% endif %}
           {% if property.owner.email %}
             <a href="mailto:{{ property.owner.email }}?subject=Inquiry%20about%20{{ property.title|urlencode }}&body=Hi%2C%20I%27m%20interested%20in%20this%20property%20listed%20on%202Hame."
-               class="contact-btn contact-btn-email">{% icon "mail" %}️ Send Email</a>
+               class="contact-btn contact-btn-email">{% icon "mail" %} Send Email</a>
           {% endif %}
         </div>
         {% endwith %}
@@ -695,7 +682,13 @@
           </div>
           <div class="property-footer">
             <div class="property-price">KES {{ similar.price }} <span>/mo</span></div>
-            <div class="property-rating"><span class="rating-star">⭐</span>4.7</div>
+            <div class="property-rating">
+              {% if similar.avg_rating %}
+                <span class="rating-star">{% icon "star" filled=True size=14 %}</span>{{ similar.avg_rating|floatformat:1 }}
+              {% else %}
+                <span style="color:var(--gray-400);font-size:0.8rem;">New</span>
+              {% endif %}
+            </div>
           </div>
         </div>
         <div class="property-card-actions">
@@ -716,20 +709,63 @@
 
 {% block inject_js %}
 <script>
-  // ── Photo Lightbox (shared by desktop grid + mobile carousel) ──
+  // ── Photo gallery: main image + thumbnail row + lightbox, all sharing
+  //    one "current index" so whichever one you interact with keeps the
+  //    other two in sync. ──
+  var currentGalleryIndex = 0;
+
   (function () {
     const dataEl = document.getElementById('gallery-data');
     const images = dataEl ? JSON.parse(dataEl.textContent) : [];
+    const mainImg = document.getElementById('gallery-main-img');
+    const mainCounterEl = document.getElementById('gallery-current');
+    const thumbRow = document.getElementById('gallery-thumb-row');
+
     const lightbox = document.getElementById('photo-lightbox');
-    const imgEl = document.getElementById('lightbox-img');
-    const currentEl = document.getElementById('lightbox-current');
-    const totalEl = document.getElementById('lightbox-total');
-    let index = 0;
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCurrentEl = document.getElementById('lightbox-current');
+    const lightboxTotalEl = document.getElementById('lightbox-total');
+
+    function render() {
+      const photo = images[currentGalleryIndex];
+      if (!photo) return;
+
+      if (mainImg) {
+        mainImg.src = photo.url;
+        mainImg.alt = photo.caption || '';
+      }
+      if (mainCounterEl) mainCounterEl.textContent = currentGalleryIndex + 1;
+
+      if (thumbRow) {
+        thumbRow.querySelectorAll('.gallery-thumb').forEach(function (btn, i) {
+          btn.classList.toggle('active', i === currentGalleryIndex);
+        });
+        // "auto-scroll if an image on the row is active" - bring the
+        // newly active thumbnail into view without jumping the whole
+        // page, e.g. when it was scrolled off to one side.
+        const activeThumb = thumbRow.querySelector('.gallery-thumb.active');
+        if (activeThumb) {
+          activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      }
+
+      if (lightboxImg) {
+        lightboxImg.src = photo.url;
+        lightboxImg.alt = photo.caption || '';
+      }
+      if (lightboxCurrentEl) lightboxCurrentEl.textContent = currentGalleryIndex + 1;
+      if (lightboxTotalEl) lightboxTotalEl.textContent = images.length;
+    }
+
+    window.setGalleryImage = function (i) {
+      if (!images.length) return;
+      currentGalleryIndex = Math.max(0, Math.min(i, images.length - 1));
+      render();
+    };
 
     window.openLightbox = function (i) {
       if (!images.length || !lightbox) return;
-      index = Math.max(0, Math.min(i, images.length - 1));
-      render();
+      window.setGalleryImage(i);
       lightbox.hidden = false;
       document.body.style.overflow = 'hidden';
     };
@@ -742,18 +778,8 @@
 
     window.lightboxStep = function (delta) {
       if (!images.length) return;
-      index = (index + delta + images.length) % images.length;
-      render();
+      window.setGalleryImage((currentGalleryIndex + delta + images.length) % images.length);
     };
-
-    function render() {
-      const photo = images[index];
-      if (!photo) return;
-      imgEl.src = photo.url;
-      imgEl.alt = photo.caption || '';
-      if (currentEl) currentEl.textContent = index + 1;
-      if (totalEl) totalEl.textContent = images.length;
-    }
 
     if (lightbox) {
       lightbox.addEventListener('click', function (e) {
@@ -777,17 +803,6 @@
         touchStartX = null;
       }, { passive: true });
     }
-  })();
-
-  // ── Mobile carousel slide counter ──
-  (function () {
-    const track = document.getElementById('carousel-track');
-    const counterEl = document.getElementById('carousel-current');
-    if (!track || !counterEl) return;
-    track.addEventListener('scroll', function () {
-      const idx = Math.round(track.scrollLeft / track.clientWidth) + 1;
-      counterEl.textContent = idx;
-    }, { passive: true });
   })();
 </script>
 {% if property.latitude and property.longitude %}
