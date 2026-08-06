@@ -6,8 +6,12 @@ Disallow: /clients/
 Disallow: /report/
 Disallow: /contracts/
 Disallow: /payments/
-Disallow: /users/my-profile/
 Disallow: /properties/properties/
 Disallow: /properties/add/
+Disallow: /properties/*/edit/
+Disallow: /properties/*/delete/
+Disallow: /users/my-profile/
+Disallow: /users/owner-qr-card/
+Disallow: /users/mover-qr-card/
 
 Sitemap: https://2hame.com/sitemap.xml

@@ -1,11 +1,20 @@
 # config/urls.py
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as serve_static
 from django.views.generic import RedirectView, TemplateView
+
+from .sitemaps import PropertySitemap, BlogPostSitemap, StaticViewSitemap
+
+sitemaps = {
+    'properties': PropertySitemap,
+    'blog': BlogPostSitemap,
+    'static': StaticViewSitemap,
+}
 
 urlpatterns = [
     path(
@@ -13,6 +22,9 @@ urlpatterns = [
         TemplateView.as_view(template_name='robots.txt', content_type='text/plain'),
         name='robots_txt',
     ),
+    # robots.txt already points here (Sitemap: https://2hame.com/sitemap.xml) -
+    # this is what actually makes that promise real instead of 404ing.
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
     # Google (and many other crawlers/tools) request /favicon.ico at the
     # domain root directly - they don't parse <link rel="icon"> out of
     # <head> for this check. Without this route, that request 404s even

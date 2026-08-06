@@ -364,6 +364,19 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='TuHame <no-reply@tuha
 # These only kick in when DEBUG=False (i.e. on your live server), so local
 # development over plain http:// keeps working exactly as before.
 if not DEBUG:
+    # cPanel/Passenger (and Cloudflare, if you're using it) terminates SSL
+    # in front of the app and forwards plain HTTP internally, setting this
+    # header to say what the original request actually was. Without this,
+    # Django's request.is_secure() is always False even on a real https://
+    # request - which both breaks SECURE_SSL_REDIRECT (every request looks
+    # insecure, so it "redirects" to https, which arrives looking insecure
+    # again -> redirect loop) and makes anything that builds an absolute
+    # URL from the request - like the sitemap - emit http:// links on an
+    # https:// site. Only safe to trust this header because Apache is the
+    # actual internet-facing front door here; if you ever move behind a
+    # different proxy that doesn't set X-Forwarded-Proto itself, remove
+    # this or a client could spoof the header directly.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
