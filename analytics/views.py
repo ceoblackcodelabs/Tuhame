@@ -20,6 +20,7 @@ class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 class BaseAnalyticsView(SuperuserRequiredMixin, TemplateView):
     template_name = None
     path_prefix = None  # None = whole site; '/blog/' = blog-only
+    exact_path = None   # e.g. '/' for homepage-only - see reports.get_visit_queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -30,7 +31,7 @@ class BaseAnalyticsView(SuperuserRequiredMixin, TemplateView):
             range_key = reports.DEFAULT_RANGE
         start, end, group_by = reports.get_range_bounds(range_key)
 
-        qs = reports.get_visit_queryset(start, end, path_prefix=self.path_prefix)
+        qs = reports.get_visit_queryset(start, end, path_prefix=self.path_prefix, exact_path=self.exact_path)
 
         # Best-effort location enrichment - see analytics/geolocation.py.
         # Bounded and safe to call every page load.
@@ -51,6 +52,7 @@ class BaseAnalyticsView(SuperuserRequiredMixin, TemplateView):
             'device_breakdown': reports.get_device_breakdown(qs),
             'location_breakdown': reports.get_location_breakdown(qs),
             'combo_series_label': 'New Users',
+            '_qs': qs,  # exposed for subclasses building extra breakdowns (e.g. SiteVisitsView) - not for direct template use
         })
         return context
 
@@ -58,6 +60,20 @@ class BaseAnalyticsView(SuperuserRequiredMixin, TemplateView):
 class TrafficDashboardView(BaseAnalyticsView):
     template_name = 'analytics/traffic.html'
     path_prefix = None
+
+
+class SiteVisitsView(BaseAnalyticsView):
+    """Homepage-only visits - 'how often are people visiting my site' in
+    the most literal sense: front-door traffic, separate from the
+    whole-site Traffic view (which includes every page) and from Blog
+    Analytics."""
+    template_name = 'analytics/site_visits.html'
+    exact_path = '/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['day_of_week_breakdown'] = reports.get_day_of_week_breakdown(context['_qs'])
+        return context
 
 
 class BlogAnalyticsView(BaseAnalyticsView):

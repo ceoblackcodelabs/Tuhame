@@ -6,5 +6,6 @@ app_name = 'analytics'
 
 urlpatterns = [
     path('traffic/', views.TrafficDashboardView.as_view(), name='traffic'),
+    path('site-visits/', views.SiteVisitsView.as_view(), name='site_visits'),
     path('blog/', views.BlogAnalyticsView.as_view(), name='blog_analytics'),
 ]
