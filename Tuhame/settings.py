@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'payments',
     'Report',
     'blog',
+    'analytics',
 ]
 
 MIDDLEWARE = [
@@ -74,6 +75,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'Tuhame.dashboard_access.DashboardAccessMiddleware',
+    'analytics.middleware.PageVisitMiddleware',
 ]
 
 ROOT_URLCONF = 'Tuhame.urls'

@@ -260,6 +260,26 @@
           {% comment %} end Contracts {% endcomment %}
 
           {% if request.user.is_superuser %}
+          {% comment %} Traffic / Blog Analytics (superuser only) {% endcomment %}
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-bs-toggle="collapse" href="#ui-traffic" aria-expanded="false" aria-controls="ui-traffic">
+              <span class="menu-icon">
+                <i class="mdi mdi-chart-line"></i>
+              </span>
+              <span class="menu-title">Traffic</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-traffic">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url 'analytics:traffic' %}">Traffic</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'analytics:blog_analytics' %}">Blogs</a></li>
+              </ul>
+            </div>
+          </li>
+          {% comment %} end Traffic / Blog Analytics {% endcomment %}
+          {% endif %}
+
+          {% if request.user.is_superuser %}
           {% comment %} Owner Verification (superuser only) {% endcomment %}
           <li class="nav-item menu-items">
             <a class="nav-link" href="{% url "owner_verification_queue" %}">

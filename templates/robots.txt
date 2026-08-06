@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /analytics/
 Disallow: /clients/
 Disallow: /report/
 Disallow: /contracts/

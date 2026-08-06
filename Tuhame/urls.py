@@ -38,6 +38,7 @@ urlpatterns = [
         name='favicon',
     ),
     path('admin/', admin.site.urls),
+    path('analytics/', include('analytics.urls')),
     path("", include('home.urls')),
     path('properties/', include('properties.urls')),
     path('dashboard/', include('dashboard.urls')),
