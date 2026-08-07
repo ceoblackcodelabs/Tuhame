@@ -469,10 +469,21 @@
             defaultLng = existingLng;
         }
 
+        // Kenya's bounding box (with a little padding) - keeps the map from
+        // panning or zooming out to show the rest of the world, since every
+        // property on this platform is in Kenya.
+        var kenyaBounds = L.latLngBounds(
+            L.latLng(-5.0, 33.5),   // south-west
+            L.latLng(5.6, 42.0)     // north-east
+        );
+
         map = L.map('location-map', {
             center: [defaultLat, defaultLng],
             zoom: 15,
-            zoomControl: true
+            zoomControl: true,
+            maxBounds: kenyaBounds,
+            maxBoundsViscosity: 1.0,
+            minZoom: 6
         });
 
         // Use OpenStreetMap tiles

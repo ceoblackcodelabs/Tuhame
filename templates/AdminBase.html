@@ -151,6 +151,25 @@
           </li> {% endcomment %}
           {% comment %} end bookings {% endcomment %}
 
+          {% if request.user.is_superuser or request.user.profile.role == 'owner' and request.user.profile.is_verified_owner %}
+          {% comment %} Leads (verified owners + superusers) {% endcomment %}
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-bs-toggle="collapse" href="#ui-leads" aria-expanded="false" aria-controls="ui-leads">
+              <span class="menu-icon">
+                <i class="mdi mdi-account-star-outline"></i>
+              </span>
+              <span class="menu-title">Leads</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-leads">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url 'analytics:leads' %}">Leads</a></li>
+              </ul>
+            </div>
+          </li>
+          {% comment %} end Leads {% endcomment %}
+          {% endif %}
+
           {% comment %} Review request {% endcomment %}
           <li class="nav-item menu-items">
             <a class="nav-link" data-bs-toggle="collapse" href="#ui-viewing" aria-expanded="false" aria-controls="ui-basic">

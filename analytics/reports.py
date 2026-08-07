@@ -107,6 +107,17 @@ def get_visit_queryset(start, end, path_prefix=None, exact_path=None, exclude_bo
     return qs
 
 
+def get_visit_queryset_for_paths(start, end, paths, exclude_bots=True):
+    """Same as get_visit_queryset, but scoped to an explicit list of paths
+    rather than a prefix - for "just this owner's properties", which don't
+    share any prefix narrower than /property/listing/ (every property
+    lives there, not just this owner's)."""
+    qs = PageVisit.objects.filter(visited_at__gte=start, visited_at__lte=end, path__in=list(paths))
+    if exclude_bots:
+        qs = qs.exclude(device_type=PageVisit.DEVICE_BOT)
+    return qs
+
+
 def get_summary_stats(qs):
     total_views = qs.count()
     unique_visitors = qs.exclude(session_key='').values('session_key').distinct().count()

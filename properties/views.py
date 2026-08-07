@@ -293,11 +293,16 @@ def geocode_address(request):
     if not address:
         return JsonResponse({'error': 'Address is required'}, status=400)
 
-    # Use Nominatim (OpenStreetMap) geocoding API
+    # Use Nominatim (OpenStreetMap) geocoding API, restricted to Kenya -
+    # every property on this platform is in Kenya, so an address search
+    # shouldn't be able to jump to a same-named place in another country.
     import requests
     from urllib.parse import quote
 
-    url = f"https://nominatim.openstreetmap.org/search?q={quote(address)}&format=json&limit=1"
+    url = (
+        f"https://nominatim.openstreetmap.org/search?q={quote(address)}"
+        f"&format=json&limit=1&countrycodes=ke"
+    )
     headers = {
         'User-Agent': '2Hame Property App'
     }

@@ -1,0 +1,346 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Leads{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
+
+{% block content %}
+<div class="main-panel">
+  <div class="content-wrapper">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Leads</h3>
+      <div class="btn-group" role="group" aria-label="Date range">
+        {% for key, label in range_choices %}
+          <a href="?range={{ key }}"
+             class="btn btn-sm {% if key == selected_range %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if not has_properties %}
+    <div class="alert alert-info">You don't have any listed properties yet - once you add one, its traffic and leads will show up here.</div>
+    {% endif %}
+
+    {% comment %} stats {% endcomment %}
+    <div class="row">
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ total_views|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-eye-outline icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Property Views</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ total_leads|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-account-star-outline icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Viewing Requests (Leads)</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ conversion_rate }}%</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-trending-up icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Views → Leads Rate</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0 text-truncate" style="max-width:180px;" title="{{ my_properties_ranked.0.property.title }}">{{ my_properties_ranked.0.property.title|default:"—" }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-trophy-outline icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Most Viewed Listing</h6>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end stats {% endcomment %}
+
+    {% comment %} chart {% endcomment %}
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Views &amp; Leads Over Time</h4>
+            <canvas id="leadsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end chart {% endcomment %}
+
+    {% comment %} my properties table {% endcomment %}
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Your Listings, Ranked by Views</h4>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Views</th>
+                    <th>Leads</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in my_properties_ranked %}
+                  <tr>
+                    <td><a href="{% url 'home:about_property' slug=row.property.slug %}" target="_blank">{{ row.property.title }}</a></td>
+                    <td>{{ row.views|intcomma }}</td>
+                    <td>{{ row.leads|intcomma }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="3" class="text-muted">No listings yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end my properties table {% endcomment %}
+
+    {% comment %} devices table {% endcomment %}
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Devices</h4>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Device</th>
+                    <th>Visits</th>
+                    <th>Share</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in device_breakdown %}
+                  <tr>
+                    <td>{{ row.device }}</td>
+                    <td>{{ row.count|intcomma }}</td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height:6px;max-width:160px;">
+                          <div class="progress-bar bg-primary" style="width:{{ row.pct }}%"></div>
+                        </div>
+                        <span class="text-muted small">{{ row.pct }}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="3" class="text-muted">No traffic on your listings in this period yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end devices table {% endcomment %}
+
+    {% comment %} location table {% endcomment %}
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Locations</h4>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Location</th>
+                    <th>Visits</th>
+                    <th>Share</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in location_breakdown %}
+                  <tr>
+                    <td>{{ row.location }}</td>
+                    <td>{{ row.count|intcomma }}</td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height:6px;max-width:160px;">
+                          <div class="progress-bar bg-info" style="width:{{ row.pct }}%"></div>
+                        </div>
+                        <span class="text-muted small">{{ row.pct }}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="3" class="text-muted">No traffic on your listings in this period yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end location table {% endcomment %}
+
+    {% comment %} trending on 2Hame {% endcomment %}
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Trending on 2Hame</h4>
+            <p class="text-muted small">What's getting attention across the platform right now - a general read on demand, not just your own listings.</p>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>City</th>
+                    <th>Views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in trending_properties %}
+                  <tr>
+                    <td><a href="{% url 'home:about_property' slug=row.property.slug %}" target="_blank">{{ row.property.title }}</a></td>
+                    <td>{{ row.property.get_property_type_display }}</td>
+                    <td>{{ row.property.city }}</td>
+                    <td>{{ row.views|intcomma }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="4" class="text-muted">Not enough platform-wide traffic in this period yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end trending on 2Hame {% endcomment %}
+
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+      <div class="d-sm-flex justify-content-center justify-content-sm-between">
+        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+      </div>
+    </footer>
+    <!-- partial -->
+  </div>
+</div>
+
+{{ chart_labels|json_script:"leads-chart-labels" }}
+{{ chart_views|json_script:"leads-chart-views" }}
+{{ chart_leads|json_script:"leads-chart-leads" }}
+
+<script>
+window.addEventListener('load', function () {
+  // Same pattern as dashboard.html - the theme's vendor chart.js demo
+  // script also runs on this page (it's loaded sitewide in AdminBase.html),
+  // and Chart.js itself loads after the main content block, so this has to
+  // wait for window 'load' rather than running inline.
+  function freshChart(canvasId, config) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === 'undefined') return null;
+    var existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+    return new Chart(canvas.getContext('2d'), config);
+  }
+
+  var labels = JSON.parse(document.getElementById('leads-chart-labels').textContent);
+  var views = JSON.parse(document.getElementById('leads-chart-views').textContent);
+  var leads = JSON.parse(document.getElementById('leads-chart-leads').textContent);
+
+  // Line + bar combo: property views as a line, viewing-request leads as
+  // bars, sharing the same date axis - so an owner can see whether more
+  // eyes on a listing is actually turning into people wanting to view it.
+  freshChart('leadsChart', {
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'line',
+          label: 'Property Views',
+          data: views,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.15)',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.35,
+          yAxisID: 'y',
+        },
+        {
+          type: 'bar',
+          label: 'Viewing Requests',
+          data: leads,
+          backgroundColor: 'rgba(255, 159, 64, 0.6)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y: { beginAtZero: true, position: 'left', ticks: { precision: 0 } },
+        y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { precision: 0 } },
+      },
+    },
+  });
+});
+</script>
+{% endblock content %}
