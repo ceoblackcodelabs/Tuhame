@@ -52,6 +52,14 @@ class ProfileForm(forms.ModelForm):
             'mover_base_lat',
             'mover_base_lng',
             'mover_base_label',
+            'owner_brand_name',
+            'owner_tagline',
+            'owner_about_heading',
+            'owner_whatsapp_number',
+            'owner_marquee_text',
+            'owner_instagram_url',
+            'owner_facebook_url',
+            'owner_youtube_url',
         ]
         widgets = {
             'profile_picture': PlainClearableFileInput(attrs={
@@ -70,6 +78,20 @@ class ProfileForm(forms.ModelForm):
                 'placeholder': 'Set on the map below',
                 'readonly': 'readonly'
             }),
+            'owner_tagline': forms.TextInput(attrs={
+                'placeholder': 'e.g. Curated homes across Nairobi, chosen with care.',
+                'maxlength': 200,
+            }),
+            'owner_marquee_text': forms.TextInput(attrs={
+                'placeholder': 'e.g. Now featuring 3-bedroom apartments in Kilimani',
+                'maxlength': 300,
+            }),
+            'owner_whatsapp_number': forms.TextInput(attrs={
+                'placeholder': 'e.g. 254712345678 (no + or spaces)',
+            }),
+            'owner_instagram_url': forms.URLInput(attrs={'placeholder': 'https://instagram.com/yourbusiness'}),
+            'owner_facebook_url': forms.URLInput(attrs={'placeholder': 'https://facebook.com/yourbusiness'}),
+            'owner_youtube_url': forms.URLInput(attrs={'placeholder': 'https://youtube.com/@yourbusiness'}),
             'bio': forms.Textarea(attrs={
                 'rows': 4,
                 'placeholder': 'Tell us about yourself...'
@@ -100,6 +122,8 @@ class ProfileForm(forms.ModelForm):
             'emergency_contact_name': 'Emergency contact name',
             'emergency_contact_phone': '+254 712 000 003',
             'emergency_contact_relationship': 'e.g. Spouse, Parent, Sibling',
+            'owner_brand_name': 'e.g. Kilimani Prime Properties',
+            'owner_about_heading': 'e.g. Two decades finding Nairobi its next home',
         }
 
         for field_name, placeholder in placeholders.items():
@@ -124,6 +148,20 @@ class ProfileForm(forms.ModelForm):
             if not phone.startswith('+') and not phone[0].isdigit():
                 raise forms.ValidationError("Please enter a valid phone number.")
         return phone
+
+    def clean_owner_whatsapp_number(self):
+        """wa.me/<number> links need digits only (country code + number,
+        no leading +, no spaces/dashes) - catch a malformed one here rather
+        than shipping a broken WhatsApp button to the public profile."""
+        number = self.cleaned_data.get('owner_whatsapp_number', '').strip()
+        if not number:
+            return number
+        cleaned = number.lstrip('+').replace(' ', '').replace('-', '')
+        if not cleaned.isdigit() or len(cleaned) < 9:
+            raise forms.ValidationError(
+                "Enter digits only, with country code, e.g. 254712345678 (no +, spaces, or dashes)."
+            )
+        return cleaned
 
 class UserRegistrationForm(forms.ModelForm):
     """Form for user registration"""

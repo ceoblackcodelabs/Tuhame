@@ -100,6 +100,7 @@ class Property(models.Model):
             models.Index(fields=['price']),
             models.Index(fields=['is_active', 'status']),
             models.Index(fields=['-created_at']),
+            models.Index(fields=['owner', 'is_active']),
         ]
 
     def __str__(self):

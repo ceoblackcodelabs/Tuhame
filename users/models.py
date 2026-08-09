@@ -154,6 +154,29 @@ class Profile(models.Model):
     mover_base_lng = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     mover_base_label = models.CharField(max_length=255, blank=True, help_text="Human-readable base location")
 
+    # Owner public profile - the branded standalone landing page a verified
+    # owner can share instead of their own website (see /owners/<username>/).
+    owner_brand_name = models.CharField(
+        max_length=100, blank=True,
+        help_text="Shown instead of the 2Hame logo on your public profile page.",
+    )
+    owner_tagline = models.CharField(
+        max_length=200, blank=True,
+        help_text="Short line shown under your name on your public profile's hero section.",
+    )
+    owner_about_heading = models.CharField(max_length=150, blank=True)
+    owner_whatsapp_number = models.CharField(
+        max_length=20, blank=True,
+        help_text="Public WhatsApp number for property inquiries, e.g. 254712345678. Leave blank to hide the WhatsApp button.",
+    )
+    owner_marquee_text = models.CharField(
+        max_length=300, blank=True,
+        help_text="Scrolling announcement text on your public profile, e.g. featured areas or a promo.",
+    )
+    owner_instagram_url = models.URLField(blank=True)
+    owner_facebook_url = models.URLField(blank=True)
+    owner_youtube_url = models.URLField(blank=True)
+
     class Meta:
         ordering = ['-created_at']
         indexes = [

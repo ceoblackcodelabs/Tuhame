@@ -176,6 +176,92 @@ def get_new_users_series(start, end, group_by):
     return build_series(User.objects.all(), 'date_joined', start, end, group_by)
 
 
+def get_browser_breakdown(qs):
+    total = qs.count()
+    rows = qs.values('browser').annotate(count=Count('id')).order_by('-count')
+    result = []
+    for row in rows:
+        count = row['count']
+        result.append({
+            'browser': row['browser'] or 'Other',
+            'count': count,
+            'pct': round(count / total * 100, 1) if total else 0,
+        })
+    return result
+
+
+def get_referrer_breakdown(qs, limit=10):
+    """Groups by referring domain (not the full URL - a query string or
+    path on the same referrer would otherwise split what's really one
+    traffic source into many rows)."""
+    from urllib.parse import urlparse
+
+    total = qs.exclude(referrer='').count()
+    rows = qs.exclude(referrer='').values_list('referrer', flat=True)
+    domain_counts = {}
+    for referrer in rows:
+        try:
+            domain = urlparse(referrer).netloc or referrer
+        except ValueError:
+            domain = referrer
+        domain_counts[domain] = domain_counts.get(domain, 0) + 1
+
+    direct_count = qs.filter(referrer='').count()
+    result = [
+        {'source': domain, 'count': count, 'pct': round(count / total * 100, 1) if total else 0}
+        for domain, count in sorted(domain_counts.items(), key=lambda x: -x[1])[:limit]
+    ]
+    if direct_count:
+        grand_total = total + direct_count
+        result.insert(0, {
+            'source': 'Direct / None',
+            'count': direct_count,
+            'pct': round(direct_count / grand_total * 100, 1) if grand_total else 0,
+        })
+    return result
+
+
+def get_region_breakdown(qs, limit=10):
+    total = qs.count()
+    rows = (
+        qs.filter(location_resolved=True)
+        .exclude(region='')
+        .values('region', 'country')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:limit]
+    )
+    return [
+        {
+            'region': row['region'],
+            'country': row['country'],
+            'count': row['count'],
+            'pct': round(row['count'] / total * 100, 1) if total else 0,
+        }
+        for row in rows
+    ]
+
+
+def get_returning_visitor_stats(qs):
+    """A 'returning' visitor is a session that shows up on more than one
+    distinct calendar day within the period - a single-page, single-visit
+    session doesn't count, even if it generated several page views."""
+    from django.db.models.functions import TruncDate
+
+    sessions = (
+        qs.exclude(session_key='')
+        .annotate(day=TruncDate('visited_at', tzinfo=dt_timezone.utc))
+        .values('session_key')
+        .annotate(distinct_days=Count('day', distinct=True))
+    )
+    total_visitors = sessions.count()
+    returning = sum(1 for s in sessions if s['distinct_days'] > 1)
+    return {
+        'total_visitors': total_visitors,
+        'returning_visitors': returning,
+        'returning_pct': round(returning / total_visitors * 100, 1) if total_visitors else 0,
+    }
+
+
 def get_day_of_week_breakdown(qs):
     """How visit volume breaks down across Mon-Sun - useful for a
     single-page view (like the homepage) where a 'top pages' chart

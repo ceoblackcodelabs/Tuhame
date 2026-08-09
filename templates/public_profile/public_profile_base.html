@@ -1,0 +1,131 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en" data-pp-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="{% block robots %}index, follow{% endblock robots %}" />
+
+  <title>{% block title %}{{ brand_name }}{% endblock title %}</title>
+  <meta name="description" content="{% block meta_description %}{{ brand_name }} - property listings on 2Hame{% endblock meta_description %}" />
+  <link rel="canonical" href="{% block canonical_url %}{% endblock canonical_url %}" />
+
+  <meta property="og:type" content="profile" />
+  <meta property="og:title" content="{% block og_title %}{{ brand_name }}{% endblock og_title %}" />
+  <meta property="og:description" content="{% block og_description %}{{ brand_name }} - property listings on 2Hame{% endblock og_description %}" />
+  <meta property="og:url" content="{% block og_url %}{% endblock og_url %}" />
+  <meta property="og:image" content="{% block og_image %}{% if profile_picture_url %}https://2hame.com{{ profile_picture_url }}{% endif %}{% endblock og_image %}" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" type="image/svg+xml" href="{% static 'assets/images/favicon.svg' %}" />
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/images/favicon-32.png' %}" />
+  <link rel="shortcut icon" type="image/x-icon" href="{% static 'assets/images/favicon.ico' %}" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="{% static 'assets/css/public-profile.css' %}" />
+
+  {% block extra_head %}{% endblock extra_head %}
+
+  <script>
+    // Applied before paint (this is inline, at the very top of <head>) so
+    // there's no flash of the wrong theme - separate localStorage key from
+    // the main site, since this page is deliberately isolated from it.
+    (function () {
+      var saved = localStorage.getItem('pp-theme');
+      var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-pp-theme', theme);
+    })();
+  </script>
+</head>
+<body class="pp-body">
+
+  {% block splash %}
+  <div class="pp-splash" id="pp-splash">
+    {% if profile_picture_url %}
+      <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-splash-avatar" />
+    {% else %}
+      <div class="pp-splash-avatar pp-header-avatar-fallback" style="width:96px;height:96px;font-size:2.25rem;">{{ brand_name|first|upper }}</div>
+    {% endif %}
+    <div class="pp-splash-name">{{ brand_name }}</div>
+    <div class="pp-splash-rule"></div>
+  </div>
+  {% endblock splash %}
+
+  {% block header %}
+  <header class="pp-header" id="pp-header">
+    <a href="." class="pp-header-brand">
+      {% if profile_picture_url %}
+        <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-header-avatar" loading="eager" />
+      {% else %}
+        <div class="pp-header-avatar-fallback">{{ brand_name|first|upper }}</div>
+      {% endif %}
+      <span class="pp-header-brandname">{{ brand_name }}</span>
+    </a>
+    <div class="pp-header-actions">
+      {% if is_own_profile %}
+        <a href="{% url 'analytics:profile_analytics' username=owner_profile.user.username %}" class="pp-btn pp-btn-outline">Analytics</a>
+        <a href="{% url 'dashboard' %}" class="pp-btn pp-btn-outline">Dashboard</a>
+      {% endif %}
+      <button type="button" class="pp-theme-toggle" id="pp-theme-toggle" aria-label="Toggle dark mode">
+        <svg id="pp-theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <svg id="pp-theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display:none;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+    </div>
+  </header>
+  {% endblock header %}
+
+  {% block content %}{% endblock content %}
+
+  <script>
+    (function () {
+      // Splash: hide shortly after the page is interactive. Kept short and
+      // simple rather than tied to every image finishing (a slow hero photo
+      // shouldn't hold a visitor hostage on a black screen).
+      var splash = document.getElementById('pp-splash');
+      function hideSplash() {
+        if (!splash) return;
+        splash.classList.add('pp-splash-hidden');
+        setTimeout(function () { splash.style.display = 'none'; }, 700);
+      }
+      if (document.readyState === 'complete') {
+        setTimeout(hideSplash, 400);
+      } else {
+        window.addEventListener('load', function () { setTimeout(hideSplash, 400); });
+      }
+      // Don't make a first-time visitor wait indefinitely if something
+      // hangs - hide no matter what after 2.5s.
+      setTimeout(hideSplash, 2500);
+    })();
+
+    (function () {
+      var header = document.getElementById('pp-header');
+      if (header) {
+        window.addEventListener('scroll', function () {
+          header.classList.toggle('pp-header-solid', window.scrollY > 40);
+        }, { passive: true });
+      }
+
+      var toggle = document.getElementById('pp-theme-toggle');
+      var iconDark = document.getElementById('pp-theme-icon-dark');
+      var iconLight = document.getElementById('pp-theme-icon-light');
+      function syncIcon() {
+        var isDark = document.documentElement.getAttribute('data-pp-theme') === 'dark';
+        if (iconDark) iconDark.style.display = isDark ? 'none' : 'block';
+        if (iconLight) iconLight.style.display = isDark ? 'block' : 'none';
+      }
+      syncIcon();
+      if (toggle) {
+        toggle.addEventListener('click', function () {
+          var isDark = document.documentElement.getAttribute('data-pp-theme') === 'dark';
+          var next = isDark ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-pp-theme', next);
+          localStorage.setItem('pp-theme', next);
+          syncIcon();
+        });
+      }
+    })();
+  </script>
+
+  {% block extra_js %}{% endblock extra_js %}
+</body>
+</html>

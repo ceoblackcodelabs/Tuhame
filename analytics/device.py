@@ -16,6 +16,29 @@ _MOBILE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Order matters - checked top to bottom, first match wins. Edge and Opera
+# both include "Chrome" in their UA string (Chromium-based), so they have
+# to be checked before the generic Chrome pattern; same for Chrome vs Safari
+# (Chrome's UA also contains "Safari").
+_BROWSER_PATTERNS = [
+    ('Edge', re.compile(r'edg/|edge/', re.IGNORECASE)),
+    ('Opera', re.compile(r'opr/|opera', re.IGNORECASE)),
+    ('Samsung Internet', re.compile(r'samsungbrowser', re.IGNORECASE)),
+    ('Chrome', re.compile(r'chrome/|crios/', re.IGNORECASE)),
+    ('Firefox', re.compile(r'firefox/|fxios/', re.IGNORECASE)),
+    ('Safari', re.compile(r'safari/', re.IGNORECASE)),
+    ('Internet Explorer', re.compile(r'msie |trident/', re.IGNORECASE)),
+]
+
+
+def detect_browser(user_agent):
+    if not user_agent:
+        return 'Other'
+    for name, pattern in _BROWSER_PATTERNS:
+        if pattern.search(user_agent):
+            return name
+    return 'Other'
+
 
 def detect_device(user_agent):
     if not user_agent:

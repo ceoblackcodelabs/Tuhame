@@ -1,5 +1,5 @@
 """
-Resolves PageVisit.ip_address -> country/city, deliberately NOT during the
+Resolves PageVisit.ip_address -> country/region/city, deliberately NOT during the
 request that creates the PageVisit (an external HTTP call in that path
 would make every single pageview slower, and be a single point of failure
 for the whole site if the geolocation service is ever slow or down).
@@ -70,19 +70,20 @@ def resolve_pending_locations(limit=BATCH_SIZE):
     for visit, result in zip(resolvable, results):
         if result and result.get('status') == 'success':
             visit.country = result.get('country', '') or ''
+            visit.region = result.get('regionName', '') or ''
             visit.city = result.get('city', '') or ''
         visit.location_resolved = True
         updated.append(visit)
 
     if updated:
-        PageVisit.objects.bulk_update(updated, ['country', 'city', 'location_resolved'])
+        PageVisit.objects.bulk_update(updated, ['country', 'region', 'city', 'location_resolved'])
 
     return len(unresolvable) + len(updated)
 
 
 def _lookup_batch(ip_list):
     """One call to ip-api.com's batch endpoint for up to 100 IPs."""
-    payload = [{'query': ip, 'fields': 'status,country,city'} for ip in ip_list]
+    payload = [{'query': ip, 'fields': 'status,country,regionName,city'} for ip in ip_list]
     resp = requests.post(API_URL, json=payload, timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
     return resp.json()

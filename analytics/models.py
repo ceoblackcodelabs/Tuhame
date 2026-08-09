@@ -37,11 +37,13 @@ class PageVisit(models.Model):
 
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     device_type = models.CharField(max_length=10, choices=DEVICE_CHOICES, default=DEVICE_OTHER, db_index=True)
+    browser = models.CharField(max_length=30, blank=True, default='')
 
     # Populated lazily by analytics.geolocation, not at request time - see
     # that module for why (keeps page-load latency unaffected by an
     # external geolocation lookup).
     country = models.CharField(max_length=100, blank=True, default='')
+    region = models.CharField(max_length=100, blank=True, default='')
     city = models.CharField(max_length=100, blank=True, default='')
     location_resolved = models.BooleanField(default=False, db_index=True)
 

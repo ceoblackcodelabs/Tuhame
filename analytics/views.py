@@ -143,6 +143,110 @@ class BlogAnalyticsView(BaseAnalyticsView):
         return context
 
 
+class ProfileAnalyticsView(TemplateView):
+    """
+    Section 13 of the public-profile redesign spec: a separate analytics
+    page (own base layout, not the dashboard theme) showing traffic to an
+    owner's own public profile page specifically - not their properties,
+    not the whole site. Gated to the profile owner themselves, or a
+    superuser.
+    """
+    template_name = 'public_profile/profile_analytics.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        from django.shortcuts import get_object_or_404
+        from users.models import Profile
+
+        self.owner_profile = get_object_or_404(
+            Profile.objects.select_related('user'),
+            user__username=kwargs['username'], role='owner',
+        )
+        if not (request.user.is_superuser or request.user == self.owner_profile.user):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.urls import reverse
+        from django.utils import timezone
+        from datetime import timedelta
+
+        profile_path = reverse('home:owner_portfolio', kwargs={'username': self.owner_profile.user.username})
+        now = timezone.now()
+
+        resolve_pending_locations()
+
+        # ── Fixed reference-point cards - always all shown, independent of
+        #    the chart's range filter below. ──
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = now - timedelta(days=7)
+        month_start = now - timedelta(days=30)
+        year_start = now - timedelta(days=365)
+
+        def visitor_count(since):
+            return reports.get_visit_queryset(since, now, exact_path=profile_path).exclude(session_key='').values('session_key').distinct().count()
+
+        all_time_qs = reports.get_visit_queryset(
+            self.owner_profile.user.date_joined, now, exact_path=profile_path
+        )
+        returning_stats = reports.get_returning_visitor_stats(all_time_qs)
+
+        # ── Chart range filter ──
+        range_key = self.request.GET.get('range', 'week')
+        range_map = {
+            'today': (today_start, now, 'hour'),
+            'week': (week_start, now, 'day'),
+            'month': (month_start, now, 'day'),
+            'year': (year_start, now, 'day'),
+        }
+        if range_key == 'custom':
+            start = self.request.GET.get('start')
+            end = self.request.GET.get('end')
+            try:
+                from datetime import datetime
+                chart_start = timezone.make_aware(datetime.strptime(start, '%Y-%m-%d'))
+                chart_end = timezone.make_aware(datetime.strptime(end, '%Y-%m-%d')) + timedelta(days=1)
+            except (TypeError, ValueError):
+                chart_start, chart_end, group_by = week_start, now, 'day'
+            else:
+                group_by = 'day'
+        else:
+            chart_start, chart_end, group_by = range_map.get(range_key, range_map['week'])
+
+        chart_qs = reports.get_visit_queryset(chart_start, chart_end, exact_path=profile_path)
+        labels, values = reports.build_series(chart_qs, 'visited_at', chart_start, chart_end, group_by)
+
+        context.update({
+            'owner_profile': self.owner_profile,
+            'brand_name': self.owner_profile.owner_brand_name or self.owner_profile.get_full_name() or self.owner_profile.user.username,
+            'profile_picture_url': self.owner_profile.profile_picture.url if self.owner_profile.profile_picture else None,
+            'is_own_profile': self.request.user.is_authenticated and self.request.user.id == self.owner_profile.user.id,
+
+            'total_visitors': returning_stats['total_visitors'],
+            'today_visitors': visitor_count(today_start),
+            'week_visitors': visitor_count(week_start),
+            'month_visitors': visitor_count(month_start),
+            'year_visitors': visitor_count(year_start),
+            'returning_visitors': returning_stats['returning_visitors'],
+            'returning_pct': returning_stats['returning_pct'],
+
+            'range_choices': [
+                ('today', 'Today'), ('week', 'Week'), ('month', 'Month'), ('year', 'Year'), ('custom', 'Custom'),
+            ],
+            'selected_range': range_key,
+            'chart_labels': labels,
+            'chart_values': values,
+
+            'device_breakdown': reports.get_device_breakdown(chart_qs),
+            'browser_breakdown': reports.get_browser_breakdown(chart_qs),
+            'country_breakdown': reports.get_location_breakdown(chart_qs),
+            'region_breakdown': reports.get_region_breakdown(chart_qs),
+            'referrer_breakdown': reports.get_referrer_breakdown(chart_qs),
+        })
+        return context
+
+
 class LeadsView(VerifiedOwnerRequiredMixin, TemplateView):
     """
     Owner-facing analytics: how their own listings are performing (views +

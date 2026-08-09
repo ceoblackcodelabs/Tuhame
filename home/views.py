@@ -835,23 +835,99 @@ class MoverDetailView(DetailView):
 
 
 class OwnerPortfolioView(DetailView):
-    """Public property-owner portfolio page - their verified listings. No login required (QR scannable)."""
+    """
+    Public property-owner portfolio page - a standalone, branded landing
+    page a verified owner can share instead of their own website. No login
+    required (QR scannable). See templates/public_profile/owner_portfolio.html
+    and the redesign spec this implements.
+    """
     model = Profile
-    template_name = 'home/owner_portfolio.html'
+    template_name = 'public_profile/owner_portfolio.html'
     context_object_name = 'owner_profile'
     slug_field = 'user__username'
     slug_url_kwarg = 'username'
 
     def get_queryset(self):
-        return Profile.objects.filter(role='owner', is_active=True, user__is_active=True)
+        return Profile.objects.filter(role='owner', is_active=True, user__is_active=True).select_related('user')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile = self.object
-        context['properties'] = Property.objects.filter(
-            owner=profile.user, is_active=True
+        owner_user = profile.user
+
+        properties = Property.objects.filter(
+            owner=owner_user, is_active=True
         ).order_by('-created_at')
-        context['total_properties'] = context['properties'].count()
+
+        # ── Filters ──
+        request = self.request
+        price_min = request.GET.get('price_min')
+        price_max = request.GET.get('price_max')
+        bedrooms = request.GET.get('bedrooms')
+        bathrooms = request.GET.get('bathrooms')
+        property_type = request.GET.get('property_type')
+        city = request.GET.get('city')
+        status = request.GET.get('status')
+
+        if price_min:
+            properties = properties.filter(price__gte=price_min)
+        if price_max:
+            properties = properties.filter(price__lte=price_max)
+        if bedrooms:
+            properties = properties.filter(bedrooms__gte=bedrooms)
+        if bathrooms:
+            properties = properties.filter(bathrooms__gte=bathrooms)
+        if property_type:
+            properties = properties.filter(property_type=property_type)
+        if city:
+            properties = properties.filter(city__iexact=city)
+        if status:
+            properties = properties.filter(status=status)
+
+        total_properties = Property.objects.filter(owner=owner_user, is_active=True).count()
+
+        # ── Pagination: 9 per page (3x3 grid) ──
+        from django.core.paginator import Paginator
+        paginator = Paginator(properties, 9)
+        page_obj = paginator.get_page(request.GET.get('page'))
+
+        # ── Filter option lists (cities from this owner's own listings only) ──
+        owner_cities = (
+            Property.objects.filter(owner=owner_user, is_active=True)
+            .exclude(city='').values_list('city', flat=True).distinct().order_by('city')
+        )
+
+        # ── Hero slideshow images (cached - see home/portfolio.py) ──
+        from .portfolio import get_owner_hero_images
+        hero_images = get_owner_hero_images(owner_user)
+
+        # ── Reviews, aggregated across all of this owner's properties ──
+        reviews = (
+            PropertyReview.objects.filter(property__owner=owner_user, comment__gt='')
+            .select_related('user', 'property')
+            .order_by('-created_at')[:12]
+        )
+        review_stats = PropertyReview.objects.filter(property__owner=owner_user).aggregate(
+            avg_rating=Avg('rating'), count=Count('id')
+        )
+
+        context.update({
+            'properties': page_obj,
+            'page_obj': page_obj,
+            'total_properties': total_properties,
+            'property_types': PropertyType.choices,
+            'property_statuses': PropertyStatus.choices,
+            'owner_cities': owner_cities,
+            'hero_images': hero_images,
+            'brand_name': profile.owner_brand_name or profile.get_full_name() or owner_user.username,
+            'profile_picture_url': profile.profile_picture.url if profile.profile_picture else None,
+            'is_own_profile': request.user.is_authenticated and request.user.id == owner_user.id,
+            'reviews': reviews,
+            'review_avg': review_stats['avg_rating'] or 0,
+            'review_count': review_stats['count'] or 0,
+            # preserve applied filters in pagination links
+            'querystring': request.GET.urlencode(),
+        })
         return context
 
 

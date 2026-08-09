@@ -32,7 +32,7 @@ def optimize_image_field(image_field, max_dimension=1600, quality=82):
       PNGs with transparency are kept as PNG so logos/graphics with
       transparent backgrounds aren't broken.
     """
-    if not image_field or not hasattr(image_field, "file"):
+    if not image_field:
         return
 
     # Only process a file that was just assigned/uploaded this save - not
@@ -40,7 +40,22 @@ def optimize_image_field(image_field, max_dimension=1600, quality=82):
     # marks a freshly-assigned FieldFile as "uncommitted" until it's
     # actually written to storage). Otherwise every unrelated model save
     # would re-open, re-compress and slightly degrade the same JPEG again.
+    # Checked first, and separately from the .file access below, because
+    # it's a cheap attribute check with no I/O - unlike hasattr(image_field,
+    # "file"), which looks safe but isn't: FieldFile.file is a lazy
+    # property that opens the underlying storage file, and if that file is
+    # missing it raises FileNotFoundError - a different exception than
+    # AttributeError, which is the only one hasattr() actually swallows.
+    # A profile whose image file had gone missing from storage would then
+    # fail to save at all, on any field, not just the image.
     if getattr(image_field, "_committed", True):
+        return
+
+    try:
+        if not hasattr(image_field, "file"):
+            return
+    except Exception as exc:
+        logger.warning("Image optimization skipped (file unreadable) for %s: %s", getattr(image_field, "name", "?"), exc)
         return
 
     try:

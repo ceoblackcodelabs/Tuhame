@@ -1,4 +1,4 @@
-from .device import detect_device, get_client_ip
+from .device import detect_browser, detect_device, get_client_ip
 from .models import PageVisit
 
 # Anything under these prefixes is either an asset, an internal/admin
@@ -53,6 +53,7 @@ class PageVisitMiddleware:
 
         user_agent = request.META.get('HTTP_USER_AGENT', '')
         device = detect_device(user_agent)
+        browser = detect_browser(user_agent)
 
         # Bots inflate every number on the dashboard without representing
         # a real person - track them separately rather than folding them
@@ -63,5 +64,6 @@ class PageVisitMiddleware:
             user=request.user if request.user.is_authenticated else None,
             ip_address=get_client_ip(request),
             device_type=device,
+            browser=browser,
             referrer=request.META.get('HTTP_REFERER', '')[:500],
         )

@@ -187,6 +187,18 @@
 
   .edit-field { display: flex; flex-direction: column; }
 
+  .edit-field-hint {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    margin-top: 0.35rem;
+  }
+
+  .edit-field-error {
+    font-size: 0.78rem;
+    color: #DC2626;
+    margin-top: 0.35rem;
+  }
+
   .edit-field label {
     font-size: 0.82rem;
     font-weight: 600;
@@ -417,6 +429,66 @@
             {% endif %}
           {% endif %}
         </div>
+
+        <!-- Owner Public Profile (shown only to verified property owners) -->
+        {% if user.profile.role == 'owner' and user.profile.is_verified_owner %}
+        <div class="edit-section-card" id="owner-profile-section">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">{% icon "home" %}</span> Public Profile
+          </div>
+          <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:1rem;">
+            Powers your standalone branded page at
+            <a href="{% url 'home:owner_portfolio' username=user.username %}" target="_blank">2hame.com{% url 'home:owner_portfolio' username=user.username %}</a>
+            — shareable with clients like your own website.
+          </p>
+
+          <div class="edit-grid">
+            <div class="edit-field">
+              {{ form.owner_brand_name.label_tag }}
+              {{ form.owner_brand_name }}
+              <div class="edit-field-hint">Shown instead of the 2Hame logo on your public profile.</div>
+            </div>
+            <div class="edit-field">
+              {{ form.owner_whatsapp_number.label_tag }}
+              {{ form.owner_whatsapp_number }}
+              {% if form.owner_whatsapp_number.errors %}<div class="edit-field-error">{{ form.owner_whatsapp_number.errors.0 }}</div>{% endif %}
+              <div class="edit-field-hint">Leave blank to hide the WhatsApp button on your listings.</div>
+            </div>
+            <div class="edit-field full-width">
+              {{ form.owner_tagline.label_tag }}
+              {{ form.owner_tagline }}
+              <div class="edit-field-hint">Short line shown under your name on your profile's hero section.</div>
+            </div>
+            <div class="edit-field full-width">
+              {{ form.owner_about_heading.label_tag }}
+              {{ form.owner_about_heading }}
+            </div>
+            <div class="edit-field full-width">
+              {{ form.owner_marquee_text.label_tag }}
+              {{ form.owner_marquee_text }}
+              <div class="edit-field-hint">Scrolling announcement banner, e.g. a featured area or promo. Leave blank to hide it.</div>
+            </div>
+          </div>
+
+          <div class="edit-section-title" style="margin-top:1.5rem;font-size:0.9rem;">
+            <span class="edit-section-icon">{% icon "globe" %}</span> Social Links
+          </div>
+          <div class="edit-grid">
+            <div class="edit-field">
+              {{ form.owner_instagram_url.label_tag }}
+              {{ form.owner_instagram_url }}
+            </div>
+            <div class="edit-field">
+              {{ form.owner_facebook_url.label_tag }}
+              {{ form.owner_facebook_url }}
+            </div>
+            <div class="edit-field">
+              {{ form.owner_youtube_url.label_tag }}
+              {{ form.owner_youtube_url }}
+            </div>
+          </div>
+        </div>
+        {% endif %}
 
         <!-- Mover Portfolio (shown only for the Mover role) -->
         <div class="edit-section-card" id="mover-portfolio-section" style="{% if user.profile.role != 'mover' %}display:none;{% endif %}">
