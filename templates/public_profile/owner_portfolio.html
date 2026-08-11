@@ -1,5 +1,6 @@
 {% extends "public_profile/public_profile_base.html" %}
 {% load humanize %}
+{% load icons %}
 
 {% block title %}{{ brand_name }} - Property Listings{% endblock title %}
 {% block meta_description %}{{ brand_name }}, verified property owner on 2Hame{% if owner_profile.city %} based in {{ owner_profile.city }}{% endif %}. Browse {{ total_properties }} active listing{{ total_properties|pluralize }}.{% endblock meta_description %}
@@ -7,6 +8,14 @@
 {% block og_url %}https://2hame.com{% url 'home:owner_portfolio' username=owner_profile.user.username %}{% endblock og_url %}
 {% block og_title %}{{ brand_name }} - Property Listings on 2Hame{% endblock og_title %}
 {% block og_description %}{{ owner_profile.bio|default:"Browse active property listings from this verified owner."|truncatechars:150 }}{% endblock og_description %}
+
+{% block nav_links %}
+<a href="#about">About</a>
+<a href="#categories">Categories</a>
+<a href="#listings">Listings</a>
+{% if reviews or True %}<a href="#reviews">Reviews</a>{% endif %}
+<a href="#connect">Contact</a>
+{% endblock nav_links %}
 
 {% block content %}
 
@@ -22,12 +31,53 @@
   <div class="pp-hero-overlay"></div>
   <div class="pp-hero-content">
     <h1 class="pp-hero-name">{{ brand_name }}</h1>
-    <p class="pp-hero-tagline">{{ owner_profile.owner_tagline|default:"Find your next home, sourced with care and shown with pride." }}</p>
+    <div class="pp-hero-tagline pp-hero-tagline-rotator" id="pp-hero-rotator">
+      {% for word in hero_taglines %}
+        <span class="pp-hero-tagline-word{% if forloop.first %} pp-word-active{% endif %}">{{ word }}</span>
+      {% endfor %}
+    </div>
     <a href="#listings" class="pp-hero-cta">View Properties</a>
+
+    <div class="pp-hero-counters">
+      <div>
+        <div class="pp-hero-counter-value" data-pp-count="{{ total_properties }}">0</div>
+        <div class="pp-hero-counter-label">Listings</div>
+      </div>
+      {% if review_count %}
+      <div>
+        <div class="pp-hero-counter-value" data-pp-count="{{ review_count }}">0</div>
+        <div class="pp-hero-counter-label">Client Reviews</div>
+      </div>
+      {% endif %}
+      <div>
+        <div class="pp-hero-counter-value" data-pp-count="{{ years_active }}" data-pp-count-suffix="+">0</div>
+        <div class="pp-hero-counter-label">Years Active</div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ─── MARQUEE ─── -->
+<!-- ─── REGION MARQUEE (auto-scrolling, per-location listing counts) ─── -->
+{% if region_breakdown %}
+<div class="pp-region-marquee">
+  <div class="pp-region-track">
+    {% for row in region_breakdown %}
+      <a href="?city={{ row.city }}#listings" class="pp-region-card">
+        <p class="pp-region-card-name">{{ row.city }}</p>
+        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+      </a>
+    {% endfor %}
+    {% for row in region_breakdown %}
+      <a href="?city={{ row.city }}#listings" class="pp-region-card" aria-hidden="true" tabindex="-1">
+        <p class="pp-region-card-name">{{ row.city }}</p>
+        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ─── ANNOUNCEMENT MARQUEE ─── -->
 {% if owner_profile.owner_marquee_text %}
 <div class="pp-marquee">
   <div class="pp-marquee-track">
@@ -39,9 +89,9 @@
 {% endif %}
 
 <!-- ─── ABOUT ─── -->
-<section class="pp-about">
+<section class="pp-about pp-bg-light" id="about">
   <div class="pp-container">
-    <div class="pp-about-grid">
+    <div class="pp-about-grid pp-reveal">
       {% if profile_picture_url %}
         <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-about-image" loading="lazy" />
       {% else %}
@@ -51,17 +101,56 @@
         <p class="pp-eyebrow">About</p>
         <h2 class="pp-about-heading">{{ owner_profile.owner_about_heading|default:"Trusted local expertise, personal service" }}</h2>
         <p class="pp-about-desc">{{ owner_profile.bio|default:"This owner hasn't added a description yet." }}</p>
+
+        <ul class="pp-about-features">
+          <li class="pp-about-feature">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Reliable
+          </li>
+          <li class="pp-about-feature">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Client Support
+          </li>
+          <li class="pp-about-feature">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Expert Advice
+          </li>
+          <li class="pp-about-feature">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Trustworthy
+          </li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── LISTINGS ─── -->
-<section class="pp-section" id="listings">
+<!-- ─── CATEGORIES ─── -->
+{% if category_breakdown %}
+<section class="pp-section pp-bg-default" id="categories">
   <div class="pp-container">
-    <div class="pp-section-header">
+    <div class="pp-section-header pp-reveal">
+      <p class="pp-eyebrow">Browse by Category</p>
+      <h2 class="pp-about-heading">What We List</h2>
+    </div>
+    <div class="pp-category-grid pp-reveal">
+      {% for row in category_breakdown %}
+        <a href="?property_type={{ row.value }}#listings" class="pp-category-card">
+          <p class="pp-category-card-label">{{ row.label }}</p>
+          <p class="pp-category-card-count">{{ row.count }} listing{{ row.count|pluralize }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ─── LISTINGS ─── -->
+<section class="pp-section pp-bg-light" id="listings">
+  <div class="pp-container">
+    <div class="pp-section-header pp-reveal">
       <p class="pp-eyebrow">Listings</p>
-      <h2 class="pp-about-heading">{{ total_properties }} Propert{{ total_properties|pluralize:"y,ies" }} Available</h2>
+      <h2 class="pp-about-heading">{{ page_obj.paginator.count }} Propert{{ page_obj.paginator.count|pluralize:"y,ies" }}{% if request.GET.property_type or request.GET.city or request.GET.status or request.GET.bedrooms or request.GET.bathrooms or request.GET.price_min or request.GET.price_max %} Found{% else %} Available{% endif %}</h2>
     </div>
 
     <button type="button" class="pp-filters-mobile-btn" id="pp-filters-toggle">
@@ -127,7 +216,7 @@
       <div>
         <div class="pp-property-grid">
           {% for property in properties %}
-          <div class="pp-card">
+          <div class="pp-card pp-reveal">
             {% if property.main_image %}
               <img src="{{ property.main_image.url }}" alt="{{ property.title }}" class="pp-card-image" loading="lazy" />
             {% else %}
@@ -151,7 +240,7 @@
                 {% if owner_profile.owner_whatsapp_number %}
                   <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information?{% endfilter %}"
                      target="_blank" rel="noopener noreferrer" class="pp-btn pp-btn-whatsapp">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.87 9.87 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2z"/></svg>
+                    {% brand_icon "whatsapp" size=14 class_name="pp-whatsapp-icon" %}
                     WhatsApp
                   </a>
                 {% endif %}
@@ -186,39 +275,47 @@
 </section>
 
 <!-- ─── REVIEWS ─── -->
-{% if reviews %}
-<section class="pp-section" style="background:var(--pp-surface);border-top:1px solid var(--pp-border);border-bottom:1px solid var(--pp-border);">
+<section class="pp-section pp-bg-default" id="reviews">
   <div class="pp-container">
-    <div class="pp-section-header">
+    <div class="pp-section-header pp-reveal">
       <p class="pp-eyebrow">Reviews</p>
       <h2 class="pp-about-heading">What Clients Say</h2>
       {% if review_count %}<p style="color:var(--pp-text-muted);">{{ review_avg|floatformat:1 }} average from {{ review_count }} review{{ review_count|pluralize }}</p>{% endif %}
     </div>
-    <div id="pp-reviews-track" style="display:flex;gap:1.5rem;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:0.5rem;">
-      {% for review in reviews %}
-      <div style="flex:0 0 min(340px,85vw);scroll-snap-align:start;background:var(--pp-bg);border:1px solid var(--pp-border);border-radius:var(--pp-radius-lg);padding:1.5rem;">
-        <div style="color:var(--pp-gold);margin-bottom:0.75rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
-        <p style="color:var(--pp-text-muted);line-height:1.7;margin-bottom:1rem;">&ldquo;{{ review.comment|truncatewords:35 }}&rdquo;</p>
-        <p style="font-weight:600;font-size:0.9rem;">{{ review.user.get_full_name|default:review.user.username }}</p>
-        <p style="font-size:0.78rem;color:var(--pp-text-muted);">{{ review.property.title }}</p>
-      </div>
-      {% endfor %}
+    <div id="pp-reviews-track" style="display:flex;gap:1.5rem;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:0.5rem;" class="pp-reveal">
+      {% if reviews %}
+        {% for review in reviews %}
+        <div class="pp-testimonial-card" style="flex:0 0 min(340px,85vw);scroll-snap-align:start;">
+          <div style="color:var(--pp-gold);margin-bottom:0.75rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+          <p style="color:var(--pp-text-muted);line-height:1.7;margin-bottom:1rem;">&ldquo;{{ review.comment|truncatewords:35 }}&rdquo;</p>
+          <p style="font-weight:600;font-size:0.9rem;">{{ review.user.get_full_name|default:review.user.username }}</p>
+          <p style="font-size:0.78rem;color:var(--pp-text-muted);">{{ review.property.title }}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for t in fallback_testimonials %}
+        <div class="pp-testimonial-card" style="flex:0 0 min(340px,85vw);scroll-snap-align:start;">
+          <span class="pp-testimonial-fallback-tag">Example</span>
+          <p style="color:var(--pp-text-muted);line-height:1.7;margin-bottom:1rem;">&ldquo;{{ t.text }}&rdquo;</p>
+          <p style="font-weight:600;font-size:0.9rem;">{{ t.role }}</p>
+        </div>
+        {% endfor %}
+      {% endif %}
     </div>
   </div>
 </section>
-{% endif %}
 
 <!-- ─── SOCIAL ─── -->
 {% if owner_profile.owner_whatsapp_number or owner_profile.owner_instagram_url or owner_profile.owner_facebook_url or owner_profile.owner_youtube_url %}
-<section class="pp-section">
+<section class="pp-section pp-bg-light" id="connect">
   <div class="pp-container">
-    <div class="pp-social-card">
+    <div class="pp-social-card pp-reveal">
       <p class="pp-eyebrow">Connect</p>
       <h3 style="font-family:var(--pp-font-display);font-size:1.35rem;margin:0;">Follow &amp; Get in Touch</h3>
       <div class="pp-social-links">
         {% if owner_profile.owner_whatsapp_number %}
         <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi {{ brand_name }}, I found your profile on 2Hame and would love to know more about your listings.{% endfilter %}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.87 9.87 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2z"/></svg>
+          {% brand_icon "whatsapp" size=18 class_name="pp-whatsapp-icon" %}
         </a>
         {% endif %}
         {% if owner_profile.owner_instagram_url %}
@@ -268,6 +365,42 @@
   })();
 
   (function () {
+    // Hero rotating tagline - cycles through static phrases; the owner's
+    // name stays fixed above it (h1, not part of the rotator).
+    var words = document.querySelectorAll('#pp-hero-rotator .pp-hero-tagline-word');
+    if (words.length > 1) {
+      var idx = 0;
+      setInterval(function () {
+        words[idx].classList.remove('pp-word-active');
+        idx = (idx + 1) % words.length;
+        words[idx].classList.add('pp-word-active');
+      }, 3200);
+    }
+  })();
+
+  (function () {
+    // Animated counters on the hero - count up once, when scrolled near.
+    var counters = document.querySelectorAll('[data-pp-count]');
+    if (!counters.length) return;
+    function animate(el) {
+      var target = parseInt(el.getAttribute('data-pp-count'), 10) || 0;
+      var suffix = el.getAttribute('data-pp-count-suffix') || '';
+      var start = 0;
+      var duration = 1200;
+      var startTime = null;
+      function step(ts) {
+        if (!startTime) startTime = ts;
+        var progress = Math.min((ts - startTime) / duration, 1);
+        el.textContent = Math.floor(progress * target) + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = target + suffix;
+      }
+      requestAnimationFrame(step);
+    }
+    counters.forEach(function (el) { animate(el); });
+  })();
+
+  (function () {
     // Mobile filter drawer
     var filters = document.getElementById('pp-filters');
     var toggle = document.getElementById('pp-filters-toggle');
@@ -282,6 +415,27 @@
     }
     if (toggle) toggle.addEventListener('click', open);
     if (backdrop) backdrop.addEventListener('click', close);
+  })();
+
+  (function () {
+    // Subtle fade-up reveal for section content as it scrolls into view -
+    // kept to opacity/translate only, respects prefers-reduced-motion via
+    // CSS, and reveals immediately for anyone without IntersectionObserver
+    // rather than leaving content permanently invisible.
+    var targets = document.querySelectorAll('.pp-reveal');
+    if (!('IntersectionObserver' in window)) {
+      targets.forEach(function (el) { el.classList.add('pp-revealed'); });
+      return;
+    }
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('pp-revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    targets.forEach(function (el) { observer.observe(el); });
   })();
 </script>
 {% endblock extra_js %}

@@ -10,6 +10,7 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Avg, Count
+from django.utils import timezone
 from users.models import Profile
 
 class HomeView(ListView):
@@ -897,6 +898,23 @@ class OwnerPortfolioView(DetailView):
             .exclude(city='').values_list('city', flat=True).distinct().order_by('city')
         )
 
+        # ── Category section (property types this owner has, with counts) -
+        #    also doubles as a filter: clicking one links to ?property_type=X ──
+        type_labels = dict(PropertyType.choices)
+        category_breakdown = [
+            {'value': row['property_type'], 'label': type_labels.get(row['property_type'], row['property_type']), 'count': row['count']}
+            for row in Property.objects.filter(owner=owner_user, is_active=True)
+            .values('property_type').annotate(count=Count('id')).order_by('-count')
+        ]
+
+        # ── Region marquee (cities this owner has listings in, with counts) -
+        #    also doubles as a filter: clicking one links to ?city=X ──
+        region_breakdown = [
+            {'city': row['city'], 'count': row['count']}
+            for row in Property.objects.filter(owner=owner_user, is_active=True)
+            .exclude(city='').values('city').annotate(count=Count('id')).order_by('-count')
+        ]
+
         # ── Hero slideshow images (cached - see home/portfolio.py) ──
         from .portfolio import get_owner_hero_images
         hero_images = get_owner_hero_images(owner_user)
@@ -911,6 +929,42 @@ class OwnerPortfolioView(DetailView):
             avg_rating=Avg('rating'), count=Count('id')
         )
 
+        # Preserve applied filters across pagination links, but not the page
+        # number itself - that's supplied fresh by each link
+        # (?page=N&{{ querystring }}). Leaving 'page' in here stacked
+        # duplicate page params (?page=2&page=1&page=3...) since the
+        # querystring captured at request time still held the OLD page value.
+        querystring_params = request.GET.copy()
+        querystring_params.pop('page', None)
+        querystring = querystring_params.urlencode()
+
+        # ── Hero rotating tagline words. The owner's actual name stays
+        #    fixed (separate <h1>, not part of this list) - only the line
+        #    underneath it rotates. Their own tagline (if set) leads, then
+        #    a few generic static phrases.
+        hero_taglines = []
+        if profile.owner_tagline:
+            hero_taglines.append(profile.owner_tagline)
+        hero_taglines += [
+            'Find your next home, sourced with care.',
+            'Verified listings. Honest advice.',
+            'Helping Kenyans find their place.',
+        ]
+
+        # ── Fallback testimonials, shown only when this owner has zero real
+        #    reviews yet. Kept generic and role-labeled rather than
+        #    attributed to a fabricated named person - these are clearly
+        #    marked "Example" in the template, not presented as real
+        #    reviews from real clients.
+        fallback_testimonials = [
+            {'role': 'Home Seeker', 'text': "Communication was clear from the first message to move-in day. Exactly what I was looking for."},
+            {'role': 'Property Investor', 'text': "Listings were accurate and well documented - no surprises when I viewed the property in person."},
+            {'role': 'Long-term Tenant', 'text': "Responsive, professional, and easy to reach whenever I had a question about the property."},
+        ]
+
+        from decimal import Decimal
+        years_active = max(1, (timezone.now() - owner_user.date_joined).days // 365)
+
         context.update({
             'properties': page_obj,
             'page_obj': page_obj,
@@ -918,15 +972,19 @@ class OwnerPortfolioView(DetailView):
             'property_types': PropertyType.choices,
             'property_statuses': PropertyStatus.choices,
             'owner_cities': owner_cities,
+            'category_breakdown': category_breakdown,
+            'region_breakdown': region_breakdown,
             'hero_images': hero_images,
+            'hero_taglines': hero_taglines,
+            'years_active': years_active,
             'brand_name': profile.owner_brand_name or profile.get_full_name() or owner_user.username,
             'profile_picture_url': profile.profile_picture.url if profile.profile_picture else None,
             'is_own_profile': request.user.is_authenticated and request.user.id == owner_user.id,
             'reviews': reviews,
             'review_avg': review_stats['avg_rating'] or 0,
             'review_count': review_stats['count'] or 0,
-            # preserve applied filters in pagination links
-            'querystring': request.GET.urlencode(),
+            'fallback_testimonials': fallback_testimonials,
+            'querystring': querystring,
         })
         return context
 

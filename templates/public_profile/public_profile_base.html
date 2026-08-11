@@ -53,7 +53,7 @@
 
   {% block header %}
   <header class="pp-header" id="pp-header">
-    <a href="." class="pp-header-brand">
+    <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}" class="pp-header-brand">
       {% if profile_picture_url %}
         <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-header-avatar" loading="eager" />
       {% else %}
@@ -61,17 +61,28 @@
       {% endif %}
       <span class="pp-header-brandname">{{ brand_name }}</span>
     </a>
+
+    <nav class="pp-header-nav" id="pp-header-nav">
+      {% block nav_links %}{% endblock nav_links %}
+      <div class="pp-header-nav-actions">
+        {% if is_own_profile %}
+          <a href="{% url 'analytics:profile_analytics' username=owner_profile.user.username %}" class="pp-btn pp-btn-outline">Analytics</a>
+          <a href="{% url 'dashboard' %}" class="pp-btn pp-btn-outline">Dashboard</a>
+        {% endif %}
+      </div>
+    </nav>
+
     <div class="pp-header-actions">
-      {% if is_own_profile %}
-        <a href="{% url 'analytics:profile_analytics' username=owner_profile.user.username %}" class="pp-btn pp-btn-outline">Analytics</a>
-        <a href="{% url 'dashboard' %}" class="pp-btn pp-btn-outline">Dashboard</a>
-      {% endif %}
       <button type="button" class="pp-theme-toggle" id="pp-theme-toggle" aria-label="Toggle dark mode">
         <svg id="pp-theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         <svg id="pp-theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display:none;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <button type="button" class="pp-hamburger" id="pp-hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
+  <div class="pp-nav-backdrop" id="pp-nav-backdrop"></div>
   {% endblock header %}
 
   {% block content %}{% endblock content %}
@@ -121,6 +132,28 @@
           document.documentElement.setAttribute('data-pp-theme', next);
           localStorage.setItem('pp-theme', next);
           syncIcon();
+        });
+      }
+
+      var hamburger = document.getElementById('pp-hamburger');
+      var nav = document.getElementById('pp-header-nav');
+      var backdrop = document.getElementById('pp-nav-backdrop');
+      function closeNav() {
+        if (nav) nav.classList.remove('pp-nav-open');
+        if (backdrop) backdrop.classList.remove('pp-nav-backdrop-visible');
+        if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+      }
+      if (hamburger && nav) {
+        hamburger.addEventListener('click', function () {
+          var isOpen = nav.classList.toggle('pp-nav-open');
+          if (backdrop) backdrop.classList.toggle('pp-nav-backdrop-visible', isOpen);
+          hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+      }
+      if (backdrop) backdrop.addEventListener('click', closeNav);
+      if (nav) {
+        nav.querySelectorAll('a').forEach(function (link) {
+          link.addEventListener('click', closeNav);
         });
       }
     })();
