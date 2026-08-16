@@ -37,6 +37,7 @@ urlpatterns = [
     path('movers/map/', MoverMapView.as_view(), name='mover_map'),
     path('movers/<str:username>/', MoverDetailView.as_view(), name='mover_detail'),
     path('owners/<str:username>/', OwnerPortfolioView.as_view(), name='owner_portfolio'),
+    path('owners/<str:username>/property/<slug:slug>/', PublicProfilePropertyDetailView.as_view(), name='public_profile_property_detail'),
     path('api/movers/map-data/', MoverMapDataView.as_view(), name='mover_map_data'),
     path('api/movers/nearby/', MoversNearbyDataView.as_view(), name='movers_nearby_data'),
     path('api/move-requests/<int:pk>/commit/', CommitMoveOfferView.as_view(), name='commit_move_offer'),

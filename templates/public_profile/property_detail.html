@@ -1,0 +1,166 @@
+{% extends "public_profile/public_profile_base.html" %}
+{% load humanize %}
+{% load icons %}
+
+{% block title %}{{ property.title }} - {{ brand_name }}{% endblock title %}
+{% block meta_description %}{{ property.bedrooms }} bed, {{ property.bathrooms }} bath {{ property.get_property_type_display }} in {{ property.city }}. Listed by {{ brand_name }} on 2Hame.{% endblock meta_description %}
+{% block canonical_url %}https://2hame.com{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endblock canonical_url %}
+{% block og_url %}https://2hame.com{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endblock og_url %}
+{% block og_title %}{{ property.title }} - {{ brand_name }}{% endblock og_title %}
+{% block og_description %}{{ property.bedrooms }} bed, {{ property.bathrooms }} bath {{ property.get_property_type_display }} in {{ property.city }}. KES {{ property.price|intcomma }}.{% endblock og_description %}
+{% block og_image %}{% if property.main_image %}https://2hame.com{{ property.main_image.url }}{% endif %}{% endblock og_image %}
+
+{% block nav_links %}
+<a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}">Back to Listings</a>
+<a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}#connect">Contact</a>
+{% endblock nav_links %}
+
+{% block content %}
+<section class="pp-property-detail">
+  <div class="pp-container">
+    <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}" class="pp-back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to {{ brand_name }}'s Listings
+    </a>
+
+    <!-- ─── Gallery ─── -->
+    <div class="pp-pd-gallery">
+      <div class="pp-pd-main-frame" id="pp-pd-main-frame">
+        {% if all_images %}
+          <img src="{{ all_images.0.url }}" alt="{{ property.title }}" class="pp-pd-main-photo" id="pp-pd-main-img" />
+          {% if all_images|length > 1 %}<div class="pp-pd-counter"><span id="pp-pd-current">1</span> / {{ all_images|length }}</div>{% endif %}
+        {% else %}
+          <div class="pp-pd-main-fallback">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="56" height="56"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
+          </div>
+        {% endif %}
+      </div>
+      {% if all_images|length > 1 %}
+      <div class="pp-pd-thumb-row" id="pp-pd-thumb-row">
+        {% for img in all_images %}
+          <button type="button" class="pp-pd-thumb{% if forloop.first %} pp-pd-thumb-active{% endif %}" data-pp-thumb-index="{{ forloop.counter0 }}">
+            <img src="{{ img.url }}" alt="{{ img.caption }}" {% if not forloop.first %}loading="lazy"{% endif %} />
+          </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="pp-pd-layout">
+      <div class="pp-pd-main">
+        <div class="pp-pd-header">
+          <div>
+            <p class="pp-pd-price">KES {{ property.price|intcomma }}{% if property.status == 'rented' %} <span class="pp-pd-price-suffix">/mo</span>{% endif %}</p>
+            <h1 class="pp-pd-title">{{ property.title }}</h1>
+            <p class="pp-pd-location">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ property.address|default:property.city }}{% if property.state %}, {{ property.state }}{% endif %}
+            </p>
+          </div>
+          <span class="pp-pd-status-badge">{{ property.get_status_display }}</span>
+        </div>
+
+        <div class="pp-pd-facts">
+          <div class="pp-pd-fact"><span class="pp-pd-fact-value">{{ property.bedrooms }}</span><span class="pp-pd-fact-label">Bedrooms</span></div>
+          <div class="pp-pd-fact"><span class="pp-pd-fact-value">{{ property.bathrooms }}</span><span class="pp-pd-fact-label">Bathrooms</span></div>
+          {% if property.area_sqft %}<div class="pp-pd-fact"><span class="pp-pd-fact-value">{{ property.area_sqft }}</span><span class="pp-pd-fact-label">m²</span></div>{% endif %}
+          <div class="pp-pd-fact"><span class="pp-pd-fact-value">{{ property.get_property_type_display }}</span><span class="pp-pd-fact-label">Type</span></div>
+        </div>
+
+        <div class="pp-pd-section">
+          <h2 class="pp-pd-section-title">Description</h2>
+          <p class="pp-pd-desc">{{ property.description|default:"No description provided yet."|linebreaksbr }}</p>
+        </div>
+
+        {% if property.amenities.all %}
+        <div class="pp-pd-section">
+          <h2 class="pp-pd-section-title">Amenities</h2>
+          <ul class="pp-pd-amenities">
+            {% for amenity in property.amenities.all %}
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                {{ amenity.name }}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- ─── Sticky contact card ─── -->
+      <aside class="pp-pd-sidebar">
+        <div class="pp-pd-contact-card">
+          <div class="pp-pd-contact-owner">
+            {% if profile_picture_url %}
+              <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-pd-contact-avatar" />
+            {% else %}
+              <div class="pp-header-avatar-fallback">{{ brand_name|first|upper }}</div>
+            {% endif %}
+            <div>
+              <p class="pp-pd-contact-name">{{ brand_name }}</p>
+              <p class="pp-pd-contact-role">Property Owner</p>
+            </div>
+          </div>
+          {% if owner_profile.owner_whatsapp_number %}
+            <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information?{% endfilter %}"
+               target="_blank" rel="noopener noreferrer" class="pp-btn pp-btn-whatsapp" style="width:100%;justify-content:center;margin-top:1rem;">
+              {% brand_icon "whatsapp" size=16 class_name="pp-whatsapp-icon" %}
+              Message on WhatsApp
+            </a>
+          {% endif %}
+          <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}#connect" class="pp-btn pp-btn-outline" style="width:100%;justify-content:center;margin-top:0.6rem;">View All Listings</a>
+        </div>
+      </aside>
+    </div>
+
+    {% if similar_properties %}
+    <div class="pp-pd-section" style="margin-top:2rem;">
+      <h2 class="pp-pd-section-title">More from {{ brand_name }}</h2>
+      <div class="pp-property-grid">
+        {% for sp in similar_properties %}
+        <div class="pp-card">
+          {% if sp.main_image %}
+            <img src="{{ sp.main_image.url }}" alt="{{ sp.title }}" class="pp-card-image" loading="lazy" />
+          {% else %}
+            <div class="pp-card-image-fallback">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
+            </div>
+          {% endif %}
+          <div class="pp-card-body">
+            <p class="pp-card-price">KES {{ sp.price|intcomma }}</p>
+            <h3 class="pp-card-title">{{ sp.title }}</h3>
+            <p class="pp-card-location">{{ sp.city }}</p>
+            <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=sp.slug %}" class="pp-btn pp-btn-outline" style="width:100%;justify-content:center;">Details</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('load', function () {
+  var images = [{% for img in all_images %}{ url: "{{ img.url|escapejs }}" }{% if not forloop.last %},{% endif %}{% endfor %}];
+  var mainImg = document.getElementById('pp-pd-main-img');
+  var counter = document.getElementById('pp-pd-current');
+  var thumbs = document.querySelectorAll('[data-pp-thumb-index]');
+
+  thumbs.forEach(function (thumb) {
+    thumb.addEventListener('click', function () {
+      var idx = parseInt(thumb.getAttribute('data-pp-thumb-index'), 10);
+      if (!images[idx] || !mainImg) return;
+      mainImg.src = images[idx].url;
+      if (counter) counter.textContent = idx + 1;
+      thumbs.forEach(function (t) { t.classList.remove('pp-pd-thumb-active'); });
+      thumb.classList.add('pp-pd-thumb-active');
+      thumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    });
+  });
+});
+</script>
+{% endblock extra_js %}

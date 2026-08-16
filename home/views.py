@@ -989,6 +989,57 @@ class OwnerPortfolioView(DetailView):
         return context
 
 
+class PublicProfilePropertyDetailView(DetailView):
+    """
+    Property detail page rendered INSIDE an owner's isolated public-profile
+    "mini-site" (see templates/public_profile/). Deliberately separate from
+    home:about_property, the main 2Hame site's property page - a visitor
+    exploring an owner's branded profile should never get pulled into the
+    main 2Hame nav/footer/branding. Same Property model, just a different
+    view + template; no new models.
+    """
+    model = Property
+    template_name = 'public_profile/property_detail.html'
+    context_object_name = 'property'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        # Scoped to the username in the URL, not just the slug - keeps the
+        # URL honest (this property must actually belong to this owner) and
+        # 404s instead of quietly rendering under the wrong owner's
+        # branding if someone hand-edits the URL to a property they don't
+        # own.
+        return Property.objects.filter(
+            owner__username=self.kwargs['username'], is_active=True
+        ).select_related('owner', 'owner__profile').prefetch_related('images', 'amenities')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        prop = self.object
+        profile = prop.owner.profile
+
+        all_images = []
+        if prop.main_image:
+            all_images.append({'url': prop.main_image.url, 'caption': prop.title})
+        for img in prop.images.all():
+            all_images.append({'url': img.image.url, 'caption': img.caption or prop.title})
+
+        similar_properties = Property.objects.filter(
+            owner=prop.owner, is_active=True, property_type=prop.property_type
+        ).exclude(pk=prop.pk)[:3]
+
+        context.update({
+            'owner_profile': profile,
+            'brand_name': profile.owner_brand_name or profile.get_full_name() or prop.owner.username,
+            'profile_picture_url': profile.profile_picture.url if profile.profile_picture else None,
+            'is_own_profile': self.request.user.is_authenticated and self.request.user.id == prop.owner.id,
+            'all_images': all_images,
+            'similar_properties': similar_properties,
+        })
+        return context
+
+
 class MoversNearbyDataView(LoginRequiredMixin, View):
     """JSON feed of movers with a set base location, for the property map search
     and the mover map's peer-visibility tab. Supports optional vehicle filtering."""

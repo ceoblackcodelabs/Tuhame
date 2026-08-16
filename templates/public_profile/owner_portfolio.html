@@ -236,7 +236,7 @@
                 <span>{{ property.bathrooms }} bath</span>
               </div>
               <div class="pp-card-actions">
-                <a href="{% url 'home:about_property' slug=property.slug %}" class="pp-btn pp-btn-outline">Details</a>
+                <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="pp-btn pp-btn-outline">Details</a>
                 {% if owner_profile.owner_whatsapp_number %}
                   <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information?{% endfilter %}"
                      target="_blank" rel="noopener noreferrer" class="pp-btn pp-btn-whatsapp">

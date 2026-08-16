@@ -5,7 +5,7 @@
    not a page inside 2Hame. See public_profile_base.html.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Jost:wght@300;400;500;600;700&display=swap');
 
 :root {
   --pp-gold: #B8935A;
@@ -19,8 +19,8 @@
   --pp-text-muted: #6B6B70;
   --pp-border: #E8E4DD;
 
-  --pp-font-display: 'Cormorant Garamond', Georgia, serif;
-  --pp-font-body: 'Manrope', -apple-system, sans-serif;
+  --pp-font-display: 'Playfair Display', Georgia, serif;
+  --pp-font-body: 'Jost', -apple-system, sans-serif;
 
   --pp-radius: 4px;
   --pp-radius-lg: 8px;
@@ -918,21 +918,25 @@ a { color: inherit; text-decoration: none; }
 /* ── Hero: rotating tagline + animated counters ── */
 .pp-hero-tagline-rotator {
   position: relative;
-  height: 1.8em;
-  overflow: hidden;
+  min-height: 3.2em;
+  overflow: visible;
 }
 
 .pp-hero-tagline-word {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 8px);
+  width: 100%;
   opacity: 0;
-  transform: translateY(8px);
   transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
 }
 
 .pp-hero-tagline-word.pp-word-active {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
+  pointer-events: auto;
 }
 
 .pp-hero-counters {
@@ -981,12 +985,19 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pp-region-card {
+  display: block;
   flex-shrink: 0;
   width: 200px;
   padding: 1.1rem 1.4rem;
   border: 1px solid rgba(184,147,90,0.3);
   border-radius: var(--pp-radius);
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.03);
+  transition: var(--pp-transition);
+}
+
+.pp-region-card:hover {
+  border-color: var(--pp-gold);
+  background: rgba(184,147,90,0.08);
 }
 
 .pp-region-card-name {
@@ -1111,4 +1122,239 @@ a { color: inherit; text-decoration: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .pp-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ── Property detail page ── */
+.pp-property-detail {
+  padding: 7rem 0 4rem;
+}
+
+.pp-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pp-text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.pp-back-link:hover { color: var(--pp-gold); }
+
+.pp-pd-gallery { margin-bottom: 2rem; }
+
+.pp-pd-main-frame {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  border-radius: var(--pp-radius-lg);
+  overflow: hidden;
+  background: var(--pp-black-soft);
+}
+
+.pp-pd-main-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pp-pd-main-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pp-gold);
+}
+
+.pp-pd-counter {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background: rgba(11,11,12,0.7);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+}
+
+.pp-pd-thumb-row {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding: 0.75rem 0.1rem 0;
+}
+
+.pp-pd-thumb {
+  display: block;
+  flex-shrink: 0;
+  width: 90px;
+  height: 68px;
+  border-radius: var(--pp-radius);
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.6;
+  background: none;
+  transition: var(--pp-transition);
+}
+
+.pp-pd-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.pp-pd-thumb:hover { opacity: 0.85; }
+
+.pp-pd-thumb-active {
+  opacity: 1;
+  border-color: var(--pp-gold);
+}
+
+.pp-pd-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pp-pd-layout { grid-template-columns: 1fr; }
+  .pp-pd-main-frame { height: 300px; }
+}
+
+.pp-pd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pp-pd-price {
+  font-family: var(--pp-font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--pp-gold);
+  margin: 0 0 0.35rem;
+}
+
+.pp-pd-price-suffix { font-size: 1rem; color: var(--pp-text-muted); font-weight: 400; }
+
+.pp-pd-title {
+  font-family: var(--pp-font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+
+.pp-pd-location {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--pp-text-muted);
+  font-size: 0.9rem;
+}
+
+.pp-pd-status-badge {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--pp-gold);
+  color: var(--pp-gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pp-pd-facts {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--pp-border);
+  border-bottom: 1px solid var(--pp-border);
+  margin-bottom: 2rem;
+}
+
+.pp-pd-fact { display: flex; flex-direction: column; }
+
+.pp-pd-fact-value {
+  font-family: var(--pp-font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.pp-pd-fact-label {
+  font-size: 0.72rem;
+  color: var(--pp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.15rem;
+}
+
+.pp-pd-section { margin-bottom: 2rem; }
+
+.pp-pd-section-title {
+  font-family: var(--pp-font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.pp-pd-desc {
+  color: var(--pp-text-muted);
+  line-height: 1.8;
+}
+
+.pp-pd-amenities {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.pp-pd-amenities li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.pp-pd-amenities svg { color: var(--pp-gold); flex-shrink: 0; }
+
+.pp-pd-sidebar { position: sticky; top: 90px; }
+
+.pp-pd-contact-card {
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius-lg);
+  padding: 1.5rem;
+}
+
+.pp-pd-contact-owner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pp-pd-contact-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--pp-gold);
+}
+
+.pp-pd-contact-name { font-weight: 700; font-size: 0.95rem; margin: 0; }
+
+.pp-pd-contact-role { font-size: 0.78rem; color: var(--pp-text-muted); margin: 0; }
+
+@media (max-width: 480px) {
+  .pp-pd-amenities { grid-template-columns: 1fr; }
+  .pp-pd-facts { gap: 1.25rem; }
 }
