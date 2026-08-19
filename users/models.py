@@ -176,6 +176,7 @@ class Profile(models.Model):
     owner_instagram_url = models.URLField(blank=True)
     owner_facebook_url = models.URLField(blank=True)
     owner_youtube_url = models.URLField(blank=True)
+    owner_tiktok_url = models.URLField(blank=True)
 
     class Meta:
         ordering = ['-created_at']

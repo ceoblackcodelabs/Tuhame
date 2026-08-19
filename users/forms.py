@@ -60,6 +60,7 @@ class ProfileForm(forms.ModelForm):
             'owner_instagram_url',
             'owner_facebook_url',
             'owner_youtube_url',
+            'owner_tiktok_url',
         ]
         widgets = {
             'profile_picture': PlainClearableFileInput(attrs={
@@ -92,6 +93,7 @@ class ProfileForm(forms.ModelForm):
             'owner_instagram_url': forms.URLInput(attrs={'placeholder': 'https://instagram.com/yourbusiness'}),
             'owner_facebook_url': forms.URLInput(attrs={'placeholder': 'https://facebook.com/yourbusiness'}),
             'owner_youtube_url': forms.URLInput(attrs={'placeholder': 'https://youtube.com/@yourbusiness'}),
+            'owner_tiktok_url': forms.URLInput(attrs={'placeholder': 'https://tiktok.com/@yourbusiness'}),
             'bio': forms.Textarea(attrs={
                 'rows': 4,
                 'placeholder': 'Tell us about yourself...'

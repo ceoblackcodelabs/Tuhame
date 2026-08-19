@@ -29,10 +29,9 @@
     <div class="pp-hero-slide pp-hero-slide-active" style="background:linear-gradient(135deg,#16161A,#0B0B0C);"></div>
   {% endfor %}
   <div class="pp-hero-overlay"></div>
-  {{ hero_taglines|json_script:"pp-hero-taglines-data" }}
   <div class="pp-hero-content">
     <p class="pp-hero-eyebrow">{% icon "home" %} Verified Property Owner{% if owner_cities %} · {{ owner_cities|first }}{% endif %}</p>
-    <h1 class="pp-hero-name">{{ brand_name }} <span class="pp-hero-typewriter" id="pp-hero-typewriter"></span></h1>
+    <h1 class="pp-hero-name">{{ brand_name }}</h1>
     <p class="pp-hero-tagline">{{ owner_profile.bio|truncatewords:28|default:"Verified listings, honest advice, and support from first message to move-in day." }}</p>
 
     <div class="pp-hero-ctas">
@@ -216,6 +215,7 @@
       </aside>
 
       <div>
+        <div id="pp-listings-results">
         <div class="pp-property-grid">
           {% for property in properties %}
           <div class="pp-card pp-reveal">
@@ -240,7 +240,7 @@
               <div class="pp-card-actions">
                 <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="pp-btn pp-btn-outline">Details</a>
                 {% if owner_profile.owner_whatsapp_number %}
-                  <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information?{% endfilter %}"
+                  <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information? https://2hame.com{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endfilter %}"
                      target="_blank" rel="noopener noreferrer" class="pp-btn pp-btn-whatsapp">
                     {% brand_icon "whatsapp" size=14 class_name="pp-whatsapp-icon" %}
                     WhatsApp
@@ -271,6 +271,7 @@
           {% endif %}
         </div>
         {% endif %}
+        </div>
       </div>
     </div>
   </div>
@@ -367,58 +368,6 @@
   })();
 
   (function () {
-    // Hero headline typewriter - types and deletes each phrase in place
-    // next to the brand name, cursor blinks between phrases. Uses a fixed
-    // inline-block with no absolute positioning, so it can never collapse
-    // the way the old word-rotator did.
-    var el = document.getElementById('pp-hero-typewriter');
-    var dataEl = document.getElementById('pp-hero-taglines-data');
-    if (!el || !dataEl) return;
-
-    var phrases = [];
-    try { phrases = JSON.parse(dataEl.textContent) || []; } catch (e) { phrases = []; }
-    phrases = phrases.filter(function (p) { return p && p.trim(); });
-    if (!phrases.length) { el.remove(); return; }
-
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.textContent = phrases[0];
-      return;
-    }
-
-    var phraseIndex = 0, charIndex = 0, deleting = false;
-    var typeSpeed = 55, deleteSpeed = 30, holdTime = 1800, gapTime = 400;
-
-    el.classList.add('pp-typewriter-blink');
-
-    function tick() {
-      var current = phrases[phraseIndex];
-      el.classList.toggle('pp-typewriter-blink', charIndex === 0 || charIndex === current.length);
-
-      if (!deleting) {
-        charIndex++;
-        el.textContent = current.slice(0, charIndex);
-        if (charIndex === current.length) {
-          deleting = true;
-          setTimeout(tick, holdTime);
-          return;
-        }
-        setTimeout(tick, typeSpeed);
-      } else {
-        charIndex--;
-        el.textContent = current.slice(0, charIndex);
-        if (charIndex === 0) {
-          deleting = false;
-          phraseIndex = (phraseIndex + 1) % phrases.length;
-          setTimeout(tick, gapTime);
-          return;
-        }
-        setTimeout(tick, deleteSpeed);
-      }
-    }
-    setTimeout(tick, 500);
-  })();
-
-  (function () {
     // Animated counters on the hero - count up once, when scrolled near.
     var counters = document.querySelectorAll('[data-pp-count]');
     if (!counters.length) return;
@@ -476,6 +425,58 @@
       });
     }, { threshold: 0.15 });
     targets.forEach(function (el) { observer.observe(el); });
+  })();
+
+  (function () {
+    // AJAX pagination for the listings grid - clicking a page link fetches
+    // just that page and swaps the grid + pagination in place, no full
+    // reload. Falls back to a normal navigation on any fetch failure.
+    var results = document.getElementById('pp-listings-results');
+    if (!results) return;
+
+    function markRevealed(container) {
+      container.querySelectorAll('.pp-reveal').forEach(function (el) {
+        el.classList.add('pp-revealed');
+      });
+    }
+
+    function loadPage(url, pushState) {
+      results.classList.add('pp-listings-loading');
+      fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (res) {
+          if (!res.ok) throw new Error('Bad response');
+          return res.text();
+        })
+        .then(function (html) {
+          var doc = new DOMParser().parseFromString(html, 'text/html');
+          var fresh = doc.getElementById('pp-listings-results');
+          if (!fresh) throw new Error('No results container in response');
+          results.innerHTML = fresh.innerHTML;
+          markRevealed(results);
+          if (pushState) window.history.pushState({ ppListingsUrl: url }, '', url);
+          var listingsSection = document.getElementById('listings');
+          if (listingsSection) listingsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        })
+        .catch(function () {
+          window.location.href = url;
+        })
+        .finally(function () {
+          results.classList.remove('pp-listings-loading');
+        });
+    }
+
+    results.addEventListener('click', function (e) {
+      var link = e.target.closest('.pp-pagination a');
+      if (!link || !results.contains(link)) return;
+      e.preventDefault();
+      loadPage(link.getAttribute('href'), true);
+    });
+
+    window.addEventListener('popstate', function (e) {
+      if (e.state && e.state.ppListingsUrl) {
+        loadPage(e.state.ppListingsUrl, false);
+      }
+    });
   })();
 </script>
 {% endblock extra_js %}

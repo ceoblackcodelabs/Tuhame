@@ -908,12 +908,29 @@ class OwnerPortfolioView(DetailView):
         ]
 
         # ── Region marquee (cities this owner has listings in, with counts) -
-        #    also doubles as a filter: clicking one links to ?city=X ──
+        #    also doubles as a filter: clicking one links to ?city=X. Always
+        #    shows at least 5 cards (padded with 0-listing placeholder
+        #    cities) so the infinite-scroll marquee always has enough width
+        #    to loop smoothly instead of sitting static/flush-left. ──
         region_breakdown = [
             {'city': row['city'], 'count': row['count']}
             for row in Property.objects.filter(owner=owner_user, is_active=True)
             .exclude(city='').values('city').annotate(count=Count('id')).order_by('-count')
         ]
+        MIN_REGION_CARDS = 5
+        FALLBACK_REGIONS = [
+            'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret',
+            'Thika', 'Machakos', 'Kiambu', 'Naivasha', 'Malindi',
+        ]
+        if len(region_breakdown) < MIN_REGION_CARDS:
+            existing_cities = {row['city'].strip().lower() for row in region_breakdown}
+            for fallback_city in FALLBACK_REGIONS:
+                if len(region_breakdown) >= MIN_REGION_CARDS:
+                    break
+                if fallback_city.strip().lower() in existing_cities:
+                    continue
+                region_breakdown.append({'city': fallback_city, 'count': 0})
+                existing_cities.add(fallback_city.strip().lower())
 
         # ── Hero slideshow images (cached - see home/portfolio.py) ──
         from .portfolio import get_owner_hero_images

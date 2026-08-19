@@ -102,7 +102,7 @@
             </div>
           </div>
           {% if owner_profile.owner_whatsapp_number %}
-            <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information?{% endfilter %}"
+            <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information? {{ request.build_absolute_uri }}{% endfilter %}"
                target="_blank" rel="noopener noreferrer" class="pp-btn pp-btn-whatsapp" style="width:100%;justify-content:center;margin-top:1rem;">
               {% brand_icon "whatsapp" size=16 class_name="pp-whatsapp-icon" %}
               Message on WhatsApp

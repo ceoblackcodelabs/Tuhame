@@ -112,13 +112,6 @@ a { color: inherit; text-decoration: none; }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pp-caret-blink {
-  0%, 100% { border-color: var(--pp-gold-light); }
-  50% { border-color: transparent; }
-}
-
-.pp-hero-typewriter.pp-typewriter-blink { animation: pp-caret-blink 0.8s step-end infinite; }
-
 @media (prefers-reduced-motion: reduce) {
   .pp-splash-avatar, .pp-splash-name, .pp-splash-rule { animation: none; opacity: 1; }
 }
@@ -186,7 +179,12 @@ a { color: inherit; text-decoration: none; }
 .pp-topbar-social a:hover { color: var(--pp-gold-light); opacity: 1; }
 
 @media (max-width: 640px) {
-  .pp-topbar-social { display: none; }
+  /* Icons only on small screens - phone number / email text hidden,
+     but the icon (and its tap target) stays so contact is one tap away. */
+  .pp-topbar-text { display: none; }
+  .pp-topbar-contacts { gap: 1.1rem; }
+  .pp-topbar-contacts a { gap: 0; }
+  .pp-topbar-social { gap: 0.75rem; }
 }
 
 .pp-header {
@@ -360,35 +358,10 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.15;
 }
 
-/* Typewriter line - fixed width so it can never collapse the way the old
-   absolutely-positioned word-rotator did (that bug squashed the subtitle
-   into a 1-char column). This sits inline with the heading. */
-.pp-hero-typewriter {
-  display: inline-block;
-  color: var(--pp-gold-light);
-  border-right: 2px solid var(--pp-gold-light);
-  padding-right: 4px;
-  max-width: 100%;
-}
-
-.pp-hero-typewriter.pp-typewriter-caret-off { border-right-color: transparent; }
-
-@media (prefers-reduced-motion: reduce) {
-  .pp-hero-typewriter { border-right: none; padding-right: 0; }
-}
-
-@media (max-width: 560px) {
-  .pp-hero-typewriter {
-    display: block;
-    margin: 0.35rem auto 0;
-    font-size: clamp(1.15rem, 5vw, 1.75rem);
-    white-space: normal;
-    max-width: 100%;
-  }
-}
-
 /* Subtext paragraph - width is always explicit (100% up to max-width) so
-   it renders as a normal centered block, never a collapsed column. */
+   it renders as a normal centered block, never a collapsed column (the
+   old absolutely-positioned word-rotator here used to squash it into a
+   1-char column). */
 .pp-hero-tagline {
   width: 100%;
   color: rgba(251,250,248,0.85);
@@ -648,6 +621,15 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 640px) {
   .pp-property-grid { grid-template-columns: 1fr; }
+}
+
+#pp-listings-results {
+  transition: opacity 0.25s ease;
+}
+
+#pp-listings-results.pp-listings-loading {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .pp-card {
