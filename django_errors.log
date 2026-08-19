@@ -194,3 +194,19 @@ Traceback (most recent call last):
   File "/home/blacksheep/CODES/venv/lib/python3.12/site-packages/django/http/request.py", line 203, in get_host
     raise DisallowedHost(msg)
 django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '10.5.5.4:8000'. You may need to add '10.5.5.4' to ALLOWED_HOSTS.
+2026-08-16 15:32:35,741 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:35,764 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:35,777 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:35,790 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:36,019 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:36,038 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:36,078 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:36,105 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,049 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,063 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,082 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,103 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,353 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,368 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,382 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.
+2026-08-16 15:32:53,396 [ERROR] django.server: You're accessing the development server over HTTPS, but it only supports HTTP.

@@ -29,14 +29,16 @@
     <div class="pp-hero-slide pp-hero-slide-active" style="background:linear-gradient(135deg,#16161A,#0B0B0C);"></div>
   {% endfor %}
   <div class="pp-hero-overlay"></div>
+  {{ hero_taglines|json_script:"pp-hero-taglines-data" }}
   <div class="pp-hero-content">
-    <h1 class="pp-hero-name">{{ brand_name }}</h1>
-    <div class="pp-hero-tagline pp-hero-tagline-rotator" id="pp-hero-rotator">
-      {% for word in hero_taglines %}
-        <span class="pp-hero-tagline-word{% if forloop.first %} pp-word-active{% endif %}">{{ word }}</span>
-      {% endfor %}
+    <p class="pp-hero-eyebrow">{% icon "home" %} Verified Property Owner{% if owner_cities %} · {{ owner_cities|first }}{% endif %}</p>
+    <h1 class="pp-hero-name">{{ brand_name }} <span class="pp-hero-typewriter" id="pp-hero-typewriter"></span></h1>
+    <p class="pp-hero-tagline">{{ owner_profile.bio|truncatewords:28|default:"Verified listings, honest advice, and support from first message to move-in day." }}</p>
+
+    <div class="pp-hero-ctas">
+      <a href="#listings" class="pp-hero-cta">View Properties</a>
+      <a href="#connect" class="pp-hero-cta pp-hero-cta-secondary">Contact Us</a>
     </div>
-    <a href="#listings" class="pp-hero-cta">View Properties</a>
 
     <div class="pp-hero-counters">
       <div>
@@ -365,17 +367,55 @@
   })();
 
   (function () {
-    // Hero rotating tagline - cycles through static phrases; the owner's
-    // name stays fixed above it (h1, not part of the rotator).
-    var words = document.querySelectorAll('#pp-hero-rotator .pp-hero-tagline-word');
-    if (words.length > 1) {
-      var idx = 0;
-      setInterval(function () {
-        words[idx].classList.remove('pp-word-active');
-        idx = (idx + 1) % words.length;
-        words[idx].classList.add('pp-word-active');
-      }, 3200);
+    // Hero headline typewriter - types and deletes each phrase in place
+    // next to the brand name, cursor blinks between phrases. Uses a fixed
+    // inline-block with no absolute positioning, so it can never collapse
+    // the way the old word-rotator did.
+    var el = document.getElementById('pp-hero-typewriter');
+    var dataEl = document.getElementById('pp-hero-taglines-data');
+    if (!el || !dataEl) return;
+
+    var phrases = [];
+    try { phrases = JSON.parse(dataEl.textContent) || []; } catch (e) { phrases = []; }
+    phrases = phrases.filter(function (p) { return p && p.trim(); });
+    if (!phrases.length) { el.remove(); return; }
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = phrases[0];
+      return;
     }
+
+    var phraseIndex = 0, charIndex = 0, deleting = false;
+    var typeSpeed = 55, deleteSpeed = 30, holdTime = 1800, gapTime = 400;
+
+    el.classList.add('pp-typewriter-blink');
+
+    function tick() {
+      var current = phrases[phraseIndex];
+      el.classList.toggle('pp-typewriter-blink', charIndex === 0 || charIndex === current.length);
+
+      if (!deleting) {
+        charIndex++;
+        el.textContent = current.slice(0, charIndex);
+        if (charIndex === current.length) {
+          deleting = true;
+          setTimeout(tick, holdTime);
+          return;
+        }
+        setTimeout(tick, typeSpeed);
+      } else {
+        charIndex--;
+        el.textContent = current.slice(0, charIndex);
+        if (charIndex === 0) {
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          setTimeout(tick, gapTime);
+          return;
+        }
+        setTimeout(tick, deleteSpeed);
+      }
+    }
+    setTimeout(tick, 500);
   })();
 
   (function () {

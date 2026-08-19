@@ -26,6 +26,11 @@
   --pp-radius-lg: 8px;
   --pp-transition: all 0.25s ease;
   --pp-container: 1200px;
+  --pp-topbar-h: 38px;
+}
+
+@media (max-width: 640px) {
+  :root { --pp-topbar-h: 34px; }
 }
 
 [data-pp-theme="dark"] {
@@ -107,13 +112,86 @@ a { color: inherit; text-decoration: none; }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pp-caret-blink {
+  0%, 100% { border-color: var(--pp-gold-light); }
+  50% { border-color: transparent; }
+}
+
+.pp-hero-typewriter.pp-typewriter-blink { animation: pp-caret-blink 0.8s step-end infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .pp-splash-avatar, .pp-splash-name, .pp-splash-rule { animation: none; opacity: 1; }
 }
 
-.pp-header {
+/* ── Top contact bar (sits above the nav, hides on scroll) ── */
+.pp-topbar {
   position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+  height: var(--pp-topbar-h);
+  background: var(--pp-black);
+  color: rgba(251,250,248,0.78);
+  font-size: 0.78rem;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  overflow: hidden;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.pp-topbar.pp-topbar-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pp-topbar-contacts {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.pp-topbar-contacts a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pp-topbar-contacts a svg { flex-shrink: 0; opacity: 0.85; }
+.pp-topbar-contacts a:hover { color: var(--pp-gold-light); }
+
+.pp-topbar-social {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-shrink: 0;
+}
+
+.pp-topbar-social a {
+  display: flex;
+  color: inherit;
+  opacity: 0.8;
+  transition: var(--pp-transition);
+}
+
+.pp-topbar-social a:hover { color: var(--pp-gold-light); opacity: 1; }
+
+@media (max-width: 640px) {
+  .pp-topbar-social { display: none; }
+}
+
+.pp-header {
+  position: fixed;
+  top: var(--pp-topbar-h);
   left: 0;
   right: 0;
   z-index: 100;
@@ -122,10 +200,11 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
   background: transparent;
-  transition: var(--pp-transition);
+  transition: var(--pp-transition), top 0.35s ease;
 }
 
 .pp-header.pp-header-solid {
+  top: 0;
   background: var(--pp-surface);
   border-bottom: 1px solid var(--pp-border);
   padding: 0.85rem 1.5rem;
@@ -261,22 +340,71 @@ a { color: inherit; text-decoration: none; }
   padding: 0 1.5rem;
 }
 
+.pp-hero-eyebrow {
+  color: var(--pp-gold-light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin: 0 0 1rem;
+  opacity: 0.95;
+}
+
 .pp-hero-name {
   font-family: var(--pp-font-display);
   color: #FBFAF8;
   font-size: clamp(2.25rem, 6vw, 4rem);
   font-weight: 600;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.6rem;
   letter-spacing: 0.01em;
+  line-height: 1.15;
 }
 
+/* Typewriter line - fixed width so it can never collapse the way the old
+   absolutely-positioned word-rotator did (that bug squashed the subtitle
+   into a 1-char column). This sits inline with the heading. */
+.pp-hero-typewriter {
+  display: inline-block;
+  color: var(--pp-gold-light);
+  border-right: 2px solid var(--pp-gold-light);
+  padding-right: 4px;
+  max-width: 100%;
+}
+
+.pp-hero-typewriter.pp-typewriter-caret-off { border-right-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-hero-typewriter { border-right: none; padding-right: 0; }
+}
+
+@media (max-width: 560px) {
+  .pp-hero-typewriter {
+    display: block;
+    margin: 0.35rem auto 0;
+    font-size: clamp(1.15rem, 5vw, 1.75rem);
+    white-space: normal;
+    max-width: 100%;
+  }
+}
+
+/* Subtext paragraph - width is always explicit (100% up to max-width) so
+   it renders as a normal centered block, never a collapsed column. */
 .pp-hero-tagline {
+  width: 100%;
   color: rgba(251,250,248,0.85);
   font-size: clamp(0.95rem, 2vw, 1.15rem);
   font-weight: 300;
-  max-width: 520px;
+  max-width: 560px;
   margin: 0 0 2rem;
   line-height: 1.6;
+}
+
+.pp-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .pp-hero-cta {
@@ -295,6 +423,23 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pp-hero-cta:hover { background: var(--pp-gold-light); transform: translateY(-1px); }
+
+.pp-hero-cta-secondary {
+  background: transparent;
+  color: #FBFAF8;
+  border: 1px solid rgba(251,250,248,0.4);
+}
+
+.pp-hero-cta-secondary:hover {
+  background: rgba(251,250,248,0.08);
+  border-color: #FBFAF8;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .pp-hero-ctas { flex-direction: column; width: 100%; max-width: 320px; }
+  .pp-hero-cta { width: 100%; justify-content: center; }
+}
 
 .pp-marquee {
   background: var(--pp-black);
@@ -915,30 +1060,7 @@ a { color: inherit; text-decoration: none; }
   .pp-header-nav-actions .pp-btn { width: 100%; justify-content: center; }
 }
 
-/* ── Hero: rotating tagline + animated counters ── */
-.pp-hero-tagline-rotator {
-  position: relative;
-  min-height: 3.2em;
-  overflow: visible;
-}
-
-.pp-hero-tagline-word {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, 8px);
-  width: 100%;
-  opacity: 0;
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  pointer-events: none;
-}
-
-.pp-hero-tagline-word.pp-word-active {
-  opacity: 1;
-  transform: translate(-50%, 0);
-  pointer-events: auto;
-}
-
+/* ── Hero: animated counters ── */
 .pp-hero-counters {
   display: flex;
   gap: 2.5rem;
