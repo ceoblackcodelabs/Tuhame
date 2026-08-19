@@ -1,0 +1,89 @@
+{% extends "AdminBase.html" %}
+
+{% block title %}{{ title }}{% endblock title %}
+
+{% block content %}
+<div class="main-panel">
+  <div class="content-wrapper">
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">{{ title }}</h4>
+            <p class="card-description">e.g. "KES 5,000 for the first 10 users, unlimited use for 24 months".</p>
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+              </div>
+            {% endif %}
+
+            <form class="forms-sample" method="post">
+              {% csrf_token %}
+
+              <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Offer Title <span class="text-danger">*</span></label>
+                {{ form.title }}
+                {% if form.title.errors %}<small class="text-danger">{{ form.title.errors.0 }}</small>{% endif %}
+              </div>
+
+              <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}<small class="text-danger">{{ form.description.errors.0 }}</small>{% endif %}
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="{{ form.amount.id_for_label }}">Amount (KES) <span class="text-danger">*</span></label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}<small class="text-danger">{{ form.amount.errors.0 }}</small>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="{{ form.max_claims.id_for_label }}">Number of Users <span class="text-danger">*</span></label>
+                    {{ form.max_claims }}
+                    {% if form.max_claims.errors %}<small class="text-danger">{{ form.max_claims.errors.0 }}</small>{% endif %}
+                    <small class="text-muted">How many people can grab this offer.</small>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="{{ form.duration_months.id_for_label }}">Duration (months) <span class="text-danger">*</span></label>
+                    {{ form.duration_months }}
+                    {% if form.duration_months.errors %}<small class="text-danger">{{ form.duration_months.errors.0 }}</small>{% endif %}
+                    <small class="text-muted">How long access lasts once claimed.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="{{ form.available_until.id_for_label }}">Available Until (optional)</label>
+                {{ form.available_until }}
+                {% if form.available_until.errors %}<small class="text-danger">{{ form.available_until.errors.0 }}</small>{% endif %}
+                <small class="text-muted d-block">Leave blank for no cutoff date - it'll just stop once all spots are claimed.</small>
+              </div>
+
+              <div class="form-check mb-3">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active (visible to owners on Settings)</label>
+              </div>
+
+              <button type="submit" class="btn btn-primary me-2">{{ submit_text }}</button>
+              <a href="{% url 'subscriptions:offer_list' %}" class="btn btn-dark">Cancel</a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+      <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+      <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+    </div>
+  </footer>
+</div>
+{% endblock content %}

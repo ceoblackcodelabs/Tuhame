@@ -1,0 +1,122 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Settings{% endblock title %}
+
+{% block content %}
+<div class="main-panel">
+  <div class="content-wrapper">
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- ─── Current Plan ─── -->
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Current Plan</h4>
+            <div class="d-flex align-items-center flex-wrap" style="gap:1rem;">
+              <div>
+                <h3 class="mb-1">{{ subscription.plan.name|default:"Free" }}</h3>
+                <span class="badge {% if subscription.status_label == 'Active' %}bg-success{% elif subscription.status_label == 'Expired' %}bg-danger{% else %}bg-secondary{% endif %}">
+                  {{ subscription.status_label }}
+                </span>
+                {% if subscription.source_offer %}
+                  <span class="text-muted ms-2">via offer: {{ subscription.source_offer.title }}</span>
+                {% endif %}
+              </div>
+              {% if subscription.expires_at %}
+                <div class="ms-auto">
+                  <p class="text-muted mb-0">{% if subscription.is_expired %}Expired on{% else %}Renews / expires on{% endif %}</p>
+                  <p class="mb-0 font-weight-bold">{{ subscription.expires_at|date:"d M Y" }}</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Plans ─── -->
+    <div class="row">
+      <div class="col-12">
+        <h4 class="mb-3">Plans</h4>
+      </div>
+      {% for plan in plans %}
+        <div class="col-md-4 grid-margin stretch-card">
+          <div class="card {% if subscription.plan_id == plan.id %}border-primary{% endif %}">
+            <div class="card-body">
+              <h5 class="card-title mb-1">{{ plan.name }}</h5>
+              <h2 class="mb-2">
+                {% if plan.price %}KES {{ plan.price|floatformat:0|intcomma }}{% else %}Free{% endif %}
+                {% if plan.billing_period == 'monthly' %}<small class="text-muted" style="font-size:0.9rem;">/ month</small>{% endif %}
+                {% if plan.billing_period == 'annual' %}<small class="text-muted" style="font-size:0.9rem;">/ year</small>{% endif %}
+              </h2>
+              <p class="text-muted">{{ plan.description }}</p>
+              {% if subscription.plan_id == plan.id and not subscription.source_offer %}
+                <span class="badge bg-primary">Your current plan</span>
+              {% else %}
+                <button type="button" class="btn btn-sm btn-outline-primary" disabled title="Online purchase coming soon">
+                  {% if plan.billing_period == 'free' %}Switch to Free{% else %}Upgrade{% endif %}
+                </button>
+              {% endif %}
+              {% if request.user.is_superuser %}
+                <a href="{% url 'subscriptions:plan_edit' plan.pk %}" class="btn btn-sm btn-dark ms-1">Edit</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- ─── Offers ─── -->
+    <div class="row">
+      <div class="col-12 d-flex align-items-center justify-content-between mb-1">
+        <h4 class="mb-0">Special Offers</h4>
+        {% if request.user.is_superuser %}
+          <a href="{% url 'subscriptions:offer_list' %}" class="btn btn-sm btn-primary">Manage Offers</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="row">
+      {% for offer in offers %}
+        <div class="col-md-4 grid-margin stretch-card">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title mb-1">{{ offer.title }}</h5>
+              <h3 class="mb-2">KES {{ offer.amount|floatformat:0|intcomma }}</h3>
+              {% if offer.description %}<p class="text-muted mb-2">{{ offer.description }}</p>{% endif %}
+              <p class="mb-1"><strong>{{ offer.duration_months }}</strong> month{{ offer.duration_months|pluralize }} of access</p>
+              <p class="text-muted mb-3">{{ offer.claims_remaining }} of {{ offer.max_claims }} spot{{ offer.max_claims|pluralize }} left</p>
+              {% if offer.claimed_by_user %}
+                <span class="badge bg-success">Claimed</span>
+              {% else %}
+                <form method="post" action="{% url 'subscriptions:claim_offer' offer.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-success">Claim This Offer</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <p class="text-muted">No special offers available right now.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+  <!-- content-wrapper ends -->
+  <footer class="footer">
+    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+      <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+      <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+    </div>
+  </footer>
+</div>
+{% endblock content %}

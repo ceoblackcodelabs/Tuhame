@@ -392,6 +392,51 @@
                                     {% if form.main_image.errors %}
                                         <small class="text-danger">{{ form.main_image.errors.0 }}</small>
                                     {% endif %}
+                                    <small class="text-muted">This is the cover photo shown on listing cards.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gallery Images -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label>Property Images (Gallery)</label>
+                                    <small class="text-muted d-block mb-2">Add extra photos of the property (interior, exterior, rooms). {% if image_formset.forms|length %}Check "Remove" on any existing photo to delete it.{% endif %}</small>
+
+                                    {{ image_formset.management_form }}
+                                    {% if image_formset.non_form_errors %}
+                                        <div class="alert alert-danger">
+                                            {% for error in image_formset.non_form_errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="row" id="gallery-image-rows">
+                                        {% for img_form in image_formset %}
+                                            <div class="col-md-3 col-sm-4 col-6 mb-3 gallery-image-slot">
+                                                <div class="card h-100" style="background:#232332;border:1px solid #3a3a4a;">
+                                                    <div class="card-body p-2">
+                                                        {% if img_form.instance.pk and img_form.instance.image %}
+                                                            <img src="{{ img_form.instance.image.url }}" alt="" style="width:100%;height:100px;object-fit:cover;border-radius:4px;" class="mb-2" />
+                                                        {% endif %}
+                                                        {% for hidden in img_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                                        {{ img_form.image }}
+                                                        {% if img_form.image.errors %}
+                                                            <small class="text-danger d-block">{{ img_form.image.errors.0 }}</small>
+                                                        {% endif %}
+                                                        {% if img_form.instance.pk %}
+                                                            <div class="form-check mt-2">
+                                                                {{ img_form.DELETE }}
+                                                                <label class="form-check-label text-danger" for="{{ img_form.DELETE.id_for_label }}">
+                                                                    Remove this photo
+                                                                </label>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>

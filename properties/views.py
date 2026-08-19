@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.db.models import Q, Sum, Count
 from .models import Property, PropertyType, PropertyStatus, Unit, Booking
-from .forms import PropertyForm, UnitForm, BookingForm, ViewingScheduleForm
+from .forms import PropertyForm, UnitForm, BookingForm, ViewingScheduleForm, PropertyImageFormSet
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib import messages
@@ -250,16 +250,29 @@ class PropertyCreateView(LoginRequiredMixin, CreateView):
         kwargs['user'] = self.request.user
         return kwargs
 
-    def form_valid(self, form):
-        form.instance.owner = self.request.user
-        messages.success(self.request, 'Property added successfully!')
-        return super().form_valid(form)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Add New Property'
         context['submit_text'] = 'Add Property'
+        if 'image_formset' not in context:
+            if self.request.POST:
+                context['image_formset'] = PropertyImageFormSet(self.request.POST, self.request.FILES, prefix='images')
+            else:
+                context['image_formset'] = PropertyImageFormSet(prefix='images')
         return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        image_formset = context['image_formset']
+        if not image_formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, image_formset=image_formset))
+
+        form.instance.owner = self.request.user
+        self.object = form.save()
+        image_formset.instance = self.object
+        image_formset.save()
+        messages.success(self.request, 'Property added successfully!')
+        return redirect(self.get_success_url())
 
 
 class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -277,15 +290,28 @@ class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         kwargs['user'] = self.request.user
         return kwargs
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Property updated successfully!')
-        return super().form_valid(form)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Edit Property'
         context['submit_text'] = 'Update Property'
+        if 'image_formset' not in context:
+            if self.request.POST:
+                context['image_formset'] = PropertyImageFormSet(self.request.POST, self.request.FILES, instance=self.object, prefix='images')
+            else:
+                context['image_formset'] = PropertyImageFormSet(instance=self.object, prefix='images')
         return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        image_formset = context['image_formset']
+        if not image_formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, image_formset=image_formset))
+
+        self.object = form.save()
+        image_formset.instance = self.object
+        image_formset.save()
+        messages.success(self.request, 'Property updated successfully!')
+        return redirect(self.get_success_url())
 
 def geocode_address(request):
     """Geocode address to get latitude and longitude"""

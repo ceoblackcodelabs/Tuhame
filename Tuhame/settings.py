@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'Report',
     'blog',
     'analytics',
+    'subscriptions',
 ]
 
 MIDDLEWARE = [

@@ -1,6 +1,7 @@
 # apps/properties/forms.py
 from django import forms
-from .models import Property, Unit, Booking
+from django.forms import inlineformset_factory
+from .models import Property, Unit, Booking, PropertyImage
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from home.models import ViewingSchedule
@@ -148,6 +149,24 @@ class PropertyForm(forms.ModelForm):
                 is_active=True,
                 groups__name='agents'
             )
+
+
+# Extra gallery photos for a property, alongside the required main_image.
+# extra=6 blank upload slots on top of any existing images when editing;
+# can_delete=True adds a per-row "Remove" checkbox for existing photos.
+PropertyImageFormSet = inlineformset_factory(
+    Property,
+    PropertyImage,
+    fields=['image'],
+    extra=6,
+    can_delete=True,
+    widgets={
+        'image': forms.ClearableFileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*',
+        }),
+    },
+)
 
 
 class UnitForm(forms.ModelForm):

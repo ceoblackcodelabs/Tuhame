@@ -1,0 +1,111 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Manage Offers{% endblock title %}
+
+{% block content %}
+<div class="main-panel">
+  <div class="content-wrapper">
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div>
+                <h4 class="card-title mb-1">Offers</h4>
+                <p class="card-description mb-0">Promo pricing owners can claim from Settings.</p>
+              </div>
+              <div>
+                <a href="{% url 'subscriptions:settings' %}" class="btn btn-dark me-2">Back to Settings</a>
+                <a href="{% url 'subscriptions:offer_add' %}" class="btn btn-primary">+ New Offer</a>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Amount (KES)</th>
+                    <th>Duration</th>
+                    <th>Claims</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for offer in offers %}
+                  <tr>
+                    <td>{{ offer.title }}</td>
+                    <td>{{ offer.amount|floatformat:0|intcomma }}</td>
+                    <td>{{ offer.duration_months }} month{{ offer.duration_months|pluralize }}</td>
+                    <td>{{ offer.claims_count }} / {{ offer.max_claims }}</td>
+                    <td>
+                      {% if offer.is_active %}
+                        <span class="badge bg-success">Active</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'subscriptions:offer_edit' offer.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                      <form method="post" action="{% url 'subscriptions:offer_delete' offer.pk %}" style="display:inline;" onsubmit="return confirm('Delete this offer? This cannot be undone.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="6" class="text-muted text-center py-4">No offers yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title mb-1">Plan Prices</h4>
+            <p class="card-description">Edit what Monthly / Annual cost.</p>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr><th>Plan</th><th>Price (KES)</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {% for plan in plans %}
+                  <tr>
+                    <td>{{ plan.name }}</td>
+                    <td>{{ plan.price|floatformat:0|intcomma }}</td>
+                    <td><a href="{% url 'subscriptions:plan_edit' plan.pk %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <footer class="footer">
+    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+      <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+      <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+    </div>
+  </footer>
+</div>
+{% endblock content %}

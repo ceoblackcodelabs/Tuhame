@@ -331,16 +331,15 @@
           {% comment %} end Clients {% endcomment %}
 
           {% comment %} settings {% endcomment %}
-          {% comment %} <li class="nav-item menu-items">
-            <a class="nav-link" href="">
+          <li class="nav-item menu-items">
+            <a class="nav-link" href="{% url "subscriptions:settings" %}">
               <span class="menu-icon">
                 <i class="mdi mdi-playlist-play"></i>
               </span>
               <span class="menu-title">Settings</span>
-              <i class="menu-arrow"></i>
             </a>
           </li>
-          {% comment %} settings {% endcomment %}
+          {% comment %} end settings {% endcomment %}
 
           {% comment %} logout {% endcomment %}
           <li class="nav-item menu-items">
