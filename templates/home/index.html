@@ -576,70 +576,66 @@
     </div>
     <div class="testimonials-grid">
       {% for t in testimonials %}
-        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
-          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+        <div class="testimonial-card fade-up">
           <div class="testimonial-quote-icon">{% icon "quote" %}</div>
-          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
+          <div class="testimonial-stars">
             {% for i in "12345" %}
               {% if forloop.counter <= t.rating %}
-                <span itemprop="ratingValue" content="{{ t.rating }}">{% icon "star" %}</span>
+                <span>{% icon "star" %}</span>
               {% else %}
                 {% icon "star-outline" %}
               {% endif %}
             {% endfor %}
           </div>
-          <p class="testimonial-text" itemprop="reviewBody">{{ t.comment|truncatewords:32 }}</p>
-          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
-            <div class="testimonial-avatar" itemprop="name">{{ t.reviewer_name|first|upper }}</div>
+          <p class="testimonial-text">{{ t.comment|truncatewords:32 }}</p>
+          <div class="testimonial-footer">
+            <div class="testimonial-avatar">{{ t.reviewer_name|first|upper }}</div>
             <div>
-              <div class="testimonial-name" itemprop="name">{{ t.reviewer_name }}, {{ t.get_reviewer_type_display }}{% if t.is_verified %} {% icon "check" %}{% endif %}</div>
-              <div class="testimonial-location" itemprop="address">{{ t.location }}</div>
+              <div class="testimonial-name">{{ t.reviewer_name }}, {{ t.get_reviewer_type_display }}{% if t.is_verified %} {% icon "check" %}{% endif %}</div>
+              <div class="testimonial-location">{{ t.location }}</div>
             </div>
           </div>
         </div>
       {% empty %}
-        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
-          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+        <div class="testimonial-card fade-up">
           <div class="testimonial-quote-icon">{% icon "quote" %}</div>
-          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
-            <span itemprop="ratingValue" content="5">{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
+          <div class="testimonial-stars">
+            <span>{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
           </div>
-          <p class="testimonial-text" itemprop="reviewBody">Finding a verified apartment used to take weeks of back and forth. With 2Hame I searched, viewed and moved in within days — no middlemen, no surprises.</p>
-          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
-            <div class="testimonial-avatar" itemprop="name">A</div>
+          <p class="testimonial-text">Finding a verified apartment used to take weeks of back and forth. With 2Hame I searched, viewed and moved in within days — no middlemen, no surprises.</p>
+          <div class="testimonial-footer">
+            <div class="testimonial-avatar">A</div>
             <div>
-              <div class="testimonial-name" itemprop="name">Ann W., Tenant {% icon "check" %}</div>
-              <div class="testimonial-location" itemprop="address">Nairobi, Kenya</div>
+              <div class="testimonial-name">Ann W., Tenant {% icon "check" %}</div>
+              <div class="testimonial-location">Nairobi, Kenya</div>
             </div>
           </div>
         </div>
-        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
-          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+        <div class="testimonial-card fade-up">
           <div class="testimonial-quote-icon">{% icon "quote" %}</div>
-          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
-            <span itemprop="ratingValue" content="5">{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
+          <div class="testimonial-stars">
+            <span>{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
           </div>
-          <p class="testimonial-text" itemprop="reviewBody">As a landlord, listing my property and talking directly to interested tenants saved me so much time compared to the usual agent back-and-forth.</p>
-          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
-            <div class="testimonial-avatar" itemprop="name">L</div>
+          <p class="testimonial-text">As a landlord, listing my property and talking directly to interested tenants saved me so much time compared to the usual agent back-and-forth.</p>
+          <div class="testimonial-footer">
+            <div class="testimonial-avatar">L</div>
             <div>
-              <div class="testimonial-name" itemprop="name">Michael K., Property Owner {% icon "check" %}</div>
-              <div class="testimonial-location" itemprop="address">Mombasa, Kenya</div>
+              <div class="testimonial-name">Michael K., Property Owner {% icon "check" %}</div>
+              <div class="testimonial-location">Mombasa, Kenya</div>
             </div>
           </div>
         </div>
-        <div class="testimonial-card fade-up" itemscope itemtype="https://schema.org/Review">
-          <meta itemprop="itemReviewed" content="2Hame Real Estate Platform" />
+        <div class="testimonial-card fade-up">
           <div class="testimonial-quote-icon">{% icon "quote" %}</div>
-          <div class="testimonial-stars" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
-            <span itemprop="ratingValue" content="5">{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
+          <div class="testimonial-stars">
+            <span>{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}{% icon "star" %}</span>
           </div>
-          <p class="testimonial-text" itemprop="reviewBody">The interactive map made it so easy to see what's actually nearby — schools, matatu stops, supermarkets — before I even scheduled a viewing.</p>
-          <div class="testimonial-footer" itemprop="author" itemscope itemtype="https://schema.org/Person">
-            <div class="testimonial-avatar" itemprop="name">T</div>
+          <p class="testimonial-text">The interactive map made it so easy to see what's actually nearby — schools, matatu stops, supermarkets — before I even scheduled a viewing.</p>
+          <div class="testimonial-footer">
+            <div class="testimonial-avatar">T</div>
             <div>
-              <div class="testimonial-name" itemprop="name">David M., Tenant {% icon "check" %}</div>
-              <div class="testimonial-location" itemprop="address">Kisumu, Kenya</div>
+              <div class="testimonial-name">David M., Tenant {% icon "check" %}</div>
+              <div class="testimonial-location">Kisumu, Kenya</div>
             </div>
           </div>
         </div>
