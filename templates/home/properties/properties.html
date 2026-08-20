@@ -1,5 +1,6 @@
 {% extends "home/base.html" %}
 {% load icons %}
+{% load static %}
 
 <!-- ─── SEO BLOCKS ─── -->
 {% block meta_description %}Browse thousands of verified properties for rent and sale across Kenya. Find apartments, villas, rentals, and BNBs with interactive maps, Move Scores, and real-time availability on 2Hame.{% endblock meta_description %}
@@ -43,7 +44,7 @@
           "name": "{{ property.title|escapejs }}",
           "description": "{{ property.description|truncatewords:20|escapejs }}",
           "url": "https://2hame.com{% url 'home:about_property' slug=property.slug %}",
-          {% if property.main_image %}"image": "https://2hame.com{{ property.main_image.url }}",{% endif %}
+          {% if property.main_image %}"image": "https://2hame.com{{ property.main_image.url }}",{% else %}"image": "https://2hame.com{% static 'assets/img/og-image.png' %}",{% endif %}
           "numberOfRooms": {{ property.bedrooms|default:0 }},
           "offers": {
             "@type": "Offer",

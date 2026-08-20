@@ -1,5 +1,6 @@
 {% extends "home/base.html" %}
 {% load icons %}
+{% load static %}
 
 <!-- ─── SEO BLOCKS ─── -->
 {% block meta_description %}2Hame is Kenya's platform to find, list, manage and move. Search apartments, houses and rentals, list your property, manage tenants and rent, and build your own property profile online.{% endblock meta_description %}
@@ -442,11 +443,15 @@
 
     <div class="properties-grid mobile-carousel-grid">
       {% for property in properties %}
-        <article class="property-card fade-up" itemscope itemtype="https://schema.org/Product">
+        <article class="property-card fade-up" itemscope itemtype="https://schema.org/RealEstateListing">
+          <meta itemprop="url" content="https://2hame.com{% url 'home:about_property' property.slug %}" />
+          <meta itemprop="description" content="{{ property.description|default:property.title|truncatechars:200 }}" />
           <div class="property-img-wrap">
             {% if property.main_image %}
+              <meta itemprop="image" content="https://2hame.com{{ property.main_image.url }}" />
               <div style="width:100%;height:100%;background-image:url('{{ property.main_image.url }}');background-size:cover;background-position:center;" role="img" aria-label="{{ property.title }}"></div>
             {% else %}
+              <meta itemprop="image" content="https://2hame.com{% static 'assets/img/og-image.png' %}" />
               <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;" role="img" aria-label="{{ property.title }}"></div>
             {% endif %}
             <div class="property-badge featured">{{ property.get_property_type_display }}</div>
@@ -474,7 +479,7 @@
             </div>
           </div>
           <div style="padding:0 1.25rem 1.25rem;">
-            <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;" itemprop="url">View Details</a>
+            <a href="{% url 'home:about_property' property.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;">View Details</a>
           </div>
         </article>
       {% empty %}

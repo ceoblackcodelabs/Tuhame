@@ -41,7 +41,7 @@
   "name": "{{ property.title|escapejs }}",
   "description": "{{ property.description|truncatechars:300|escapejs }}",
   "url": "https://2hame.com{% url 'home:about_property' slug=property.slug %}",
-  {% if property.main_image %}"image": "https://2hame.com{{ property.main_image.url }}",{% endif %}
+  "image": "{% if property.main_image %}https://2hame.com{{ property.main_image.url }}{% else %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endif %}",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "{{ property.address|escapejs }}",
