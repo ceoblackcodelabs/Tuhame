@@ -8,10 +8,11 @@ from django.conf.urls.static import static
 from django.views.static import serve as serve_static
 from django.views.generic import RedirectView, TemplateView
 
-from .sitemaps import PropertySitemap, BlogPostSitemap, StaticViewSitemap
+from .sitemaps import PropertySitemap, OwnerPortfolioSitemap, BlogPostSitemap, StaticViewSitemap
 
 sitemaps = {
     'properties': PropertySitemap,
+    'owners': OwnerPortfolioSitemap,
     'blog': BlogPostSitemap,
     'static': StaticViewSitemap,
 }

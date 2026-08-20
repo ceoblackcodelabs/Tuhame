@@ -1538,6 +1538,17 @@ h1, h2, h3, h4, h5, h6 {
   word-wrap: break-word;
 }
 
+/* Same look as .page-hero h1, for pages where the real H1 lives further
+   down (e.g. the property detail page, where the H1 is the property
+   title itself) - a page should only have one H1. */
+.page-hero .page-hero-kicker {
+  font-size: clamp(1.5rem, 5vw, 2.75rem);
+  color: #fff;
+  margin-bottom: 0.75rem;
+  word-wrap: break-word;
+  font-weight: 700;
+}
+
 .page-hero p {
   color: rgba(255,255,255,0.75);
   font-size: 1rem;

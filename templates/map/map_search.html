@@ -6,7 +6,24 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Map Search – 2Hame</title>
+<meta name="description" content="Search for houses, apartments and rentals in Kenya on an interactive map. Explore available properties by neighbourhood in Nairobi, Mombasa, Kisumu and beyond on 2Hame." />
+<meta name="robots" content="index, follow, max-snippet:160, max-image-preview:large" />
+<meta name="geo.region" content="KE" />
+<meta name="geo.placename" content="Nairobi" />
+<link rel="canonical" href="https://2hame.com{% url 'home:property_map' %}" />
+<title>Map Search – Find Properties Near You in Kenya | 2Hame</title>
+
+<meta property="og:title" content="Map Search – Find Properties Near You in Kenya | 2Hame" />
+<meta property="og:description" content="Explore available houses and apartments across Kenya on an interactive map. Filter by property type and location to find your next home." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://2hame.com{% url 'home:property_map' %}" />
+<meta property="og:image" content="https://2hame.com{% static 'assets/img/og-image.png' %}" />
+<meta property="og:site_name" content="2Hame" />
+<meta property="og:locale" content="en_KE" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Map Search – Find Properties Near You in Kenya | 2Hame" />
+<meta name="twitter:description" content="Explore available houses and apartments across Kenya on an interactive map." />
+
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" />
 <link rel="preconnect" href="https://c.basemaps.cartocdn.com" />
@@ -18,6 +35,8 @@
 <link rel="stylesheet" href="{% static "assets/css/map.css" %}" />
 </head>
 <body>
+
+<h1 class="sr-only">Map Search – Find Properties Near You in Kenya</h1>
 
 <div class="map-page-wrap">
   <div class="map-layout">

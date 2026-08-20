@@ -2,12 +2,12 @@
 {% load humanize %}
 {% load icons %}
 
-{% block title %}{{ brand_name }} - Property Listings{% endblock title %}
-{% block meta_description %}{{ brand_name }}, verified property owner on 2Hame{% if owner_profile.city %} based in {{ owner_profile.city }}{% endif %}. Browse {{ total_properties }} active listing{{ total_properties|pluralize }}.{% endblock meta_description %}
+{% block title %}{{ brand_name }}{% if owner_profile.city %} - Properties in {{ owner_profile.city }}{% else %} - Property Listings{% endif %} | 2Hame{% endblock title %}
+{% block meta_description %}{{ brand_name }}'s official property profile on 2Hame{% if owner_profile.city %}, based in {{ owner_profile.city }}{% endif %}. Browse {{ total_properties }} available propert{{ total_properties|pluralize:"y,ies" }}{% if owner_profile.owner_whatsapp_number %} and contact them directly on WhatsApp{% endif %}.{% endblock meta_description %}
 {% block canonical_url %}https://2hame.com{% url 'home:owner_portfolio' username=owner_profile.user.username %}{% endblock canonical_url %}
 {% block og_url %}https://2hame.com{% url 'home:owner_portfolio' username=owner_profile.user.username %}{% endblock og_url %}
-{% block og_title %}{{ brand_name }} - Property Listings on 2Hame{% endblock og_title %}
-{% block og_description %}{{ owner_profile.bio|default:"Browse active property listings from this verified owner."|truncatechars:150 }}{% endblock og_description %}
+{% block og_title %}{{ brand_name }} - Property Profile on 2Hame{% endblock og_title %}
+{% block og_description %}{{ owner_profile.bio|default:"Browse active property listings from this verified owner and get in touch directly."|truncatechars:150 }}{% endblock og_description %}
 
 {% block nav_links %}
 <a href="#about">About</a>

@@ -18,7 +18,11 @@
 
 {% block title %}Properties for Rent & Sale in Kenya – 2Hame Real Estate{% endblock title %}
 
-<!-- ─── PROPERTY LISTINGS JSON-LD ─── -->
+<!-- ─── PROPERTY LISTINGS JSON-LD ───
+     Uses RealEstateListing (matching the individual property detail pages),
+     not Product/Offer - these are property listings, not shippable retail
+     goods, so Merchant-only fields like return policy or shipping details
+     don't apply and shouldn't be forced in here. -->
 {% block property_schema %}
 <script type="application/ld+json">
 {
@@ -26,7 +30,7 @@
   "@type": "CollectionPage",
   "name": "Properties for Rent & Sale in Kenya",
   "description": "Browse thousands of verified property listings across Kenya including apartments, villas, rentals, and BNBs.",
-  "url": "https://2hame.com/properties/",
+  "url": "https://2hame.com{% url 'home:properties' %}",
   "mainEntity": {
     "@type": "ItemList",
     "itemListElement": [
@@ -35,10 +39,12 @@
         "@type": "ListItem",
         "position": {{ forloop.counter }},
         "item": {
-          "@type": "Product",
+          "@type": "RealEstateListing",
           "name": "{{ property.title|escapejs }}",
           "description": "{{ property.description|truncatewords:20|escapejs }}",
-          "image": "{% if property.main_image %}https://2hame.com{{ property.main_image.url }}{% endif %}",
+          "url": "https://2hame.com{% url 'home:about_property' slug=property.slug %}",
+          {% if property.main_image %}"image": "https://2hame.com{{ property.main_image.url }}",{% endif %}
+          "numberOfRooms": {{ property.bedrooms|default:0 }},
           "offers": {
             "@type": "Offer",
             "price": "{{ property.price }}",

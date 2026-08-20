@@ -14,5 +14,7 @@ Disallow: /properties/*/delete/
 Disallow: /users/my-profile/
 Disallow: /users/owner-qr-card/
 Disallow: /users/mover-qr-card/
+Disallow: /settings/
+Disallow: /movers/map/
 
 Sitemap: https://2hame.com/sitemap.xml

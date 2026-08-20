@@ -7,7 +7,7 @@
   <!-- ─── PRIMARY SEO ─── -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="{% block meta_description %}2Hame – Kenya's #1 real estate platform for property listings, rentals, apartments, villas, and BNBs. List your property for free and connect with thousands of verified tenants and buyers across Kenya.{% endblock meta_description %}" />
+  <meta name="description" content="{% block meta_description %}2Hame – Kenya's property platform to find, list, manage and move. Search rentals, apartments and houses, list your property, manage tenants and rent, and build your own property profile online.{% endblock meta_description %}" />
   <meta name="keywords" content="{% block meta_keywords %}real estate Kenya, property listings, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property agents, real estate investors, find movers, housing marketplace, 2Hame, Kenya property{% endblock meta_keywords %}" />
   <meta name="robots" content="{% block robots %}index, follow, max-snippet:160, max-image-preview:large{% endblock robots %}" />
   <meta name="author" content="2Hame by BlackCodeLabs" />
@@ -22,15 +22,15 @@
   <link rel="canonical" href="{% block canonical_url %}https://2hame.com{% endblock canonical_url %}" />
 
   <!-- ─── OPEN GRAPH (Social Media) ─── -->
-  <meta property="og:title" content="{% block og_title %}2Hame – Kenya's #1 Real Estate & Housing Platform for Buyers, Sellers &amp; Tenants{% endblock og_title %}" />
-  <meta property="og:description" content="{% block og_description %}Find your dream home or list your property on 2Hame. Connect with tenants, buyers, and verified movers across Kenya. The smartest way to find, move, and settle.{% endblock og_description %}" />
+  <meta property="og:title" content="{% block og_title %}2Hame – Find, List, Manage & Move | Kenya Property Platform{% endblock og_title %}" />
+  <meta property="og:description" content="{% block og_description %}2Hame helps you find, list, manage and move. Search verified property listings, list your own property, manage tenants and rent, and build a professional property profile online — all in one platform.{% endblock og_description %}" />
   <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}" />
   <meta property="og:url" content="{% block og_url %}https://2hame.com{% endblock og_url %}" />
   <meta property="og:image" content="{% block og_image %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endblock og_image %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:alt" content="{% block og_image_alt %}2Hame - Kenya's Real Estate & Housing Platform{% endblock og_image_alt %}" />
+  <meta property="og:image:alt" content="{% block og_image_alt %}2Hame - Find, List, Manage & Move{% endblock og_image_alt %}" />
   <meta property="og:site_name" content="2Hame" />
   <meta property="og:locale" content="en_KE" />
   <meta property="og:updated_time" content="{% now 'c' %}" />
@@ -39,10 +39,10 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@2hamehousing" />
   <meta name="twitter:creator" content="@2hamehousing" />
-  <meta name="twitter:title" content="{% block twitter_title %}2Hame – Kenya's Smartest Real Estate Marketplace{% endblock twitter_title %}" />
-  <meta name="twitter:description" content="{% block twitter_description %}Find properties, list rentals, and connect with verified movers. The all-in-one platform for Kenyan real estate – for buyers, sellers, and tenants.{% endblock twitter_description %}" />
+  <meta name="twitter:title" content="{% block twitter_title %}2Hame – Find, List, Manage & Move{% endblock twitter_title %}" />
+  <meta name="twitter:description" content="{% block twitter_description %}Search property listings, list your own property, manage tenants and rent, and build your property profile online — with 2Hame.{% endblock twitter_description %}" />
   <meta name="twitter:image" content="{% block twitter_image %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endblock twitter_image %}" />
-  <meta name="twitter:image:alt" content="{% block twitter_image_alt %}2Hame - Kenya's Real Estate & Housing Platform{% endblock twitter_image_alt %}" />
+  <meta name="twitter:image:alt" content="{% block twitter_image_alt %}2Hame - Find, List, Manage & Move{% endblock twitter_image_alt %}" />
 
   <!-- ─── STRUCTURED DATA (JSON-LD) ─── -->
   <script type="application/ld+json">
@@ -54,7 +54,7 @@
       "url": "https://2hame.com",
       "logo": "https://2hame.com/static/assets/img/all.png",
       "image": "https://2hame.com/static/assets/img/all.png",
-      "description": "Kenya's leading real estate platform connecting property owners, tenants, buyers, and movers. Find your dream home or list your property for free.",
+      "description": "2Hame is Kenya's property platform to find, list, manage and move. Search rentals and property listings, list your own property, manage tenants and rent, and build your property business online.",
       "founder": {
         "@type": "Person",
         "name": "2Hame Team"
@@ -82,11 +82,6 @@
         "https://instagram.com/2hame_housing",
         "https://linkedin.com/company/2hame_housing"
       ],
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "reviewCount": "1250"
-      },
       "priceRange": "KES 15,000 - KES 500,000"
     }
   </script>
@@ -98,14 +93,14 @@
       "@type": "WebSite",
       "@id": "https://2hame.com/#website",
       "url": "https://2hame.com",
-      "name": "2Hame – Kenya's Real Estate Platform",
-      "description": "Find, list, and move into your perfect home in Kenya. Apartments, villas, rentals, BNBs, and verified movers.",
+      "name": "2Hame – Find, List, Manage & Move",
+      "description": "2Hame helps you find your next home, list and market your property, manage tenants and rent, and build a professional property profile online.",
       "publisher": {
         "@id": "https://2hame.com/#organization"
       },
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://2hame.com/properties/?search={search_term_string}",
+        "target": "https://2hame.com{% url 'home:properties' %}?search={search_term_string}",
         "query-input": "required name=search_term_string"
       },
       "inLanguage": "en-KE"
@@ -118,7 +113,7 @@
   <!-- ─── PROPERTY LISTING SCHEMA (if viewing a property) ─── -->
   {% block property_schema %}{% endblock property_schema %}
 
-  <title>{% block title %}2Hame – Kenya's #1 Real Estate & Housing Platform for Buyers, Sellers &amp; Tenants{% endblock title %}</title>
+  <title>{% block title %}2Hame – Find, List, Manage & Move | Kenya Property Platform{% endblock title %}</title>
 
   <!-- ─── STYLES ─── -->
   <link rel="stylesheet" href="{% static 'assets/css/style.css' %}" />
