@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q, Avg, Count
 from django.utils import timezone
 from users.models import Profile
+from .media_utils import file_field_to_data_uri
 
 class HomeView(ListView):
     model = Property
@@ -996,6 +997,7 @@ class OwnerPortfolioView(DetailView):
             'years_active': years_active,
             'brand_name': profile.owner_brand_name or profile.get_full_name() or owner_user.username,
             'profile_picture_url': profile.profile_picture.url if profile.profile_picture else None,
+            'profile_picture_data_uri': file_field_to_data_uri(profile.profile_picture),
             'is_own_profile': request.user.is_authenticated and request.user.id == owner_user.id,
             'reviews': reviews,
             'review_avg': review_stats['avg_rating'] or 0,
@@ -1050,6 +1052,7 @@ class PublicProfilePropertyDetailView(DetailView):
             'owner_profile': profile,
             'brand_name': profile.owner_brand_name or profile.get_full_name() or prop.owner.username,
             'profile_picture_url': profile.profile_picture.url if profile.profile_picture else None,
+            'profile_picture_data_uri': file_field_to_data_uri(profile.profile_picture),
             'is_own_profile': self.request.user.is_authenticated and self.request.user.id == prop.owner.id,
             'all_images': all_images,
             'similar_properties': similar_properties,

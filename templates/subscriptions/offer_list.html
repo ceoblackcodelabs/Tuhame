@@ -7,6 +7,10 @@
 <div class="main-panel">
   <div class="content-wrapper">
 
+    <div class="page-header">
+      <h3 class="page-title">Manage Offers</h3>
+    </div>
+
     {% if messages %}
       {% for message in messages %}
         <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
@@ -22,8 +26,8 @@
                 <h4 class="card-title mb-1">Offers</h4>
                 <p class="card-description mb-0">Promo pricing owners can claim from Settings.</p>
               </div>
-              <div>
-                <a href="{% url 'subscriptions:settings' %}" class="btn btn-dark me-2">Back to Settings</a>
+              <div class="d-flex" style="gap:0.5rem;">
+                <a href="{% url 'subscriptions:settings' %}" class="btn btn-dark">Back to Settings</a>
                 <a href="{% url 'subscriptions:offer_add' %}" class="btn btn-primary">+ New Offer</a>
               </div>
             </div>
@@ -43,7 +47,7 @@
                 <tbody>
                   {% for offer in offers %}
                   <tr>
-                    <td>{{ offer.title }}</td>
+                    <td style="font-weight:500;">{{ offer.title }}</td>
                     <td>{{ offer.amount|floatformat:0|intcomma }}</td>
                     <td>{{ offer.duration_months }} month{{ offer.duration_months|pluralize }}</td>
                     <td>{{ offer.claims_count }} / {{ offer.max_claims }}</td>
@@ -87,7 +91,7 @@
                 <tbody>
                   {% for plan in plans %}
                   <tr>
-                    <td>{{ plan.name }}</td>
+                    <td style="font-weight:500;">{{ plan.name }}</td>
                     <td>{{ plan.price|floatformat:0|intcomma }}</td>
                     <td><a href="{% url 'subscriptions:plan_edit' plan.pk %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
                   </tr>
@@ -104,7 +108,7 @@
   <footer class="footer">
     <div class="d-sm-flex justify-content-center justify-content-sm-between">
       <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
-      <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+      <span class="text-muted float-none float-sm-end d-block mt-1 mt-sm-0 text-center">Hand-crafted &amp; made with <i class="mdi mdi-heart text-danger"></i></span>
     </div>
   </footer>
 </div>

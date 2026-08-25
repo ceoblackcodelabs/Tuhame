@@ -259,6 +259,23 @@ MEDIA_URL = '/media/'
 import os
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Media serving toggle: on typical shared/Passenger/cPanel hosting there's
+# no nginx in front of Django to hand /media/ off to, so Django serving it
+# directly (see Tuhame/urls.py) is the correct default. Flip to False only
+# once a web server/CDN is confirmed to serve MEDIA_ROOT directly instead -
+# more efficient at scale, but uploads 404 again if this is turned off
+# before that's actually in place.
+SERVE_MEDIA_VIA_DJANGO = config('SERVE_MEDIA_VIA_DJANGO', default=True, cast=bool)
+
+# Upload size ceiling. This is the request-body-level limit that applies
+# BEFORE any per-field validator in Tuhame/upload_validators.py even runs -
+# it must be >= the largest of those validators (currently 10MB for
+# documents) or Django rejects the request outright first, making the
+# validator's nicer error message never actually appear. Set with headroom
+# above that 10MB ceiling.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 16 * 1024 * 1024   # 16MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 16 * 1024 * 1024   # 16MB
+
 # CKEditor5 (blog post content) — uploads go through Django's normal
 # MEDIA storage instead of a separate config, so backups/migrations
 # already cover them.
@@ -312,10 +329,23 @@ if REDIS_URL:
         }
     }
 else:
+    # LocMemCache would be the Django default here, but it's isolated per
+    # worker process - on any host running more than one process (Passenger,
+    # gunicorn with >1 worker, etc.) a cache write in the process that
+    # handled a save only clears/updates that one process's copy. Every
+    # OTHER process serving public requests keeps a stale cached value
+    # indefinitely, which makes edits (e.g. a new property photo not
+    # showing up in the hero slideshow - see home/portfolio.py) appear to
+    # randomly "not take" depending on which process answers the request.
+    # FileBasedCache is shared across processes with no extra services
+    # required, so it doesn't have that failure mode. Swap for Redis above
+    # (already wired) at higher traffic for better performance - same
+    # "shared across processes" property either way, which is what
+    # actually matters here.
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'tuhame-cache',
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': str(BASE_DIR / 'var' / 'django_cache'),
             'TIMEOUT': 300,
             'OPTIONS': {'MAX_ENTRIES': 5000},
         }

@@ -1,4 +1,5 @@
 # config/urls.py
+import re
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.sitemaps.views import sitemap
@@ -61,12 +62,20 @@ urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 # django.conf.urls.static.static() only ever registers a route when
 # DEBUG=True — in production (DEBUG=False) it silently adds nothing, which
 # is why uploads succeeded but never displayed on the live site. We serve
-# media through Django unconditionally so it works the same in both places.
+# media through Django unconditionally (gated by the explicit
+# SERVE_MEDIA_VIA_DJANGO flag, default True - see settings.py) so it works
+# the same in both places.
 #
 # On shared hosting (cPanel/Passenger) there's no nginx in front of Django
 # to hand this off to, so Django serving it directly is the correct simple
 # fix here. If you later move to a VPS with nginx, point nginx at /media/
-# instead and drop this for better performance.
-urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', serve_static, {'document_root': settings.MEDIA_ROOT}),
-]
+# instead and set SERVE_MEDIA_VIA_DJANGO=False for better performance.
+if settings.SERVE_MEDIA_VIA_DJANGO:
+    _media_url_path = settings.MEDIA_URL.lstrip('/')
+    urlpatterns += [
+        re_path(
+            r'^%s(?P<path>.*)$' % re.escape(_media_url_path),
+            serve_static,
+            {'document_root': settings.MEDIA_ROOT},
+        ),
+    ]

@@ -43,7 +43,7 @@
   {% block splash %}
   <div class="pp-splash" id="pp-splash">
     {% if profile_picture_url %}
-      <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-splash-avatar" />
+      <img src="{{ profile_picture_data_uri|default:profile_picture_url }}" alt="{{ brand_name }}" class="pp-splash-avatar" />
     {% else %}
       <div class="pp-splash-avatar pp-header-avatar-fallback" style="width:96px;height:96px;font-size:2.25rem;">{{ brand_name|first|upper }}</div>
     {% endif %}
@@ -102,7 +102,7 @@
   <header class="pp-header" id="pp-header">
     <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}" class="pp-header-brand">
       {% if profile_picture_url %}
-        <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-header-avatar" loading="eager" />
+        <img src="{{ profile_picture_data_uri|default:profile_picture_url }}" alt="{{ brand_name }}" class="pp-header-avatar" loading="eager" />
       {% else %}
         <div class="pp-header-avatar-fallback">{{ brand_name|first|upper }}</div>
       {% endif %}
