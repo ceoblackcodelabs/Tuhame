@@ -1,4 +1,8 @@
 .env
 /migrations
+/__pycache__
+*.pyc
 /media/*
 db.sqlite3
+django_errors.log
+/var
