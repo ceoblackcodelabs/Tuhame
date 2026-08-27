@@ -116,6 +116,105 @@ class OfferClaim(models.Model):
         return f"{self.user} claimed {self.offer}"
 
 
+class SubscriptionPayment(models.Model):
+    """One M-Pesa STK Push attempt at buying/renewing a plan. A user can
+    have many of these over time (retries, renewals) - this is the
+    transaction log, not the current-plan state; OwnerSubscription below
+    is what mark_completed() actually updates once payment succeeds."""
+
+    STATUS_PENDING = 'pending'
+    STATUS_COMPLETED = 'completed'
+    STATUS_FAILED = 'failed'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_COMPLETED, 'Completed'),
+        (STATUS_FAILED, 'Failed'),
+        (STATUS_CANCELLED, 'Cancelled'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscription_payments',
+    )
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name='payments')
+
+    # null=True matters here: a push that fails before Safaricom ever
+    # returns an ID must store NULL, not '' - two blank strings collide on
+    # the unique constraint, two NULLs don't.
+    checkout_request_id = models.CharField(max_length=100, unique=True, null=True, blank=True, db_index=True)
+    merchant_request_id = models.CharField(max_length=100, blank=True, db_index=True)
+    mpesa_receipt_number = models.CharField(max_length=50, null=True, blank=True)
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    phone_number = models.CharField(max_length=15)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    result_code = models.IntegerField(null=True, blank=True)
+    result_desc = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    callback_payload = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} - {self.plan} - {self.status}"
+
+    def mark_completed(self, receipt_number, callback_data=None):
+        self.status = self.STATUS_COMPLETED
+        self.mpesa_receipt_number = receipt_number
+        self.completed_at = timezone.now()
+        if callback_data:
+            self.callback_payload = callback_data
+        self.save(update_fields=['status', 'mpesa_receipt_number', 'completed_at', 'callback_payload'])
+        self._activate_subscription()
+
+    def mark_failed(self, result_code, result_desc, callback_data=None):
+        self.status = self.STATUS_FAILED
+        self.result_code = result_code
+        self.result_desc = result_desc
+        if callback_data:
+            self.callback_payload = callback_data
+        self.save(update_fields=['status', 'result_code', 'result_desc', 'callback_payload'])
+
+    def mark_cancelled(self, result_desc=None, callback_data=None):
+        self.status = self.STATUS_CANCELLED
+        self.result_desc = result_desc or 'User cancelled the transaction'
+        if callback_data:
+            self.callback_payload = callback_data
+        self.save(update_fields=['status', 'result_desc', 'callback_payload'])
+
+    def _activate_subscription(self):
+        """Grants/extends the user's OwnerSubscription once payment
+        completes. If they're renewing a still-active subscription to the
+        SAME plan before it lapses, the new period stacks on top of the
+        remaining time rather than being wasted; anything else (switching
+        plans, or renewing after expiry) starts fresh from now."""
+        now = timezone.now()
+        months = self.plan.duration_months_value() or 1
+
+        sub, created = OwnerSubscription.objects.get_or_create(
+            user=self.user, defaults={'plan': self.plan, 'started_at': now},
+        )
+        stacking = (
+            not created
+            and sub.plan_id == self.plan_id
+            and sub.expires_at
+            and sub.expires_at > now
+        )
+        base = sub.expires_at if stacking else now
+
+        sub.plan = self.plan
+        sub.source_offer = None
+        if not stacking:
+            sub.started_at = now
+        sub.expires_at = add_months(base, months)
+        sub.is_active = True
+        sub.save()
+
+
 class OwnerSubscription(models.Model):
     """Which plan an owner is currently on. Every owner effectively has one
     of these - created lazily (defaulting to the Free plan) the first time

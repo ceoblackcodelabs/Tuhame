@@ -783,25 +783,11 @@ class ContactView(View):
                 contact_message.user = request.user
             contact_message.save()
 
-            # Best-effort notification email - sent on a background thread
-            # so the user-facing success response doesn't wait on the SMTP
-            # round-trip (and still never blocks if email isn't configured).
-            try:
-                from django.conf import settings
-                from Tuhame.email_utils import send_mail_async
-                send_mail_async(
-                    subject=f"[2Hame Contact] {contact_message.get_subject_display()} from {contact_message.name}",
-                    message=(
-                        f"From: {contact_message.name} <{contact_message.email}>\n"
-                        f"Phone: {contact_message.phone or 'Not provided'}\n\n"
-                        f"{contact_message.message}"
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
-                    fail_silently=True,
-                )
-            except Exception:
-                pass
+            # Best-effort notification email - routed through the single
+            # email choke point (Tuhame/emails.py), which itself never
+            # raises and sends on a background thread.
+            from Tuhame.emails import send_contact_notification_email
+            send_contact_notification_email(contact_message)
 
             messages.success(
                 request,

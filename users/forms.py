@@ -9,6 +9,41 @@ from django.core.exceptions import ValidationError
 User = get_user_model()
 
 
+class PasswordResetRequestForm(forms.Form):
+    """Just an email address - the view deliberately shows the same
+    success message whether or not it matches an account, so this form
+    can't be used to enumerate registered emails."""
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'you@example.com',
+            'autofocus': True,
+        })
+    )
+
+
+class SetNewPasswordForm(forms.Form):
+    """Used on the password-reset confirm page (after the emailed link's
+    token has already been validated by the view)."""
+    new_password1 = forms.CharField(
+        label='New password',
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'New password'}),
+        validators=[validate_password],
+        help_text='Password must be at least 8 characters long and contain letters and numbers.',
+    )
+    new_password2 = forms.CharField(
+        label='Confirm new password',
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Repeat new password'}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        p1, p2 = cleaned.get('new_password1'), cleaned.get('new_password2')
+        if p1 and p2 and p1 != p2:
+            raise ValidationError("The two password fields didn't match.")
+        return cleaned
+
+
 class PlainClearableFileInput(forms.ClearableFileInput):
     """Behaves exactly like ClearableFileInput (so the profile_picture-clear
     checkbox we render ourselves in the template still works), but renders

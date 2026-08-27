@@ -67,9 +67,13 @@
               <div class="d-flex align-items-center" style="gap:0.5rem;">
                 {% if subscription.plan_id == plan.id and not subscription.source_offer %}
                   <span class="badge bg-primary">Your current plan</span>
+                {% elif plan.billing_period == 'free' %}
+                  <button type="button" class="btn btn-sm btn-outline-primary" disabled title="Downgrading isn't self-serve yet - contact support">
+                    Switch to Free
+                  </button>
                 {% else %}
-                  <button type="button" class="btn btn-sm btn-outline-primary" disabled title="Online purchase coming soon">
-                    {% if plan.billing_period == 'free' %}Switch to Free{% else %}Upgrade{% endif %}
+                  <button type="button" class="btn btn-sm btn-primary" onclick="openMpesaModal({{ plan.pk }}, '{{ plan.name|escapejs }}', '{{ plan.price|floatformat:0 }}')">
+                    Upgrade — Pay with M-Pesa
                   </button>
                 {% endif %}
                 {% if request.user.is_superuser %}
@@ -122,6 +126,36 @@
 
   </div>
   <!-- content-wrapper ends -->
+
+  <!-- M-Pesa STK Push modal -->
+  <div id="mpesa-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:10px;max-width:380px;width:92%;padding:1.75rem;">
+      <h5 id="mpesa-modal-title" style="margin-bottom:0.25rem;">Upgrade plan</h5>
+      <p id="mpesa-modal-price" class="text-muted" style="font-size:0.85rem;margin-bottom:1rem;"></p>
+
+      <div id="mpesa-step-form">
+        <label class="form-label" for="mpesa-phone" style="font-size:0.85rem;font-weight:600;">M-Pesa phone number</label>
+        <input type="text" id="mpesa-phone" class="form-control" placeholder="07XX XXX XXX" style="margin-bottom:0.5rem;" />
+        <p id="mpesa-error" class="text-danger" style="font-size:0.8rem;display:none;margin-bottom:0.5rem;"></p>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeMpesaModal()" style="flex:1;">Cancel</button>
+          <button type="button" id="mpesa-pay-btn" class="btn btn-sm btn-primary" onclick="submitMpesaPayment()" style="flex:1;">Send STK Push</button>
+        </div>
+      </div>
+
+      <div id="mpesa-step-pending" style="display:none;text-align:center;">
+        <p style="font-size:0.88rem;margin-bottom:0.5rem;">Check your phone and enter your M-Pesa PIN to complete the payment.</p>
+        <div class="spinner-border text-primary" role="status" style="width:2rem;height:2rem;margin:0.5rem 0;"></div>
+        <p id="mpesa-status-text" class="text-muted" style="font-size:0.78rem;">Waiting for confirmation…</p>
+      </div>
+
+      <div id="mpesa-step-done" style="display:none;text-align:center;">
+        <p id="mpesa-done-text" style="font-size:0.9rem;"></p>
+        <button type="button" class="btn btn-sm btn-primary" onclick="location.reload()" style="margin-top:0.5rem;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <div class="d-sm-flex justify-content-center justify-content-sm-between">
       <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
@@ -129,4 +163,99 @@
     </div>
   </footer>
 </div>
+
+<script>
+  // ── M-Pesa STK Push modal for subscription upgrades ──
+  let mpesaPlanId = null;
+  let mpesaPollTimer = null;
+
+  function openMpesaModal(planId, planName, price) {
+    mpesaPlanId = planId;
+    document.getElementById('mpesa-modal-title').textContent = 'Upgrade to ' + planName;
+    document.getElementById('mpesa-modal-price').textContent = 'KES ' + price;
+    document.getElementById('mpesa-phone').value = '';
+    document.getElementById('mpesa-error').style.display = 'none';
+    document.getElementById('mpesa-step-form').style.display = 'block';
+    document.getElementById('mpesa-step-pending').style.display = 'none';
+    document.getElementById('mpesa-step-done').style.display = 'none';
+    document.getElementById('mpesa-modal').style.display = 'flex';
+  }
+
+  function closeMpesaModal() {
+    document.getElementById('mpesa-modal').style.display = 'none';
+    if (mpesaPollTimer) clearInterval(mpesaPollTimer);
+  }
+
+  function getCookie(name) {
+    const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return match ? match.pop() : '';
+  }
+
+  function submitMpesaPayment() {
+    const phone = document.getElementById('mpesa-phone').value.trim();
+    const errEl = document.getElementById('mpesa-error');
+    const btn = document.getElementById('mpesa-pay-btn');
+    errEl.style.display = 'none';
+
+    if (!phone) {
+      errEl.textContent = 'Enter your M-Pesa phone number.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    fetch('/settings/plans/' + mpesaPlanId + '/pay/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body: JSON.stringify({ phone_number: phone }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        btn.disabled = false;
+        btn.textContent = 'Send STK Push';
+        if (!data.success) {
+          errEl.textContent = data.error || 'Could not start the payment. Try again.';
+          errEl.style.display = 'block';
+          return;
+        }
+        document.getElementById('mpesa-step-form').style.display = 'none';
+        document.getElementById('mpesa-step-pending').style.display = 'block';
+        pollMpesaStatus(data.payment_id);
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.textContent = 'Send STK Push';
+        errEl.textContent = 'Network error. Please try again.';
+        errEl.style.display = 'block';
+      });
+  }
+
+  function pollMpesaStatus(paymentId) {
+    mpesaPollTimer = setInterval(() => {
+      fetch('/settings/payments/' + paymentId + '/status/')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === 'pending') return;
+
+          clearInterval(mpesaPollTimer);
+          document.getElementById('mpesa-step-pending').style.display = 'none';
+          document.getElementById('mpesa-step-done').style.display = 'block';
+
+          const doneText = document.getElementById('mpesa-done-text');
+          if (data.status === 'completed') {
+            doneText.textContent = 'Payment received! Your plan has been upgraded.';
+          } else if (data.status === 'cancelled') {
+            doneText.textContent = 'Payment was cancelled on your phone.';
+          } else {
+            doneText.textContent = data.result_desc || 'Payment failed. Please try again.';
+          }
+        });
+    }, 3000);
+  }
+</script>
 {% endblock content %}

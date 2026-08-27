@@ -392,6 +392,16 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='TuHame <no-reply@tuhame.co.ke>')
+# Brand name merged into every outbound email's shared context (see
+# Tuhame/emails.py) - kept separate from DEFAULT_FROM_EMAIL since that's a
+# "Name <address>" mailbox string, not a display name on its own.
+SITE_NAME = config('SITE_NAME', default='2Hame')
+
+# ============ M-PESA DARAJA (STK Push) - used for subscription payments ============
+# All read directly by subscriptions/mpesa.py at call time (never cached),
+# so a missing value fails loudly into the payment's own failure path
+# instead of silently proceeding. See DEPLOY.md for the full var list.
+MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='sandbox')
 
 # ============ PRODUCTION SECURITY HARDENING ============
 # These only kick in when DEBUG=False (i.e. on your live server), so local

@@ -9,6 +9,14 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
 
+    # Email verification
+    path('verify-email/<str:uidb64>/<str:token>/', views.VerifyEmailView.as_view(), name='verify_email'),
+    path('resend-verification/', views.ResendVerificationEmailView.as_view(), name='resend_verification_email'),
+
+    # Password reset
+    path('password-reset/', views.PasswordResetRequestView.as_view(), name='password_reset_request'),
+    path('password-reset/<str:uidb64>/<str:token>/', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+
     path('my-profile/', views.MyProfileView.as_view(), name='my_profile'),
     path('my-profile/edit/', views.MyProfileUpdateView.as_view(), name='edit_profile'),
 

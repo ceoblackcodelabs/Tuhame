@@ -53,6 +53,17 @@
     <p>My Current Home</p>
   </div>
 </div>
+{% if user.email and not profile.is_email_verified %}
+<div class="container" style="margin-top:1.5rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:#fff8e6;border:1px solid #f0d98c;border-radius:var(--radius-md);padding:0.9rem 1.25rem;">
+    <span style="font-size:0.9rem;color:#8a6d1a;">{% icon "mail" %} Confirm your email address ({{ user.email }}) so we can always reach you.</span>
+    <form method="post" action="{% url 'resend_verification_email' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm" style="background:#8a6d1a;color:#fff;">Resend confirmation link</button>
+    </form>
+  </div>
+</div>
+{% endif %}
 <div class="container">
   <div class="profile-layout">
 

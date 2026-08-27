@@ -35,14 +35,33 @@
    ALLOWED_HOSTS=yourdomain.co.ke,www.yourdomain.co.ke
    CSRF_TRUSTED_ORIGINS=https://yourdomain.co.ke,https://www.yourdomain.co.ke
    ```
-2. Upload the code (passenger_wsgi.py at the app root, same as now).
-3. In the cPanel Python App terminal:
+2. Set the email vars (used for signup verification + password reset —
+   see `Tuhame/emails.py`):
+   ```
+   EMAIL_HOST_USER=...
+   EMAIL_HOST_PASSWORD=...
+   DEFAULT_FROM_EMAIL=2Hame <no-reply@yourdomain.co.ke>
+   SITE_NAME=2Hame
+   ```
+3. Set the M-Pesa Daraja vars (used only for subscription payments — see
+   `subscriptions/mpesa.py`). SITE_URL above is reused to build the
+   callback URL, so there's no separate MPESA_CALLBACK_URL to set:
+   ```
+   CONSUMER_KEY=...
+   CONSUMER_SECRET=...
+   PASSKEY=...
+   BUSINESS_SHORT_CODE=...
+   TILL_NUMBER=...
+   MPESA_ENVIRONMENT=production
+   ```
+4. Upload the code (passenger_wsgi.py at the app root, same as now).
+5. In the cPanel Python App terminal:
    ```
    pip install -r requirements.txt
    python manage.py migrate
    python manage.py collectstatic --noinput
    ```
-4. Restart the app (cPanel "Restart" button, or `touch tmp/restart.txt`
+6. Restart the app (cPanel "Restart" button, or `touch tmp/restart.txt`
    if your setup uses that convention).
 
 That's it — no settings.py edits, no gunicorn to think about.

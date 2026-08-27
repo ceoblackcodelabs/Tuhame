@@ -12,12 +12,16 @@ from django.db.models import Avg, Count
 from home.models import ViewingSchedule, SavedProperty
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404, render
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import RedirectView
-from .forms import ProfileForm, UserRegistrationForm
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from .forms import ProfileForm, UserRegistrationForm, PasswordResetRequestForm, SetNewPasswordForm
+from .tokens import email_verification_token
 from django.db import models
 import qrcode
 from io import BytesIO
@@ -26,6 +30,15 @@ from .utils import generate_qr_code_for_user
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
+
+
+def _build_absolute_url(request, path):
+    """SITE_URL already holds the scheme+host we want in production (and
+    is what emails.py's shared branding context uses), so links inside
+    emails are built from it rather than request.build_absolute_uri() --
+    that would pick up whatever Host header a request happened to arrive
+    with, which is the wrong thing to bake into an email."""
+    return f"{settings.SITE_URL.rstrip('/')}{path}"
 
 class LoginView(FormView):
     """
@@ -100,9 +113,22 @@ class RegisterView(CreateView):
         user = self.object
         login(self.request, user)
 
+        # Fires on the success path only (account actually created) --
+        # never blocks login/registration itself if email is slow/down,
+        # since send_verification_email is fire-and-forget.
+        if user.email:
+            from Tuhame.emails import send_verification_email
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            token = email_verification_token.make_token(user)
+            verification_url = _build_absolute_url(
+                self.request, reverse('verify_email', kwargs={'uidb64': uidb64, 'token': token})
+            )
+            send_verification_email(user, verification_url)
+
         messages.success(
             self.request,
-            f'Welcome to 2Hame, {user.get_full_name() or user.username}! 🎉 Your account has been created successfully.'
+            f'Welcome to 2Hame, {user.get_full_name() or user.username}! 🎉 Your account has been created successfully. '
+            f'We\'ve sent a confirmation link to {user.email or "your email"} — verify it when you get a chance.'
         )
 
         return response
@@ -129,6 +155,151 @@ class LogoutView(RedirectView):
         logout(request)
         messages.success(request, 'You have been successfully logged out.')
         return super().get(request, *args, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Email verification
+# ---------------------------------------------------------------------------
+
+class VerifyEmailView(View):
+    """Landed on from the link in send_verification_email(). Marks the
+    profile verified on a valid, not-yet-used token; otherwise shows a
+    friendly error rather than a 404/500."""
+
+    def get(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and email_verification_token.check_token(user, token):
+            profile = getattr(user, 'profile', None)
+            if profile and not profile.is_email_verified:
+                profile.is_email_verified = True
+                profile.save(update_fields=['is_email_verified'])
+            messages.success(request, 'Your email is confirmed. Thanks!')
+        else:
+            messages.error(
+                request,
+                'That verification link is invalid or has expired. You can request a new one below.'
+            )
+
+        if request.user.is_authenticated:
+            return redirect('my_profile')
+        return redirect('login')
+
+
+class ResendVerificationEmailView(LoginRequiredMixin, View):
+    """Lets a logged-in, not-yet-verified user get a fresh link (the old
+    one becomes invalid the moment is_email_verified flips True, so there's
+    no risk of two valid links floating around)."""
+
+    def post(self, request):
+        profile = getattr(request.user, 'profile', None)
+        if profile and profile.is_email_verified:
+            messages.info(request, 'Your email is already confirmed.')
+            return redirect('my_profile')
+
+        if not request.user.email:
+            messages.error(request, "Your account doesn't have an email address on file yet — add one in Edit Profile first.")
+            return redirect('edit_profile')
+
+        from Tuhame.emails import send_verification_email
+        uidb64 = urlsafe_base64_encode(force_bytes(request.user.pk))
+        token = email_verification_token.make_token(request.user)
+        verification_url = _build_absolute_url(
+            request, reverse('verify_email', kwargs={'uidb64': uidb64, 'token': token})
+        )
+        send_verification_email(request.user, verification_url)
+        messages.success(request, f'Confirmation link sent to {request.user.email}.')
+        return redirect('my_profile')
+
+
+# ---------------------------------------------------------------------------
+# Password reset
+# ---------------------------------------------------------------------------
+
+class PasswordResetRequestView(FormView):
+    """Step 1: user enters their email. Always shows the same success
+    message whether or not it matched an account -- send_password_reset_email
+    is only actually called on a match, so a non-account can't tell the
+    difference from the outside."""
+    template_name = 'auth/password_reset_request.html'
+    form_class = PasswordResetRequestForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home:home')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        email = form.cleaned_data['email']
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        if user:
+            from Tuhame.emails import send_password_reset_email
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = _build_absolute_url(
+                self.request, reverse('password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+            )
+            send_password_reset_email(user, reset_url)
+
+        messages.success(
+            self.request,
+            "If that email matches an account, we've sent a link to reset the password."
+        )
+        return redirect('login')
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Please enter a valid email address.')
+        return super().form_invalid(form)
+
+
+class PasswordResetConfirmView(FormView):
+    """Step 2: the link from the email. Validates the uid/token before
+    showing the new-password form at all, so an expired/tampered link
+    never even gets that far."""
+    template_name = 'auth/password_reset_confirm.html'
+    form_class = SetNewPasswordForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home:home')
+
+        self.user = self._get_user(kwargs.get('uidb64'))
+        self.valid_link = bool(
+            self.user and default_token_generator.check_token(self.user, kwargs.get('token'))
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    @staticmethod
+    def _get_user(uidb64):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            return User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['valid_link'] = self.valid_link
+        return context
+
+    def form_valid(self, form):
+        if not self.valid_link:
+            messages.error(self.request, 'That reset link is invalid or has expired. Request a new one below.')
+            return redirect('password_reset_request')
+
+        self.user.set_password(form.cleaned_data['new_password1'])
+        self.user.save(update_fields=['password'])
+        messages.success(self.request, 'Your password has been reset. You can sign in now.')
+        return redirect('login')
+
+    def form_invalid(self, form):
+        if not self.valid_link:
+            messages.error(self.request, 'That reset link is invalid or has expired. Request a new one below.')
+        return super().form_invalid(form)
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):

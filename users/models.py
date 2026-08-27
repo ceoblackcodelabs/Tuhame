@@ -120,6 +120,13 @@ class Profile(models.Model):
     # Role - hunter (looking for a place) or owner (listing properties)
     role = models.CharField(max_length=10, choices=UserRole.choices, default=UserRole.HUNTER)
 
+    # Email verification - set once the user clicks the link sent by
+    # send_verification_email(). Deliberately does not gate login/dashboard
+    # access on its own; it's tracked so the UI can show a "verify your
+    # email" nudge and so the token used to verify becomes invalid once used
+    # (see users/tokens.py - the token hash includes this flag).
+    is_email_verified = models.BooleanField(default=False)
+
     # Owner verification - a user switching to 'owner' needs to be approved
     # by the main admin before they're treated as a verified property owner
     verification_status = models.CharField(

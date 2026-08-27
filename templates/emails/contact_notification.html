@@ -1,0 +1,11 @@
+{% extends "emails/_base_email.html" %}
+{% block title %}New contact message — {{ site_name }}{% endblock %}
+{% block body %}
+<p style="font-size:16px;margin:0 0 16px;">New message from the Contact form:</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 8px;">
+  <strong>From:</strong> {{ contact_message.name }} &lt;{{ contact_message.email }}&gt;<br />
+  <strong>Phone:</strong> {{ contact_message.phone|default:"Not provided" }}<br />
+  <strong>Subject:</strong> {{ contact_message.get_subject_display }}
+</p>
+<p style="font-size:14px;line-height:1.6;white-space:pre-wrap;border-left:3px solid #d4af37;padding-left:12px;margin:16px 0 0;">{{ contact_message.message }}</p>
+{% endblock %}
