@@ -40,12 +40,12 @@ class BlogPostAdmin(admin.ModelAdmin):
         ('Organization', {
             'fields': ('category', 'tags'),
         }),
+        ('Publishing', {
+            'fields': ('is_published', 'published_at', 'views_count', 'created_at', 'updated_at'),
+        }),
         ('SEO', {
             'fields': ('seo_title',),
             'description': 'Leave blank to fall back to the post title / excerpt.',
-        }),
-        ('Publishing', {
-            'fields': ('is_published', 'published_at', 'views_count', 'created_at', 'updated_at'),
         }),
     )
 
