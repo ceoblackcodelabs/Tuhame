@@ -36,7 +36,7 @@ class Command(BaseCommand):
                 'tags': 'Nairobi, first apartment, renting tips, tenant guide, affordable housing',
                 'excerpt': 'Everything you need to know about renting your first apartment in Nairobi — from budgeting and location selection to understanding leases and avoiding common pitfalls.',
                 'seo_title': 'Renting Your First Apartment in Nairobi: Complete Guide | 2Hame',
-                'seo_description': 'Learn how to rent your first apartment in Nairobi with our comprehensive guide. Budgeting, location tips, lease agreements, and how 2Hame can help you find your dream home.',
+                'seo_description': 'Rent your first Nairobi apartment with confidence: budgeting, location tips, lease terms, and how 2Hame helps you find the right home.',
                 'seo_keywords': 'renting in Nairobi, first apartment, tenant tips, affordable housing Kenya, 2Hame rental guide',
                 'content': '''
                     <h2>Your First Apartment in Nairobi: A Step-by-Step Guide</h2>
@@ -105,7 +105,7 @@ class Command(BaseCommand):
                 'tags': 'Move Score, property scoring, housing technology, AI, smart search',
                 'excerpt': 'Discover how our proprietary Move Score™ algorithm analyzes properties based on safety, transport, amenities, and value to help you find the best home in Kenya.',
                 'seo_title': '2Hame Move Score™: How It Works | Property Scoring Explained',
-                'seo_description': 'Learn how the 2Hame Move Score™ helps you find the best properties in Kenya by analyzing safety, transport, amenities, and cost value. Smart property scoring explained.',
+                'seo_description': 'How the 2Hame Move Score™ rates properties on safety, transport, amenities and value — so you can compare homes objectively.',
                 'seo_keywords': 'Move Score, property scoring, housing technology, AI search, smart property search, 2Hame',
                 'content': '''
                     <h2>What is the 2Hame Move Score™?</h2>
@@ -172,7 +172,7 @@ class Command(BaseCommand):
                 'tags': 'landlord tips, rental property, property management, tenant screening, Kenya',
                 'excerpt': 'New to being a landlord? From tenant screening and lease agreements to property maintenance — our top 10 tips will help you succeed in the Kenyan rental market.',
                 'seo_title': '10 Essential Tips for First-Time Landlords in Kenya | 2Hame Guide',
-                'seo_description': 'Discover 10 essential tips for first-time landlords in Kenya. Learn tenant screening, lease agreements, property maintenance, and how 2Hame helps you find great tenants.',
+                'seo_description': '10 essential tips for first-time landlords in Kenya — tenant screening, leases, maintenance, and how 2Hame helps you find great tenants.',
                 'seo_keywords': 'landlord tips, rental property management, tenant screening Kenya, property investment, 2Hame landlord guide',
                 'content': '''
                     <h2>10 Tips for First-Time Landlords in Kenya</h2>
@@ -330,7 +330,7 @@ class Command(BaseCommand):
                 'category': 'neighborhood-guides',
                 'tags': 'Kilimani Nairobi, neighborhood guide, housing areas, living in Nairobi',
                 'excerpt': 'A detailed guide to Kilimani — one of Nairobi\'s most popular neighborhoods for young professionals, with excellent amenities, transport links, and a vibrant community.',
-                'seo_title': 'Kilimani Neighborhood Guide: Living in Nairobi\'s Trendiest Area | 2Hame',
+                'seo_title': 'Living in Kilimani, Nairobi: Neighborhood Guide | 2Hame',
                 'seo_description': 'Discover why Kilimani is one of Nairobi\'s most sought-after neighborhoods. Schools, hospitals, transport, and housing options — all in one guide.',
                 'seo_keywords': 'Kilimani Nairobi, neighborhood guide, living in Kilimani, housing in Nairobi, 2Hame neighborhood insights',
                 'content': '''
@@ -463,6 +463,218 @@ class Command(BaseCommand):
                     </ul>
 
                     <p><strong>Ready to experience the future of housing in Kenya?</strong> Visit <a href="https://2hame.com">2Hame.com</a> today and find, list, or move — all in one place.</p>
+                '''
+            },
+            {
+                'title': 'Rent Prices in Nairobi 2026: What to Expect By Neighborhood',
+                'category': 'market-insights',
+                'tags': 'Nairobi rent prices, rental market Kenya, apartment prices Nairobi, cost of living Nairobi, 2026 housing market',
+                'excerpt': 'A neighborhood-by-neighborhood breakdown of what to expect to pay for rent in Nairobi in 2026 — from budget bedsitters to premium villas — plus what actually drives the price.',
+                'seo_title': 'Nairobi Rent Prices 2026: Neighborhood Guide | 2Hame',
+                'seo_description': 'How much does rent cost in Nairobi in 2026? Compare typical rent ranges by neighborhood — Kilimani, Westlands, South B, Ruaka, Karen and more.',
+                'seo_keywords': 'Nairobi rent prices 2026, cost of renting in Nairobi, cheapest neighborhoods Nairobi, apartment prices Kenya, rental market Nairobi',
+                'content': '''
+                    <h2>What Does Rent Actually Cost in Nairobi Right Now?</h2>
+                    <p>"How much should I budget for rent?" is the first question almost every apartment hunter asks — and the honest answer is: it depends heavily on which part of Nairobi you're looking at. Below is a general guide to typical rent ranges by area, based on patterns we see across listings on 2Hame. Exact prices always vary by size, finish, floor, and how recently the building was constructed, so treat these as a starting point — not a quote.</p>
+
+                    <h3>Budget-Friendly Areas (Bedsitters &amp; 1-Bedrooms from roughly KES 8,000–20,000)</h3>
+                    <ul>
+                        <li><strong>Eastlands (Umoja, Kayole, Donholm):</strong> Some of the most affordable options in the city, with growing infrastructure and matatu access.</li>
+                        <li><strong>Ruiru &amp; Kahawa:</strong> Popular with students and young professionals near Thika Road, with newer gated developments appearing regularly.</li>
+                        <li><strong>Rongai &amp; Kitengela:</strong> Further from the CBD but offering more space for the price, especially for families.</li>
+                    </ul>
+
+                    <h3>Mid-Range Areas (1–2 Bedrooms from roughly KES 20,000–45,000)</h3>
+                    <ul>
+                        <li><strong>South B &amp; South C:</strong> Well-established, close to the airport and CBD, with a good mix of older and newer buildings.</li>
+                        <li><strong>Ruaka &amp; Kiambu Road:</strong> One of the fastest-growing rental corridors, with many modern apartment blocks and easy access to Two Rivers Mall.</li>
+                        <li><strong>Ngong Road &amp; Langata:</strong> A balance of green space and city access, popular with families and young professionals alike.</li>
+                    </ul>
+
+                    <h3>Premium Areas (1–3 Bedrooms from roughly KES 45,000–120,000+)</h3>
+                    <ul>
+                        <li><strong>Kilimani &amp; Kileleshwa:</strong> High demand from young professionals and expats — expect modern amenities and a lively social scene.</li>
+                        <li><strong>Westlands:</strong> Central, corporate-heavy, with easy access to offices, restaurants, and nightlife.</li>
+                        <li><strong>Lavington:</strong> Spacious, leafy, and quieter — a favorite for families wanting more room without leaving the city.</li>
+                    </ul>
+
+                    <h3>Ultra-Premium Areas (Villas &amp; Townhouses, KES 150,000+)</h3>
+                    <ul>
+                        <li><strong>Karen &amp; Runda:</strong> Nairobi's most established low-density, high-end residential areas — large plots, mature gardens, and gated privacy.</li>
+                        <li><strong>Muthaiga &amp; Gigiri:</strong> Close to embassies and international schools, popular with diplomats and senior executives.</li>
+                    </ul>
+
+                    <h3>What Actually Drives the Price?</h3>
+                    <ul>
+                        <li><strong>Proximity to the CBD and major roads</strong> — shorter commutes command a premium.</li>
+                        <li><strong>Building age and finish</strong> — newly built apartments with modern fittings rent higher than older stock, even in the same neighborhood.</li>
+                        <li><strong>Security and amenities</strong> — gated compounds, backup water/power, gyms, and parking all add to the price.</li>
+                        <li><strong>Floor and view</strong> — higher floors with good views can carry a small premium in high-rises.</li>
+                    </ul>
+
+                    <h3>How to Get an Accurate, Current Price</h3>
+                    <p>Because rent shifts with new developments, seasonal demand, and the exchange rate, the most reliable number is always the live listing price — not a blog post from months ago. <strong>2Hame's interactive map and AI-powered search</strong> let you filter live listings by neighborhood and budget instantly, so you can see exactly what's available right now, not a stale average.</p>
+
+                    <h3>Frequently Asked Questions</h3>
+                    <p><strong>Is rent in Nairobi negotiable?</strong><br />Often, yes — especially for units that have been vacant for a while, or if you're willing to sign a longer lease. It rarely hurts to ask.</p>
+                    <p><strong>Do landlords in Nairobi require a deposit?</strong><br />Most require a deposit of one to two months' rent, refundable at the end of the tenancy subject to the property's condition.</p>
+                    <p><strong>What's the cheapest way to find affordable housing in Nairobi?</strong><br />Search broadly across multiple neighborhoods rather than fixating on one, and use filters (like those on 2Hame) to compare price-per-bedroom across areas you hadn't considered.</p>
+
+                    <p><strong>Ready to see real, current prices?</strong> Browse live listings by neighborhood and budget on <a href="https://2hame.com">2Hame</a> today.</p>
+                '''
+            },
+            {
+                'title': 'How to Spot and Avoid Rental Scams in Kenya',
+                'category': 'renting-tips',
+                'tags': 'rental scams Kenya, fake listings, apartment hunting safety, tenant protection, rental fraud',
+                'excerpt': 'Rental scams cost Kenyan tenants millions every year. Learn the red flags to watch for, how fraudsters operate, and how to protect your deposit before you send a single shilling.',
+                'seo_title': 'Avoid Rental Scams in Kenya: Red Flags &amp; Safety Tips | 2Hame',
+                'seo_description': 'Learn how to identify fake rental listings and avoid rental scams in Kenya. Practical red flags, verification steps, and safe payment tips from 2Hame.',
+                'seo_keywords': 'rental scams Kenya, fake apartment listings, avoid rental fraud, safe apartment hunting Kenya, rental scam red flags',
+                'content': '''
+                    <h2>Rental Scams Are More Common Than You Think</h2>
+                    <p>Every year, apartment hunters in Kenya lose money to fraudsters posting fake listings, collecting "booking fees" for properties that don't exist, or impersonating landlords for units that were never theirs to rent. The good news: these scams follow predictable patterns, and once you know what to look for, they're easy to avoid.</p>
+
+                    <h3>Red Flag #1: Pressure to Pay Before Viewing</h3>
+                    <p>A legitimate landlord or agent will let you view the property — in person or via a live video call — before asking for any money. If someone insists you "secure" the unit with a deposit before you've seen it, treat that as a serious warning sign.</p>
+
+                    <h3>Red Flag #2: Prices That Are Too Good to Be True</h3>
+                    <p>A 3-bedroom apartment in Kilimani listed at half the going rate isn't a lucky find — it's usually bait. Scammers use unrealistically low prices to attract a flood of interested tenants, then disappear once they've collected a few deposits.</p>
+
+                    <h3>Red Flag #3: Requests for Payment via Unusual Channels</h3>
+                    <p>Be cautious of anyone who insists on being paid via a personal M-Pesa number with no paper trail, refuses to provide ID, or asks you to wire money to an account outside Kenya. Legitimate transactions leave a verifiable trail — receipts, ID copies, and ideally a written agreement.</p>
+
+                    <h3>Red Flag #4: Reused Photos</h3>
+                    <p>Scammers often lift photos from real listings elsewhere. If something feels off, a quick reverse image search can reveal whether the same photos appear attached to a completely different property or city.</p>
+
+                    <h3>Red Flag #5: The "Agent" Who Isn't the Landlord — and Can't Prove It</h3>
+                    <p>Ask to see some form of proof that the person you're dealing with actually represents the property — a lease they hold, an ID matching a title deed, or a verified agent profile. A genuine agent won't be offended by the question.</p>
+
+                    <h3>How to Protect Yourself</h3>
+                    <ul>
+                        <li><strong>Always view the property in person</strong> (or via live video call if you're relocating from out of town) before paying anything.</li>
+                        <li><strong>Verify the landlord's identity</strong> — ask for ID and, where possible, some proof of ownership or authority to let the unit.</li>
+                        <li><strong>Get everything in writing</strong> — a signed lease agreement protects both parties and gives you legal recourse if something goes wrong.</li>
+                        <li><strong>Use traceable payment methods</strong> and always request a receipt for any deposit or rent paid.</li>
+                        <li><strong>Search verified platforms</strong> — listings on <strong>2Hame</strong> go through owner verification, so you're browsing real properties from accountable owners, not anonymous posts.</li>
+                    </ul>
+
+                    <h3>What to Do If You've Been Scammed</h3>
+                    <p>Report the incident to the police with any evidence you have (chat logs, M-Pesa messages, screenshots of the listing), and report the listing to the platform it appeared on so it can be taken down before it affects someone else.</p>
+
+                    <h3>Frequently Asked Questions</h3>
+                    <p><strong>Is it normal to pay a deposit before signing a lease?</strong><br />It's normal to pay a deposit at the same time you sign a lease — but not before you've viewed the property and seen the agreement.</p>
+                    <p><strong>Can I get my money back if I've been scammed?</strong><br />It's difficult once a scammer has your money, especially if payment was untraceable. This is exactly why verifying first matters more than recovering funds after the fact.</p>
+                    <p><strong>How does 2Hame protect tenants from fake listings?</strong><br />Property owners on 2Hame go through a verification process, and 2Hame's secure messaging and payment tools keep your communication and transactions on the record.</p>
+
+                    <p><strong>Search with confidence.</strong> Browse verified property owners and listings on <a href="https://2hame.com">2Hame</a> and skip the guesswork.</p>
+                '''
+            },
+            {
+                'title': "The Complete Landlord's Guide to Screening Tenants in Kenya",
+                'category': 'landlord-guides',
+                'tags': 'tenant screening, landlord tips Kenya, rental applications, tenant verification, property management Kenya',
+                'excerpt': "A good tenant screening process is the single biggest factor in a stress-free rental. Here's how to verify identity, income, and rental history before you hand over the keys.",
+                'seo_title': 'Tenant Screening Guide for Kenyan Landlords | 2Hame',
+                'seo_description': 'Learn how to screen tenants properly in Kenya — ID checks, income verification, references, and red flags for landlords.',
+                'seo_keywords': 'tenant screening Kenya, how to vet tenants, landlord guide Kenya, rental application checklist, tenant verification',
+                'content': '''
+                    <h2>Why Tenant Screening Matters More Than the Rent Amount</h2>
+                    <p>It's tempting to hand the keys to the first applicant who can pay the deposit — but a rushed decision here is the most common cause of late payments, property damage, and difficult evictions down the line. A structured screening process takes a little longer upfront and saves months of headache later.</p>
+
+                    <h3>Step 1: Require a Complete Application</h3>
+                    <p>Before viewing counts for anything, get the basics in writing: full name, national ID number, current employer or business, monthly income, and current address. Incomplete or evasive applications are themselves a signal worth noting.</p>
+
+                    <h3>Step 2: Verify Identity</h3>
+                    <p>Always request a copy of a national ID or passport and confirm the name matches other documents provided (payslip, employment letter). This protects you legally and confirms you're renting to who you think you are.</p>
+
+                    <h3>Step 3: Confirm Income and Employment</h3>
+                    <p>A common rule of thumb is that rent shouldn't exceed roughly a third of the tenant's net income — if it does, affordability may become an issue a few months in. Ask for a recent payslip or, for self-employed applicants, bank statements or business registration documents.</p>
+
+                    <h3>Step 4: Check Rental History</h3>
+                    <p>Where possible, speak to a previous landlord directly rather than relying solely on a written reference. Ask specifically about payment punctuality, property condition at move-out, and whether they'd rent to this tenant again.</p>
+
+                    <h3>Step 5: Meet in Person (or via Video Call)</h3>
+                    <p>A short conversation reveals a lot — how they communicate, whether their story is consistent, and whether they ask sensible questions about the property. Trust your judgment alongside the paperwork.</p>
+
+                    <h3>Step 6: Put Everything in a Written Lease</h3>
+                    <p>Once you've decided to proceed, a clear lease agreement protects both parties. At minimum, it should cover: rent amount and due date, deposit terms, maintenance responsibilities, notice periods, and house rules.</p>
+
+                    <h3>Red Flags to Watch For</h3>
+                    <ul>
+                        <li>Reluctance to provide ID or proof of income</li>
+                        <li>Pressure to skip the standard process "just this once"</li>
+                        <li>Inconsistent stories about current living situation or reason for moving</li>
+                        <li>Previous landlords who are vague, unreachable, or unwilling to comment</li>
+                        <li>Requests to pay in cash with no receipt, avoiding any paper trail</li>
+                    </ul>
+
+                    <h3>How 2Hame Simplifies Screening</h3>
+                    <p>Instead of collecting scattered documents over WhatsApp, 2Hame's <strong>digital tenant profiles</strong> let verified tenants apply with their ID, rental history, and documents already in one place — so you can compare applicants faster and with more confidence. Combined with the <strong>analytics dashboard</strong>, you can also see how many people are viewing and inquiring about your listing, helping you avoid rushing a decision out of scarcity.</p>
+
+                    <h3>Frequently Asked Questions</h3>
+                    <p><strong>Can I legally reject a tenant in Kenya?</strong><br />Yes — landlords can decline an applicant, but decisions should be based on legitimate criteria like affordability and rental history, applied consistently to all applicants.</p>
+                    <p><strong>How much deposit should I charge?</strong><br />One to two months' rent is standard practice in most of Kenya, refundable at the end of the tenancy less any legitimate deductions for damage.</p>
+                    <p><strong>What if a tenant's payslip looks inconsistent?</strong><br />Ask follow-up questions and consider requesting bank statements. Inconsistencies aren't always dishonest, but they're worth clarifying before signing.</p>
+
+                    <p><strong>List your property and screen with confidence.</strong> Get started with verified tenant profiles on <a href="https://2hame.com">2Hame</a>.</p>
+                '''
+            },
+            {
+                'title': 'Neighborhood Spotlight: Living in Westlands, Nairobi',
+                'category': 'neighborhood-guides',
+                'tags': 'Westlands Nairobi, Nairobi neighborhoods, expat housing Kenya, Westlands apartments, Nairobi CBD living',
+                'excerpt': "Corporate, cosmopolitan, and endlessly convenient — here's what it's actually like to live in Westlands, and who the neighborhood suits best.",
+                'seo_title': 'Living in Westlands, Nairobi: Neighborhood Guide | 2Hame',
+                'seo_description': "Thinking of renting in Westlands, Nairobi? A full guide to housing options, prices, transport, safety, and lifestyle in this central area.",
+                'seo_keywords': 'Westlands Nairobi, living in Westlands, Westlands apartments for rent, Westlands Nairobi guide, Nairobi neighborhoods',
+                'content': '''
+                    <h2>Why Westlands Is One of Nairobi's Most In-Demand Areas</h2>
+                    <p>Westlands sits just a few minutes from the CBD and has grown into one of Nairobi's most important commercial and residential hubs — home to multinational offices, embassies, malls, and a dense mix of apartment towers. If you want to be close to everything without living downtown, Westlands is usually near the top of the list.</p>
+
+                    <h3>Housing Options in Westlands</h3>
+                    <p>Westlands offers a wide range of housing, from compact one-bedroom apartments aimed at young professionals to high-end penthouses with skyline views. Many buildings are relatively modern, with amenities like gyms, backup generators, and covered parking increasingly standard in newer developments.</p>
+
+                    <h3>Getting Around</h3>
+                    <ul>
+                        <li><strong>To the CBD:</strong> Typically a short drive, though rush-hour traffic on Waiyaki Way can add time — many residents use ride-hailing apps or the growing matatu network.</li>
+                        <li><strong>Public transport:</strong> Well served by matatus connecting to most parts of the city.</li>
+                        <li><strong>Walkability:</strong> One of the more walkable areas in Nairobi, with malls, restaurants, and offices within walking distance of many apartment blocks.</li>
+                    </ul>
+
+                    <h3>Amenities &amp; Lifestyle</h3>
+                    <ul>
+                        <li><strong>Shopping:</strong> Sarit Centre, The Mall, and Westgate offer everything from groceries to international brands.</li>
+                        <li><strong>Dining &amp; nightlife:</strong> One of the highest concentrations of restaurants, cafes, and bars in the city.</li>
+                        <li><strong>Healthcare:</strong> Multiple private hospitals and clinics within easy reach.</li>
+                        <li><strong>Coworking &amp; offices:</strong> A major business district, ideal if you want a short commute to a corporate job.</li>
+                    </ul>
+
+                    <h3>Who Westlands Suits Best</h3>
+                    <ul>
+                        <li>Young professionals and expats who want a short commute and an active social scene</li>
+                        <li>Corporate employees working nearby who prioritize convenience over space</li>
+                        <li>Anyone who values walkability and 24-hour access to amenities</li>
+                    </ul>
+                    <p>Families wanting more outdoor space or a quieter, more residential feel may prefer nearby Lavington or Kileleshwa instead.</p>
+
+                    <h3>Safety</h3>
+                    <p>Westlands is generally considered safe by Nairobi standards, particularly within gated apartment compounds with dedicated security. As with any busy urban area, it's worth exercising normal city precautions, especially at night.</p>
+
+                    <h3>What to Check Before You Sign</h3>
+                    <ul>
+                        <li>Noise levels — some buildings sit close to busy roads or nightlife strips</li>
+                        <li>Parking availability, especially if you own a car</li>
+                        <li>Backup water and power — common in newer buildings but not universal</li>
+                    </ul>
+                    <p><strong>2Hame's Move Score™</strong> rates Westlands listings on safety, transport, and amenities, so you can compare specific buildings rather than relying on general reputation alone.</p>
+
+                    <h3>Frequently Asked Questions</h3>
+                    <p><strong>Is Westlands expensive to rent in?</strong><br />It's on the higher end for Nairobi, though prices vary widely by building age and finish — see our <a href="https://2hame.com">Nairobi rent price guide</a> for a fuller comparison.</p>
+                    <p><strong>Is Westlands good for families?</strong><br />It works for some families, but those wanting larger compounds and quieter streets often prefer nearby Lavington or Kileleshwa.</p>
+                    <p><strong>Is Westlands walkable?</strong><br />Yes — it's one of Nairobi's more walkable neighborhoods, with malls, restaurants, and offices close together.</p>
+
+                    <p><strong>Explore available apartments in Westlands</strong> on <a href="https://2hame.com">2Hame</a> and compare buildings side-by-side using the interactive map.</p>
                 '''
             }
         ]
