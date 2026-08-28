@@ -106,3 +106,5 @@ If you outgrow shared hosting, moving to a VPS with nginx in front of a
 few Gunicorn/Passenger workers is the natural next step, and this
 project's settings (SITE_URL, ALLOWED_HOSTS, static/media handling)
 already work in that setup without further changes.
+
+source /home/ofjrdbsn/virtualenv/2Hame/3.12/bin/activate && cd /home/ofjrdbsn/2Hame
