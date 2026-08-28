@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from properties.models import Property, PropertyStatus, PropertyType, Amenity, PropertyReview
 from django.db import models
 from .forms import ViewingScheduleForm, ReviewForm, ContactForm
-from .models import Partner, Testimonial
+from .models import Partner, Testimonial, HeroSlide
 from django.contrib import messages
 import json
 from django.http import JsonResponse
@@ -96,6 +96,12 @@ class HomeView(ListView):
         # partners without a code change; the template falls back to a
         # placeholder icon for any partner with no logo uploaded.
         context['partners'] = Partner.objects.filter(is_active=True)
+
+        # Hero carousel — admin-managed (image or compressed video per
+        # slide, see HeroSlide). Empty on a fresh install / until the
+        # admin adds slides, in which case the template falls back to a
+        # fixed default so the homepage never renders blank.
+        context['hero_slides'] = HeroSlide.objects.filter(is_active=True)
 
         # Testimonials - curated, admin-managed testimonials for the homepage
         context['testimonials'] = Testimonial.objects.filter(

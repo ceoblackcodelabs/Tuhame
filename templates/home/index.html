@@ -3,17 +3,17 @@
 {% load static %}
 
 <!-- ─── SEO BLOCKS ─── -->
-{% block meta_description %}2Hame is Kenya's platform to find, list, manage and move. Search apartments, houses and rentals, list your property, manage tenants and rent, and build your own property profile online.{% endblock meta_description %}
+{% block meta_description %}2Hame is Kenya's platform to find, list, manage and move. Search apartments, houses and rentals, list your property, manage tenants and rent, and get your own branded property website — free — hosted right on 2Hame.{% endblock meta_description %}
 
-{% block meta_keywords %}2Hame, real estate Kenya, property listings Kenya, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property management Kenya, landlord tools, property agents, real estate investors, find movers, housing marketplace, Kenya property{% endblock meta_keywords %}
+{% block meta_keywords %}2Hame, real estate Kenya, property listings Kenya, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property management Kenya, landlord tools, property agents, real estate investors, find movers, housing marketplace, free property website Kenya, real estate agent website Kenya, landlord website, Kenya property{% endblock meta_keywords %}
 
 {% block og_title %}2Hame – Find, List, Manage & Move | Kenya Property Platform{% endblock og_title %}
 
-{% block og_description %}Search property listings, list your own property, manage tenants and rent, and build a professional property profile online — all on 2Hame, Kenya's find-list-manage-move platform.{% endblock og_description %}
+{% block og_description %}Search property listings, list your own property, manage tenants and rent, and get your own branded property website — free, hosted on 2Hame, no coding needed — all on Kenya's find-list-manage-move platform.{% endblock og_description %}
 
 {% block twitter_title %}2Hame – Find, List, Manage & Move{% endblock twitter_title %}
 
-{% block twitter_description %}Search property listings, list your own property, manage tenants and rent, and build your property profile online — with 2Hame.{% endblock twitter_description %}
+{% block twitter_description %}Search property listings, list your own property, manage tenants and rent, and get your own free branded property website on 2Hame.{% endblock twitter_description %}
 
 {% block canonical_url %}https://2hame.com{% endblock canonical_url %}
 
@@ -57,8 +57,28 @@
       {
         "@type": "ListItem",
         "position": 4,
+        "name": "Get Your Free Property Website",
+        "url": "https://2hame.com/users/my-profile/edit/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 5,
         "name": "Find Movers",
         "url": "https://2hame.com/movers/map/"
+      }
+    ]
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "2Hame Services for Property Owners",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Free Branded Property Website",
+          "description": "Verified 2Hame owners get their own branded portfolio website (e.g. 2hame.com/owners/yourname) to showcase listings, in place of building a separate website."
+        }
       }
     ]
   }
@@ -87,42 +107,59 @@
 <!-- ─── HERO ─── -->
 <section class="hero" aria-label="Find your next home in Kenya">
   <div class="hero-carousel">
-    <!-- Slide 1 - For Tenants -->
+    {% if hero_slides %}
+      {% for slide in hero_slides %}
+        <div class="hero-slide{% if forloop.first %} active{% endif %}" data-title="{{ slide.title }}" data-subtitle="{{ slide.subtitle }}">
+          {% if slide.media_type == 'video' and slide.video %}
+            <video class="hero-bg" style="position:absolute;inset:0;" autoplay muted loop playsinline
+                   {% if slide.video_poster %}poster="{{ slide.video_poster.url }}"{% endif %}>
+              <source src="{{ slide.video.url }}" type="video/mp4" />
+            </video>
+          {% elif slide.image %}
+            <div class="hero-bg" style="position:absolute;inset:0;">
+              <div style="position:absolute;inset:0;background-image:url('{{ slide.image.url }}');background-size:cover;background-position:center;"></div>
+            </div>
+          {% else %}
+            <div class="hero-bg" style="background: linear-gradient(135deg, #1a3a6b 0%, #2563EB 50%, #0a192f 100%); width:100%; height:100%; position:absolute; inset:0;"></div>
+          {% endif %}
+          <div class="hero-overlay"></div>
+        </div>
+      {% endfor %}
+    {% else %}
+    <!-- Fallback slides - shown until slides are added under Django Admin → Home → Hero slides -->
     <div class="hero-slide active" data-title="Find Your Next <em>Home</em> With Ease" data-subtitle="Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast.">
       <div class="hero-bg" style="background: linear-gradient(135deg, #1a3a6b 0%, #2563EB 50%, #0a192f 100%); width:100%; height:100%; position:absolute; inset:0;">
         <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;opacity:0.45;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
-    <!-- Slide 2 - For Property Owners -->
     <div class="hero-slide" data-title="List Your Property &amp; <em>Find Tenants</em> Fast" data-subtitle="Reach thousands of verified tenants and buyers. Free listings, premium exposure, and direct communication.">
       <div class="hero-bg" style="position:absolute;inset:0;">
         <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
-    <!-- Slide 3 - Apartments -->
     <div class="hero-slide" data-title="Modern <em>Apartments</em> In Prime Locations" data-subtitle="Live closer to work, school and the city's best spots — verified apartments, updated daily.">
       <div class="hero-bg" style="position:absolute;inset:0;">
         <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
-    <!-- Slide 4 - For Real Estate Agents -->
-    <div class="hero-slide" data-title="For <em>Real Estate Agents</em> &amp; Developers" data-subtitle="Showcase your portfolio, manage listings, and connect with serious buyers and tenants in one place.">
+    <div class="hero-slide" data-title="For <em>Real Estate Agents</em> &amp; Developers" data-subtitle="Get your own free branded property website on 2Hame — showcase your portfolio, manage listings, and connect with serious buyers and tenants, no coding needed.">
       <div class="hero-bg" style="position:absolute;inset:0;">
         <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
       </div>
       <div class="hero-overlay"></div>
     </div>
+    {% endif %}
   </div>
 
   <div class="hero-content">
     <div class="hero-badge">
       <span>{% icon "trophy" %}</span> Find. List. Manage. Move.
     </div>
-    <h1 class="hero-title">Find Your Next <em>Home</em> With Ease</h1>
-    <p class="hero-subtitle">Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast. <strong style="color:var(--primary);">List your property for free.</strong></p>
+    <h1 class="hero-title">{% if hero_slides.0 %}{{ hero_slides.0.title|safe }}{% else %}Find Your Next <em>Home</em> With Ease{% endif %}</h1>
+    <p class="hero-subtitle">{% if hero_slides.0 %}{{ hero_slides.0.subtitle }}{% else %}Discover rentals, villas, apartments and BNBs near you — from Nairobi to the Coast. <strong style="color:var(--primary);">List your property for free.</strong>{% endif %}</p>
 
     <!-- Search Bar -->
     <form method="get" action="{% url 'home:properties' %}" class="hero-search" role="search" aria-label="Search properties">
@@ -146,10 +183,16 @@
   </div>
 
   <div class="hero-dots">
-    <span class="hero-dot active" role="button" aria-label="Slide 1"></span>
-    <span class="hero-dot" role="button" aria-label="Slide 2"></span>
-    <span class="hero-dot" role="button" aria-label="Slide 3"></span>
-    <span class="hero-dot" role="button" aria-label="Slide 4"></span>
+    {% if hero_slides %}
+      {% for slide in hero_slides %}
+        <span class="hero-dot{% if forloop.first %} active{% endif %}" role="button" aria-label="Slide {{ forloop.counter }}"></span>
+      {% endfor %}
+    {% else %}
+      <span class="hero-dot active" role="button" aria-label="Slide 1"></span>
+      <span class="hero-dot" role="button" aria-label="Slide 2"></span>
+      <span class="hero-dot" role="button" aria-label="Slide 3"></span>
+      <span class="hero-dot" role="button" aria-label="Slide 4"></span>
+    {% endif %}
   </div>
 
   <div class="hero-stats">
@@ -263,7 +306,7 @@
           Whether you're a landlord, real estate agent, or developer — reach thousands of verified tenants and buyers actively searching for their next home through our AI-powered search and interactive map platform.
         </p>
         <p style="color:var(--gray-500);line-height:1.7;">
-          List your property for free and get access to real-time analytics, secure payment processing, and direct communication tools. Track views, inquiries, and engagement metrics to understand what's working.
+          List your property for free and get your own branded property website on 2Hame — plus real-time analytics, secure payment processing, and direct communication tools. Track views, inquiries, and engagement metrics to understand what's working.
         </p>
         <div class="about-highlights">
           <div class="about-highlight-item">
@@ -271,6 +314,13 @@
             <div>
               <strong style="font-size:0.9rem;color:var(--gray-800);">Free Listings &amp; Premium Visibility</strong>
               <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">List your property for free with premium options to boost visibility among thousands of active tenants and buyers.</p>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="about-highlight-icon">{% icon "globe" %}</div>
+            <div>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Your Own Free Property Website</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Get a branded portfolio website hosted on 2Hame — no coding, no separate hosting — to share instead of building your own site.</p>
             </div>
           </div>
           <div class="about-highlight-item">

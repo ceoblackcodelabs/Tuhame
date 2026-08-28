@@ -10,7 +10,7 @@ from properties.models import (
     Amenity,
 )
 
-from .models import ViewingSchedule, SavedProperty, MoveChecklistItem, ContactMessage, MoveRequest, MoveOffer, Partner, Testimonial
+from .models import ViewingSchedule, SavedProperty, MoveChecklistItem, ContactMessage, MoveRequest, MoveOffer, Partner, Testimonial, HeroSlide
 
 
 @admin.register(ViewingSchedule)
@@ -336,3 +336,29 @@ class PartnerAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" style="height:32px;width:auto;border-radius:4px;" />', obj.logo.url)
         return format_html('<span style="color:#9CA3AF;">No logo — placeholder shown</span>')
     logo_preview.short_description = 'Logo'
+
+
+@admin.register(HeroSlide)
+class HeroSlideAdmin(admin.ModelAdmin):
+    list_display = ('preview', 'title', 'media_type', 'is_active', 'order')
+    list_editable = ('is_active', 'order')
+    list_filter = ('media_type', 'is_active')
+    fieldsets = (
+        (None, {'fields': ('title', 'subtitle', 'order', 'is_active')}),
+        ('Background media', {
+            'fields': ('media_type', 'image', 'video', 'video_poster'),
+            'description': 'Set Media type to Image or Video, then fill in the matching field below. '
+                            'Uploaded video is compressed automatically — this can take a few seconds on save.',
+        }),
+    )
+
+    def preview(self, obj):
+        if obj.media_type == HeroSlide.MediaType.VIDEO and obj.video:
+            thumb = obj.video_poster.url if obj.video_poster else None
+            if thumb:
+                return format_html('<img src="{}" style="height:32px;width:56px;object-fit:cover;border-radius:4px;" />', thumb)
+            return format_html('<span style="color:#9CA3AF;">🎬 video</span>')
+        if obj.image:
+            return format_html('<img src="{}" style="height:32px;width:56px;object-fit:cover;border-radius:4px;" />', obj.image.url)
+        return format_html('<span style="color:#9CA3AF;">No media set</span>')
+    preview.short_description = 'Preview'

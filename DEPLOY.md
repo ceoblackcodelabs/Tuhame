@@ -54,14 +54,23 @@
    TILL_NUMBER=...
    MPESA_ENVIRONMENT=production
    ```
-4. Upload the code (passenger_wsgi.py at the app root, same as now).
-5. In the cPanel Python App terminal:
+4. Install `ffmpeg` on the server if it isn't already there — it's what
+   compresses hero videos on upload (see `Tuhame/video_utils.py`). If it's
+   missing, uploads still work, just uncompressed (a warning is logged,
+   nothing breaks). On a cPanel box without root, check with your host
+   whether `ffmpeg` can be added, or ask them to install it — there's no
+   pure-Python fallback for this.
+   ```
+   which ffmpeg   # confirms it's on PATH
+   ```
+5. Upload the code (passenger_wsgi.py at the app root, same as now).
+6. In the cPanel Python App terminal:
    ```
    pip install -r requirements.txt
    python manage.py migrate
    python manage.py collectstatic --noinput
    ```
-6. Restart the app (cPanel "Restart" button, or `touch tmp/restart.txt`
+7. Restart the app (cPanel "Restart" button, or `touch tmp/restart.txt`
    if your setup uses that convention).
 
 That's it — no settings.py edits, no gunicorn to think about.

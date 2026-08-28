@@ -13,6 +13,7 @@ from django.template.defaultfilters import filesizeformat
 
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.webp', '.gif')
 DOCUMENT_EXTENSIONS = ('.pdf', '.jpg', '.jpeg', '.png')
+VIDEO_EXTENSIONS = ('.mp4', '.webm', '.mov', '.m4v')
 
 
 def _validate(f, max_size, extensions, kind):
@@ -41,6 +42,17 @@ def validate_signature_image(f):
 
 def validate_partner_logo(f):
     _validate(f, max_size=2 * 1024 * 1024, extensions=IMAGE_EXTENSIONS, kind='image')
+
+
+def validate_hero_image(f):
+    _validate(f, max_size=8 * 1024 * 1024, extensions=IMAGE_EXTENSIONS, kind='image')
+
+
+def validate_hero_video(f):
+    # Generous raw-upload cap — the video gets compressed down at save time
+    # (see Tuhame/video_utils.py) so this just guards against something
+    # wildly oversized landing in temp storage before that even runs.
+    _validate(f, max_size=150 * 1024 * 1024, extensions=VIDEO_EXTENSIONS, kind='video')
 
 
 def validate_document(f):

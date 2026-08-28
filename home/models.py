@@ -3,7 +3,7 @@ from properties.models import Property
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from Tuhame.upload_validators import validate_partner_logo
+from Tuhame.upload_validators import validate_partner_logo, validate_hero_image, validate_hero_video
 
 User = get_user_model()
 
@@ -324,6 +324,69 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.get_subject_display()} ({self.created_at:%Y-%m-%d})"
+
+
+class HeroSlide(models.Model):
+    """One slide in the homepage hero carousel — admin-managed so the
+    background (image OR video) and headline can be changed without a
+    code deploy. If no active slides exist, the homepage falls back to a
+    fixed default (see home/views.py / templates/home/index.html)."""
+
+    class MediaType(models.TextChoices):
+        IMAGE = 'image', 'Image'
+        VIDEO = 'video', 'Video'
+
+    title = models.CharField(
+        max_length=200,
+        help_text="Headline shown over the slide. Basic HTML like <em>Home</em> is allowed for the highlighted word — it's rendered as-is.",
+    )
+    subtitle = models.CharField(max_length=300, blank=True)
+
+    media_type = models.CharField(max_length=10, choices=MediaType.choices, default=MediaType.IMAGE)
+    image = models.ImageField(
+        upload_to='hero/images/', blank=True, null=True, validators=[validate_hero_image],
+        help_text="Used when Media type is Image.",
+    )
+    video = models.FileField(
+        upload_to='hero/videos/', blank=True, null=True, validators=[validate_hero_video],
+        help_text="Used when Media type is Video. Compressed and re-encoded automatically on save (muted, max 30s, 1080p) — the original file you upload is not what gets stored.",
+    )
+    video_poster = models.ImageField(
+        upload_to='hero/video_posters/', blank=True, null=True,
+        help_text="Optional still frame shown while the video loads. Auto-generated from the video if left blank and the server supports it.",
+    )
+
+    order = models.PositiveIntegerField(default=0, help_text="Lower numbers show first.")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            from Tuhame.image_utils import optimize_image_field
+            optimize_image_field(self.image, max_dimension=1920)
+
+        if self.video:
+            from Tuhame.video_utils import compress_video_field, extract_video_poster
+            # Auto-poster needs the RAW uploaded bytes (compression re-encodes
+            # in place), so grab it before compress_video_field touches the field.
+            if not self.video_poster and not getattr(self.video, '_committed', True):
+                from django.core.files.base import ContentFile
+                poster_bytes = extract_video_poster(self.video)
+                if poster_bytes:
+                    self.video_poster.save(
+                        f"{self.video.name.rsplit('.', 1)[0]}_poster.jpg",
+                        ContentFile(poster_bytes), save=False,
+                    )
+            compress_video_field(self.video)
+
+        super().save(*args, **kwargs)
 
 
 class Partner(models.Model):
