@@ -41,7 +41,7 @@ class BlogPostAdmin(admin.ModelAdmin):
             'fields': ('category', 'tags'),
         }),
         ('SEO', {
-            'fields': ('seo_title'),
+            'fields': ('seo_title',),
             'description': 'Leave blank to fall back to the post title / excerpt.',
         }),
         ('Publishing', {
