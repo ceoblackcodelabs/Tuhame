@@ -1,5 +1,5 @@
 {% extends "emails/_base_email.html" %}
-{% block title %}Confirm your email — {{ site_name }}{% endblock %}
+{% block title %}Confirm your email - {{ site_name }}{% endblock %}
 {% block body %}
 <p style="font-size:16px;margin:0 0 16px;">Hi {{ user.get_full_name|default:user.username }},</p>
 <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
