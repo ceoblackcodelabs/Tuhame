@@ -29,7 +29,7 @@ class BlogPostAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Post', {
-            'fields': ('title', 'slug', 'author', 'cover_image', 'excerpt', 'seo_description', 'seo_keywords'),
+            'fields': ('title', 'slug', 'author', 'cover_image', 'excerpt'),
         }),
         # Isolated on its own so the CKEditor widget can't break the
         # aligned-fieldset float layout of the fields around it.
@@ -40,12 +40,12 @@ class BlogPostAdmin(admin.ModelAdmin):
         ('Organization', {
             'fields': ('category', 'tags'),
         }),
+        ('SEO', {
+            'fields': ('seo_title', 'seo_description', 'seo_keywords'),
+            'description': 'Leave blank to fall back to the post title / excerpt.',
+        }),
         ('Publishing', {
             'fields': ('is_published', 'published_at', 'views_count', 'created_at', 'updated_at'),
-        }),
-        ('SEO', {
-            'fields': ('seo_title',),
-            'description': 'Leave blank to fall back to the post title / excerpt.',
         }),
     )
 

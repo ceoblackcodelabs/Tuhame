@@ -54,7 +54,14 @@
    TILL_NUMBER=...
    MPESA_ENVIRONMENT=production
    ```
-4. Install `ffmpeg` on the server if it isn't already there — it's what
+4. Get a free CARTO API key at https://carto.com/basemaps/apikey/ (no
+   approval queue, free up to 5M tile requests/month) and set it —
+   without this, every map on the site (property map, map search, mover
+   map, edit profile map) still loads but shows CARTO's "API KEY
+   REQUIRED" watermark stamped across the tiles:
+   ```
+   CARTO_API_KEY=your-carto-key
+5. Install `ffmpeg` on the server if it isn't already there — it's what
    compresses hero videos on upload (see `Tuhame/video_utils.py`). If it's
    missing, uploads still work, just uncompressed (a warning is logged,
    nothing breaks). On a cPanel box without root, check with your host
@@ -63,14 +70,14 @@
    ```
    which ffmpeg   # confirms it's on PATH
    ```
-5. Upload the code (passenger_wsgi.py at the app root, same as now).
-6. In the cPanel Python App terminal:
+6. Upload the code (passenger_wsgi.py at the app root, same as now).
+7. In the cPanel Python App terminal:
    ```
    pip install -r requirements.txt
    python manage.py migrate
    python manage.py collectstatic --noinput
    ```
-7. Restart the app (cPanel "Restart" button, or `touch tmp/restart.txt`
+8. Restart the app (cPanel "Restart" button, or `touch tmp/restart.txt`
    if your setup uses that convention).
 
 That's it — no settings.py edits, no gunicorn to think about.
@@ -106,5 +113,3 @@ If you outgrow shared hosting, moving to a VPS with nginx in front of a
 few Gunicorn/Passenger workers is the natural next step, and this
 project's settings (SITE_URL, ALLOWED_HOSTS, static/media handling)
 already work in that setup without further changes.
-
-source /home/ofjrdbsn/virtualenv/2Hame/3.12/bin/activate && cd /home/ofjrdbsn/2Hame

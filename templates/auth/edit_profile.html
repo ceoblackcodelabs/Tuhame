@@ -779,7 +779,13 @@
     const startLng = parseFloat(lngInput.value) || 36.8219;
 
     moverMap = L.map('mover-base-map', { center: [startLat, startLng], zoom: latInput.value ? 14 : 11 });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // CARTO now requires a (free) API key for its tile service — see
+    // settings.CARTO_API_KEY. Falls back to the keyless URL if unset,
+    // same as before (tiles still load, just watermarked by CARTO).
+    var cartoTileUrl = '{{ carto_api_key|escapejs }}'
+      ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key={{ carto_api_key|escapejs }}'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    L.tileLayer(cartoTileUrl, {
       attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 19

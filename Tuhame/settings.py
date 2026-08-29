@@ -95,6 +95,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'Tuhame.context_processors.carto_api_key',
             ],
             **({} if DEBUG else {
                 # Cached loader: each template is compiled once per worker
@@ -396,6 +397,15 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='TuHame <no-reply@tuha
 # Tuhame/emails.py) - kept separate from DEFAULT_FROM_EMAIL since that's a
 # "Name <address>" mailbox string, not a display name on its own.
 SITE_NAME = config('SITE_NAME', default='2Hame')
+
+# ============ MAP TILES (CARTO) ============
+# CARTO's basemap tile service now requires a (free) API key — see
+# https://carto.com/basemaps/apikey/. Get one there (no approval queue,
+# free up to 5M tile requests/month) and set it here. Left blank, every
+# map on the site still loads, just with CARTO's "API KEY REQUIRED"
+# watermark stamped across the tiles instead of a hard failure — see
+# Tuhame/context_processors.py for how this reaches every template.
+CARTO_API_KEY = config('CARTO_API_KEY', default='')
 
 # ============ M-PESA DARAJA (STK Push) - used for subscription payments ============
 # All read directly by subscriptions/mpesa.py at call time (never cached),

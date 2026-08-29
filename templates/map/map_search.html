@@ -168,10 +168,17 @@ const map = L.map('leaflet-map', {
 // use" — a live commercial site like this one qualifies — and it actively
 // blocks traffic that strips its referrer or looks automated (that's what
 // the "access blocked" / osm.wiki/blocked page the site was hitting means).
-// CARTO's tiles are built for exactly this kind of production embedding,
-// need no signup/API key for normal traffic, and use the same OSM map
-// data underneath, so the map still looks the same.
-const baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+// CARTO's tiles are built for exactly this kind of production embedding
+// and use the same OSM map data underneath, so the map still looks the
+// same either way.
+//
+// CARTO now requires a (free) API key for its tile service — see
+// settings.CARTO_API_KEY. Falls back to the keyless URL if unset, same
+// as before (tiles still load, just watermarked by CARTO).
+var cartoTileUrl = '{{ carto_api_key|escapejs }}'
+  ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key={{ carto_api_key|escapejs }}'
+  : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const baseTileLayer = L.tileLayer(cartoTileUrl, {
   attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   subdomains: 'abcd',
   maxZoom: 20,

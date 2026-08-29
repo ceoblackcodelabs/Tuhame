@@ -945,19 +945,19 @@ class Command(BaseCommand):
         '''
             },
             {
-                'title': 'How to Avoid Real Estate and Rental Scams in Kenya',
+                'title': 'How to Avoid Land and Property Buying Scams in Kenya',
                 'category': 'market-insights',
-                'tags': 'real estate scams Kenya, EARB registered agents, land search Kenya, Ardhisasa, property fraud',
-                'excerpt': 'From fake listings to fraudulent land sales — a due-diligence guide covering registered agents, official land searches, Ardhisasa, and the warning signs that precede most scams.',
-                'seo_title': 'How to Avoid Real Estate & Rental Scams in Kenya',
-                'seo_description': 'Protect yourself from real estate and rental scams in Kenya — verify agents via EARB, confirm ownership with a land search, and spot common warning signs.',
-                'seo_keywords': 'real estate scams Kenya, avoid property fraud, EARB registered agents, land search Kenya, Ardhisasa verification',
+                'tags': 'land buying scams Kenya, property fraud Kenya, EARB registered agents, land search Kenya, Ardhisasa, fake title deeds',
+                'excerpt': "Buying land or property is where the biggest scam losses happen in Kenya — fake title deeds, unregistered agents, and land sold twice. A due-diligence guide before you pay a shilling.",
+                'seo_title': 'How to Avoid Land & Property Buying Scams in Kenya',
+                'seo_description': 'Buying land or property in Kenya? Verify agents via EARB, confirm ownership with an official land search, and spot the warning signs of fraud before you pay.',
+                'seo_keywords': 'land buying scams Kenya, property fraud Kenya, fake title deeds, EARB registered agents, land search Kenya, Ardhisasa verification',
                 'content': '''
-            <h2>Most Scams Can Be Prevented With Basic Verification</h2>
-            <p>Real estate scams can cost victims hundreds of thousands or even millions of shillings. Rental scams can be equally painful because victims may lose deposits and rent before discovering that the advertised property isn't actually available. The good news is that many scams can be prevented with basic verification.</p>
+            <h2>Buying Property Is Where the Biggest Scam Losses Happen</h2>
+            <p>Real estate purchase scams can cost victims hundreds of thousands or even millions of shillings — far more than a lost rental deposit, because the stakes and sums involved in buying land or a home are so much higher. Fake title deeds, land sold to multiple buyers, and unregistered "agents" collecting deposits for property they don't represent are all common. The good news is that most of these scams can be prevented with basic verification before any money changes hands.</p>
 
-            <h3>1. Never Trust Photos Alone</h3>
-            <p>Beautiful photographs prove very little. Scammers can copy property photos from legitimate listings and advertise them elsewhere. Always verify the actual property.</p>
+            <h3>1. Never Trust Photos or Listings Alone</h3>
+            <p>Beautiful photographs prove very little. Scammers can copy property photos from legitimate listings and advertise them elsewhere. Always verify the actual property and the actual land parcel, not just the marketing material.</p>
 
             <h3>2. Visit the Property</h3>
             <p>Before paying, physically inspect the property whenever possible. Check the location, building, apartment number, management, security, and condition. If someone refuses to let you see the property and insists on immediate payment, be cautious.</p>
@@ -989,7 +989,7 @@ class Command(BaseCommand):
             <h3>The Golden Rule</h3>
             <p>Never let excitement make you skip verification. If someone wants your money before you can verify the property, the owner and the transaction, walk away until the facts are clear.</p>
 
-            <p><strong>Search with confidence.</strong> Browse verified property owners and listings on <a href="https://2hame.com">2Hame</a> and skip the guesswork.</p>
+            <p><strong>Selling or listing land or property?</strong> Verified owners get their own branded page and reach serious buyers on <a href="https://2hame.com">2Hame</a> — no anonymous listings, no guesswork.</p>
         '''
             },
             {
