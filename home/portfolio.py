@@ -15,6 +15,12 @@ This is what makes "every refresh shows a different combination" and
 "don't query the database every request" both true at once: the pool
 changes rarely (once per TTL window), but which 3 images get shown from
 it changes every single request, for free.
+
+The three STATIC_HERO_IMAGES below always show first, regardless of
+whether the owner has any listings - so a brand-new owner with zero
+photos still gets a full, professional-looking hero instead of a blank
+gradient. Once they have listings with photos, up to 3 of their own get
+appended after the static ones, for up to 6 slides total.
 """
 import random
 
@@ -25,6 +31,16 @@ HERO_POOL_TTL = 3600  # 1 hour - long enough to actually save queries, short eno
 HERO_POOL_SIZE = 12   # cache a pool bigger than 3 so repeated visits still see variety
 HERO_SLIDE_COUNT = 3
 
+# Always-shown fallback slides - generic, well-lit interiors that work
+# under the hero's dark overlay regardless of which owner is viewing.
+# Hotlinked from Unsplash (same approach already used for the homepage
+# hero and auth pages elsewhere in this codebase).
+STATIC_HERO_IMAGES = [
+    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&auto=format&fit=crop&q=80",
+]
+
 
 def _image_url(stored_path):
     if not stored_path:
@@ -34,9 +50,10 @@ def _image_url(stored_path):
 
 
 def get_owner_hero_images(owner_user):
-    """Returns up to HERO_SLIDE_COUNT unique image URLs for this owner's
-    hero slideshow. Empty list if they have no listings with photos yet -
-    the template falls back to a plain gradient background in that case."""
+    """Returns the hero slideshow image list for this owner: the 3 static
+    fallback photos always first, plus up to HERO_SLIDE_COUNT of the
+    owner's own listing photos appended after (if they have any) - so
+    the hero never has fewer than 3 slides, and tops out at 6."""
     cache_key = f'owner-hero-pool:{owner_user.id}'
     pool = cache.get(cache_key)
 
@@ -55,5 +72,8 @@ def get_owner_hero_images(owner_user):
         cache.set(cache_key, pool, HERO_POOL_TTL)
 
     if not pool:
-        return []
-    return random.sample(pool, min(HERO_SLIDE_COUNT, len(pool)))
+        return list(STATIC_HERO_IMAGES)
+
+    owner_images = random.sample(pool, min(HERO_SLIDE_COUNT, len(pool)))
+    return list(STATIC_HERO_IMAGES) + owner_images
+
