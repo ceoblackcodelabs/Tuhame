@@ -75,7 +75,7 @@
 /* ─── Reset & Base ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; font-size: 16px; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; font-size: 16px; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
 
 body {
   font-family: var(--font-body);
@@ -3658,12 +3658,21 @@ input[type="range"] {
   flex-wrap: nowrap;
   gap: 0.5rem;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding: 0.2rem 0.1rem;
   flex: 1;
   min-width: 0;
+  max-width: 100%;
+  /* Without these two, a horizontal drag that starts on the pills can
+     "escape" into the page itself on mobile once it reaches its own
+     scroll edge — overscroll-behavior-x stops that hand-off at the
+     boundary, touch-action tells the browser upfront that this element
+     owns horizontal panning so it never even considers the page. */
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
 }
 
 .blog-filter-pills::-webkit-scrollbar { display: none; }
