@@ -81,7 +81,7 @@ def send_verification_email(user, verification_url):
     inbox. Also reused by ResendVerificationEmailView."""
     _send(
         to_email=user.email,
-        subject=f"Confirm your email — {getattr(settings, 'SITE_NAME', '2Hame')}",
+        subject=f"Confirm your email - {getattr(settings, 'SITE_NAME', '2Hame')}",
         template_name='verify_email.html',
         context={'user': user, 'verification_url': verification_url},
     )
@@ -99,7 +99,7 @@ def send_password_reset_email(user, reset_url):
     can't be used to probe which emails are registered."""
     _send(
         to_email=user.email,
-        subject=f"Reset your password — {getattr(settings, 'SITE_NAME', '2Hame')}",
+        subject=f"Reset your password - {getattr(settings, 'SITE_NAME', '2Hame')}",
         template_name='password_reset.html',
         context={'user': user, 'reset_url': reset_url},
     )

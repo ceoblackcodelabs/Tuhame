@@ -36,8 +36,13 @@
    CSRF_TRUSTED_ORIGINS=https://yourdomain.co.ke,https://www.yourdomain.co.ke
    ```
 2. Set the email vars (used for signup verification + password reset —
-   see `Tuhame/emails.py`):
+   see `Tuhame/emails.py`). `EMAIL_BACKEND` matters most: leaving it
+   unset falls back to Django's console backend, which just prints
+   emails to stdout instead of sending them — nothing reaches an
+   inbox, and on some servers it can even crash the worker process
+   trying to print a non-ASCII character:
    ```
+   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
    EMAIL_HOST_USER=...
    EMAIL_HOST_PASSWORD=...
    DEFAULT_FROM_EMAIL=2Hame <no-reply@yourdomain.co.ke>
