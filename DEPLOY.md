@@ -40,11 +40,31 @@
    unset falls back to Django's console backend, which just prints
    emails to stdout instead of sending them — nothing reaches an
    inbox, and on some servers it can even crash the worker process
-   trying to print a non-ASCII character:
+   trying to print a non-ASCII character. Pick ONE of the two setups
+   below, not both:
+
+   **Option A — real SMTP** (Gmail, your host's mail server, etc.).
+   Note that many shared hosts block outbound SMTP ports (587/465),
+   which is the most common reason this silently doesn't work:
    ```
    EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
    EMAIL_HOST_USER=...
    EMAIL_HOST_PASSWORD=...
+   DEFAULT_FROM_EMAIL=2Hame <no-reply@yourdomain.co.ke>
+   SITE_NAME=2Hame
+   ```
+
+   **Option B — Brevo's HTTP API** (see `Tuhame/email_backends.py`).
+   Goes out over normal HTTPS instead of SMTP, so it isn't affected by
+   blocked SMTP ports — the more reliable choice on shared hosting.
+   `BREVO_API_KEY` is an API key from Brevo's dashboard (Settings →
+   SMTP & API → API Keys) — **not** the SMTP password shown on that
+   same page, those are different credentials. The address in
+   `DEFAULT_FROM_EMAIL` must also be a verified sender in Brevo
+   (Settings → Senders) or Brevo will reject the send:
+   ```
+   EMAIL_BACKEND=Tuhame.email_backends.BrevoAPIBackend
+   BREVO_API_KEY=xkeysib-...
    DEFAULT_FROM_EMAIL=2Hame <no-reply@yourdomain.co.ke>
    SITE_NAME=2Hame
    ```

@@ -393,6 +393,11 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='TuHame <no-reply@tuhame.co.ke>')
+# Only used when EMAIL_BACKEND is set to Tuhame.email_backends.BrevoAPIBackend
+# (sends via Brevo's HTTP API instead of SMTP - see that file for why).
+# This is a Brevo API key, not an SMTP password - those are different
+# credentials in Brevo's dashboard.
+BREVO_API_KEY = config('BREVO_API_KEY', default='')
 # Brand name merged into every outbound email's shared context (see
 # Tuhame/emails.py) - kept separate from DEFAULT_FROM_EMAIL since that's a
 # "Name <address>" mailbox string, not a display name on its own.
