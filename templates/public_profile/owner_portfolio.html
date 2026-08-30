@@ -1,4 +1,5 @@
 {% extends "public_profile/public_profile_base.html" %}
+{% load static %}
 {% load humanize %}
 {% load icons %}
 
@@ -30,6 +31,11 @@
   {% endfor %}
   <div class="pp-hero-overlay"></div>
   <div class="pp-hero-content">
+    {% if owner_profile.profile_picture %}
+      <img src="{{ owner_profile.profile_picture.url }}" alt="{{ brand_name }}" class="pp-hero-logo" />
+    {% else %}
+      <img src="{% static 'assets/img/logo.png' %}" alt="2Hame" class="pp-hero-logo pp-hero-logo-fallback" />
+    {% endif %}
     <p class="pp-hero-eyebrow">{% icon "home" %} Verified Property Owner{% if owner_cities %} · {{ owner_cities|first }}{% endif %}</p>
     <h1 class="pp-hero-name">{{ brand_name }}</h1>
     <p class="pp-hero-tagline">{{ owner_profile.bio|truncatewords:28|default:"Verified listings, honest advice, and support from first message to move-in day." }}</p>
