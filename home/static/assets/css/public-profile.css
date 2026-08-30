@@ -339,7 +339,13 @@ a { color: inherit; text-decoration: none; }
 @media (min-width: 981px) {
   .pp-hero-overlay {
     background:
-      linear-gradient(180deg, rgba(11,11,12,0.3) 0%, rgba(11,11,12,0.05) 45%, rgba(11,11,12,0.65) 100%),
+      /* Vertical layer: barely any darkening at the top (this used to be
+         0.3 here, which stacked with the horizontal layer below and made
+         the whole top band - right where the header and logo sit - go
+         nearly solid black, hiding the photo exactly where it should be
+         most visible). Only the bottom, where the hero transitions into
+         the feature strip, still needs real darkening. */
+      linear-gradient(180deg, rgba(11,11,12,0.05) 0%, rgba(11,11,12,0.05) 50%, rgba(11,11,12,0.55) 100%),
       linear-gradient(90deg,
         var(--pp-black) 0%,
         rgba(11,11,12,0.97) 20%,
@@ -1112,12 +1118,23 @@ a { color: inherit; text-decoration: none; }
   background: var(--pp-gold);
 }
 
-/* ── Alternating section backgrounds ── */
+/* ── Alternating section backgrounds ──
+   Odd sections (About, Listings, Connect) sit on deep black; even
+   sections (Categories, Reviews) sit on a lighter charcoal shade - two
+   distinct, fully-opaque tones of black, not a translucent tint (the
+   old dark-mode --pp-alt-bg was only 8% opacity over an already-black
+   page background, which was visually almost identical to no tint at
+   all). A hairline border marks the seam between every section so the
+   alternation actually reads as sections, not one continuous field. */
 :root { --pp-alt-bg: rgba(184,147,90,0.06); }
-[data-pp-theme="dark"] { --pp-alt-bg: rgba(184,147,90,0.08); }
+[data-pp-theme="dark"] { --pp-alt-bg: var(--pp-black-soft); }
 
 .pp-bg-light { background: var(--pp-alt-bg); }
 .pp-bg-default { background: var(--pp-bg); }
+
+.pp-bg-light, .pp-bg-default, .pp-feature-strip, .pp-region-marquee {
+  border-top: 1px solid var(--pp-border);
+}
 
 /* ── Header nav + hamburger ── */
 .pp-header-nav {
