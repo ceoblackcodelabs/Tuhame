@@ -38,7 +38,12 @@
     {% endif %}
     <p class="pp-hero-eyebrow">{% icon "home" %} Verified Property Owner{% if owner_cities %} · {{ owner_cities|first }}{% endif %}</p>
     <h1 class="pp-hero-name">{{ brand_name }}</h1>
-    <p class="pp-hero-tagline">{{ owner_profile.bio|truncatewords:28|default:"Verified listings, honest advice, and support from first message to move-in day." }}</p>
+    <hr class="pp-hero-hr" />
+    {% if hero_taglines %}
+      <p class="pp-hero-rotating-tagline" id="pp-hero-rotating-tagline">{{ hero_taglines.0 }}</p>
+      {{ hero_taglines|json_script:"pp-hero-taglines-data" }}
+    {% endif %}
+    <p class="pp-hero-tagline">{{ owner_profile.bio|truncatewords:36|default:"Verified listings, honest advice, and support from first message to move-in day - every property personally reviewed before it goes live." }}</p>
 
     <div class="pp-hero-ctas">
       <a href="#listings" class="pp-hero-cta">View Properties</a>
@@ -96,26 +101,6 @@
   </div>
 </section>
 
-<!-- ─── REGION MARQUEE (auto-scrolling, per-location listing counts) ─── -->
-{% if region_breakdown %}
-<div class="pp-region-marquee">
-  <div class="pp-region-track">
-    {% for row in region_breakdown %}
-      <a href="?city={{ row.city }}#listings" class="pp-region-card">
-        <p class="pp-region-card-name">{{ row.city }}</p>
-        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
-      </a>
-    {% endfor %}
-    {% for row in region_breakdown %}
-      <a href="?city={{ row.city }}#listings" class="pp-region-card" aria-hidden="true" tabindex="-1">
-        <p class="pp-region-card-name">{{ row.city }}</p>
-        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
-      </a>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
 <!-- ─── ANNOUNCEMENT MARQUEE ─── -->
 {% if owner_profile.owner_marquee_text %}
 <div class="pp-marquee">
@@ -139,23 +124,24 @@
       <div>
         <p class="pp-eyebrow">About</p>
         <h2 class="pp-about-heading">{{ owner_profile.owner_about_heading|default:"Trusted local expertise, personal service" }}</h2>
+        <hr class="pp-about-hr" />
         <p class="pp-about-desc">{{ owner_profile.bio|default:"This owner hasn't added a description yet." }}</p>
 
         <ul class="pp-about-features">
           <li class="pp-about-feature">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
             Reliable
           </li>
           <li class="pp-about-feature">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
             Client Support
           </li>
           <li class="pp-about-feature">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
             Expert Advice
           </li>
           <li class="pp-about-feature">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
             Trustworthy
           </li>
         </ul>
@@ -163,6 +149,27 @@
     </div>
   </div>
 </section>
+
+<!-- ─── REGION MARQUEE (auto-scrolling, per-location listing counts) ─── -->
+{% if region_breakdown %}
+<div class="pp-region-marquee">
+  <div class="pp-region-track">
+    {% for row in region_breakdown %}
+      <a href="?city={{ row.city }}#listings" class="pp-region-card">
+        <p class="pp-region-card-name">{{ row.city }}</p>
+        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+      </a>
+    {% endfor %}
+    {% for row in region_breakdown %}
+      <a href="?city={{ row.city }}#listings" class="pp-region-card" aria-hidden="true" tabindex="-1">
+        <p class="pp-region-card-name">{{ row.city }}</p>
+        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 
 <!-- ─── CATEGORIES ─── -->
 {% if category_breakdown %}
@@ -403,6 +410,28 @@
         slides[current].classList.add('pp-hero-slide-active');
       }, 5000);
     }
+  })();
+
+  (function () {
+    // Rotating line under the hero's hr divider - owner's own tagline
+    // first (see Profile.owner_tagline), then a few generic phrases,
+    // cross-fading every few seconds. See the CSS comment on
+    // .pp-hero-rotating-tagline for why this stays a normal block-flow
+    // element with an explicit width rather than absolutely positioned.
+    var el = document.getElementById('pp-hero-rotating-tagline');
+    var dataEl = document.getElementById('pp-hero-taglines-data');
+    if (!el || !dataEl) return;
+    var phrases = JSON.parse(dataEl.textContent || '[]');
+    if (phrases.length < 2) return;
+    var idx = 0;
+    setInterval(function () {
+      el.style.opacity = 0;
+      setTimeout(function () {
+        idx = (idx + 1) % phrases.length;
+        el.textContent = phrases[idx];
+        el.style.opacity = 1;
+      }, 500);
+    }, 4000);
   })();
 
   (function () {

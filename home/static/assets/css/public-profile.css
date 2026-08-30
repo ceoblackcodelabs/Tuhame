@@ -405,6 +405,32 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.15;
 }
 
+.pp-hero-hr {
+  width: 130px;
+  height: 2px;
+  background: var(--pp-gold);
+  border: none;
+  margin: 1.5rem 0 0;
+}
+
+/* Rotating line under the hr - owner's own tagline first, then a few
+   generic phrases, cycled by JS (see extra_js block below). Deliberately
+   normal block flow with an explicit width (not absolutely positioned)
+   - an earlier version of this used absolute positioning with no width,
+   which collapsed to a 1-character-wide column once JS started swapping
+   in different-length phrases. Don't reintroduce that. */
+.pp-hero-rotating-tagline {
+  width: 100%;
+  color: var(--pp-gold-light);
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  font-weight: 500;
+  margin: 1.1rem 0 0.25rem;
+  line-height: 1.4;
+  transition: opacity 0.5s ease;
+}
+
 /* Subtext paragraph - width is always explicit (100% up to max-width) so
    it renders as a normal centered block, never a collapsed column (the
    old absolutely-positioned word-rotator here used to squash it into a
@@ -488,6 +514,17 @@ a { color: inherit; text-decoration: none; }
   gap: 0.9rem;
 }
 
+/* Thin divider between icons on desktop, where they sit in one row -
+   a small boutique-editorial touch. Skipped below 901px: once the grid
+   wraps to multiple rows (see the 900px breakpoint further down), a
+   border-right on every item creates an odd half-finished line at the
+   end of each wrapped row instead of a clean single-row rhythm. */
+@media (min-width: 901px) {
+  .pp-feature:not(:last-child) {
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+}
+
 .pp-feature-icon {
   width: 52px;
   height: 52px;
@@ -498,6 +535,12 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.pp-feature:hover .pp-feature-icon {
+  background: rgba(201,162,75,0.1);
+  transform: translateY(-3px);
 }
 
 .pp-feature-label {
@@ -569,6 +612,7 @@ a { color: inherit; text-decoration: none; }
   aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: var(--pp-radius-lg);
+  box-shadow: 0 20px 45px -15px rgba(0,0,0,0.35), 0 0 0 1px rgba(201,162,75,0.12);
 }
 
 .pp-about-image-fallback {
@@ -600,6 +644,14 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
   margin: 0 0 1.25rem;
   line-height: 1.25;
+}
+
+.pp-about-hr {
+  width: 70px;
+  height: 2px;
+  background: var(--pp-gold);
+  border: none;
+  margin: -0.35rem 0 1.25rem;
 }
 
 .pp-about-desc {
@@ -1243,14 +1295,21 @@ a { color: inherit; text-decoration: none; }
 .pp-about-feature {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.65rem;
   font-size: 0.88rem;
   font-weight: 500;
 }
 
-.pp-about-feature svg {
+.pp-about-feature-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--pp-gold);
+  color: var(--pp-gold-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  color: var(--pp-gold);
 }
 
 @media (max-width: 480px) {
