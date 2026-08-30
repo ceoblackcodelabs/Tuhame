@@ -238,16 +238,6 @@ a { color: inherit; text-decoration: none; }
   flex-shrink: 0;
 }
 
-.pp-header-brandname {
-  font-family: var(--pp-font-display);
-  font-weight: 600;
-  font-size: 1.15rem;
-  color: var(--pp-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .pp-header-actions {
   display: flex;
   align-items: center;
@@ -299,7 +289,7 @@ a { color: inherit; text-decoration: none; }
 
 .pp-hero {
   position: relative;
-  height: 80vh;
+  height: 85vh;
   min-height: 460px;
   overflow: hidden;
   background: var(--pp-black);
@@ -373,6 +363,14 @@ a { color: inherit; text-decoration: none; }
      on wide screens. */
   padding-left: clamp(1.5rem, 4vw, 4.5rem);
   padding-right: 1.5rem;
+  /* Guaranteed clearance below the fixed topbar+header (they float
+     above the hero, transparent, at a higher z-index) - without this,
+     vertically-centering a tall content block (logo + heading + tagline
+     + ctas + counters) in the hero can place its top edge - the hero's
+     own logo image - underneath the header on shorter viewports,
+     regardless of how tall the hero section itself is. This reserves
+     the space up front so centering only ever happens in what's left. */
+  padding-top: calc(var(--pp-topbar-h) + 100px);
 }
 
 .pp-hero-logo {
@@ -496,8 +494,8 @@ a { color: inherit; text-decoration: none; }
 .pp-feature-strip {
   background: var(--pp-black);
   border-top: 1px solid rgba(255,255,255,0.08);
-  height: 20vh;
-  min-height: 150px;
+  height: 15vh;
+  min-height: 130px;
   display: flex;
   align-items: center;
 }

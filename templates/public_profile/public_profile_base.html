@@ -100,13 +100,12 @@
 
   {% block header %}
   <header class="pp-header" id="pp-header">
-    <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}" class="pp-header-brand">
+    <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}" class="pp-header-brand" aria-label="{{ brand_name }}">
       {% if profile_picture_url %}
         <img src="{{ profile_picture_data_uri|default:profile_picture_url }}" alt="{{ brand_name }}" class="pp-header-avatar" loading="eager" />
       {% else %}
         <div class="pp-header-avatar-fallback">{{ brand_name|first|upper }}</div>
       {% endif %}
-      <span class="pp-header-brandname">{{ brand_name }}</span>
     </a>
 
     <nav class="pp-header-nav" id="pp-header-nav">
