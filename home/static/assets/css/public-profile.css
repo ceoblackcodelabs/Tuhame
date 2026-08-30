@@ -1264,19 +1264,35 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pp-region-card {
-  display: block;
+  display: flex;
+  align-items: stretch;
   flex-shrink: 0;
-  width: 200px;
-  padding: 1.1rem 1.4rem;
+  width: 260px;
   border: 1px solid rgba(184,147,90,0.3);
   border-radius: var(--pp-radius);
   background: rgba(255,255,255,0.03);
   transition: var(--pp-transition);
+  overflow: hidden;
 }
 
 .pp-region-card:hover {
   border-color: var(--pp-gold);
   background: rgba(184,147,90,0.08);
+}
+
+.pp-region-card-image {
+  width: 88px;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.pp-region-card-body {
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
 }
 
 .pp-region-card-name {
@@ -1285,6 +1301,9 @@ a { color: inherit; text-decoration: none; }
   font-size: 1.05rem;
   font-weight: 600;
   margin: 0 0 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pp-region-card-count {
@@ -1361,6 +1380,24 @@ a { color: inherit; text-decoration: none; }
   transform: translateY(-2px);
 }
 
+.pp-category-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--pp-gold);
+  color: var(--pp-gold-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.9rem;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.pp-category-card:hover .pp-category-card-icon {
+  background: rgba(201,162,75,0.1);
+  transform: translateY(-2px);
+}
+
 .pp-category-card-label {
   font-family: var(--pp-font-display);
   font-size: 1.05rem;
@@ -1392,6 +1429,98 @@ a { color: inherit; text-decoration: none; }
   border-radius: 999px;
   padding: 0.15rem 0.6rem;
   margin-bottom: 0.75rem;
+}
+
+/* ── Reviews: crossfade carousel (same approach as the hero slideshow -
+   stacked absolutely-positioned panels, one fully opaque at a time) ── */
+.pp-review-carousel {
+  position: relative;
+}
+
+.pp-review-track {
+  position: relative;
+  min-height: 300px;
+}
+
+.pp-review-panel {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.pp-review-panel.pp-review-panel-active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.pp-review-card {
+  max-width: 640px;
+  width: 100%;
+  height: auto;
+  text-align: center;
+  padding: 2.5rem;
+}
+
+.pp-review-stars {
+  color: var(--pp-gold);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.pp-review-quote {
+  color: var(--pp-text-muted);
+  line-height: 1.8;
+  font-size: 1.05rem;
+  font-style: italic;
+  margin-bottom: 1.25rem;
+}
+
+.pp-review-author {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.pp-review-property {
+  font-size: 0.8rem;
+  color: var(--pp-text-muted);
+  margin-top: 0.15rem;
+}
+
+.pp-review-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.pp-review-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.25);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.pp-review-dot-active {
+  background: var(--pp-gold);
+  transform: scale(1.3);
+}
+
+@media (max-width: 480px) {
+  .pp-review-track { min-height: 340px; }
+  .pp-review-card { padding: 2rem 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-review-panel { transition: none; }
 }
 
 /* ── Scroll-reveal ── */

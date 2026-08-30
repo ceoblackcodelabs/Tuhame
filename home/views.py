@@ -894,8 +894,18 @@ class OwnerPortfolioView(DetailView):
         # ── Category section (property types this owner has, with counts) -
         #    also doubles as a filter: clicking one links to ?property_type=X ──
         type_labels = dict(PropertyType.choices)
+        CATEGORY_ICONS = {
+            'bnb': 'bed', 'hotel': 'hotel', 'school': 'school',
+            'residential': 'home', 'commercial': 'store',
+            'land': 'map', 'industrial': 'factory',
+        }
         category_breakdown = [
-            {'value': row['property_type'], 'label': type_labels.get(row['property_type'], row['property_type']), 'count': row['count']}
+            {
+                'value': row['property_type'],
+                'label': type_labels.get(row['property_type'], row['property_type']),
+                'count': row['count'],
+                'icon': CATEGORY_ICONS.get(row['property_type'], 'building'),
+            }
             for row in Property.objects.filter(owner=owner_user, is_active=True)
             .values('property_type').annotate(count=Count('id')).order_by('-count')
         ]
@@ -904,12 +914,34 @@ class OwnerPortfolioView(DetailView):
         #    also doubles as a filter: clicking one links to ?city=X. Always
         #    shows at least 5 cards (padded with 0-listing placeholder
         #    cities) so the infinite-scroll marquee always has enough width
-        #    to loop smoothly instead of sitting static/flush-left. ──
-        region_breakdown = [
-            {'city': row['city'], 'count': row['count']}
-            for row in Property.objects.filter(owner=owner_user, is_active=True)
+        #    to loop smoothly instead of sitting static/flush-left. Each
+        #    card also carries a photo - a real listing's photo for cities
+        #    the owner actually has properties in, one of the same static
+        #    fallback photos used by the hero (see home/portfolio.py) for
+        #    the 0-listing padding cities, so there's never a blank tile. ──
+        from .portfolio import STATIC_HERO_IMAGES
+
+        def _image_url(stored_path):
+            if not stored_path:
+                return None
+            from django.core.files.storage import default_storage
+            return default_storage.url(stored_path)
+
+        region_breakdown = []
+        for row in (
+            Property.objects.filter(owner=owner_user, is_active=True)
             .exclude(city='').values('city').annotate(count=Count('id')).order_by('-count')
-        ]
+        ):
+            sample_property = (
+                Property.objects.filter(owner=owner_user, is_active=True, city=row['city'])
+                .exclude(main_image='').order_by('-created_at').first()
+            )
+            region_breakdown.append({
+                'city': row['city'],
+                'count': row['count'],
+                'image_url': _image_url(sample_property.main_image) if sample_property else None,
+            })
+
         MIN_REGION_CARDS = 5
         FALLBACK_REGIONS = [
             'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret',
@@ -917,13 +949,23 @@ class OwnerPortfolioView(DetailView):
         ]
         if len(region_breakdown) < MIN_REGION_CARDS:
             existing_cities = {row['city'].strip().lower() for row in region_breakdown}
-            for fallback_city in FALLBACK_REGIONS:
+            for i, fallback_city in enumerate(FALLBACK_REGIONS):
                 if len(region_breakdown) >= MIN_REGION_CARDS:
                     break
                 if fallback_city.strip().lower() in existing_cities:
                     continue
-                region_breakdown.append({'city': fallback_city, 'count': 0})
+                region_breakdown.append({
+                    'city': fallback_city, 'count': 0,
+                    'image_url': STATIC_HERO_IMAGES[i % len(STATIC_HERO_IMAGES)],
+                })
                 existing_cities.add(fallback_city.strip().lower())
+
+        # Region cards with no image at all (e.g. a real city where none of
+        # the owner's listings in it have a main_image yet) still fall back
+        # to a static photo rather than showing a blank tile.
+        for i, row in enumerate(region_breakdown):
+            if not row['image_url']:
+                row['image_url'] = STATIC_HERO_IMAGES[i % len(STATIC_HERO_IMAGES)]
 
         # ── Hero slideshow images (cached - see home/portfolio.py) ──
         from .portfolio import get_owner_hero_images

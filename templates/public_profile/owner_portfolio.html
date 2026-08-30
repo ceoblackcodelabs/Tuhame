@@ -156,14 +156,20 @@
   <div class="pp-region-track">
     {% for row in region_breakdown %}
       <a href="?city={{ row.city }}#listings" class="pp-region-card">
-        <p class="pp-region-card-name">{{ row.city }}</p>
-        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+        <div class="pp-region-card-image" style="background-image:url('{{ row.image_url }}');"></div>
+        <div class="pp-region-card-body">
+          <p class="pp-region-card-name">{{ row.city }}</p>
+          <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+        </div>
       </a>
     {% endfor %}
     {% for row in region_breakdown %}
       <a href="?city={{ row.city }}#listings" class="pp-region-card" aria-hidden="true" tabindex="-1">
-        <p class="pp-region-card-name">{{ row.city }}</p>
-        <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+        <div class="pp-region-card-image" style="background-image:url('{{ row.image_url }}');"></div>
+        <div class="pp-region-card-body">
+          <p class="pp-region-card-name">{{ row.city }}</p>
+          <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+        </div>
       </a>
     {% endfor %}
   </div>
@@ -182,6 +188,7 @@
     <div class="pp-category-grid pp-reveal">
       {% for row in category_breakdown %}
         <a href="?property_type={{ row.value }}#listings" class="pp-category-card">
+          <div class="pp-category-card-icon">{% icon row.icon size=24 %}</div>
           <p class="pp-category-card-label">{{ row.label }}</p>
           <p class="pp-category-card-count">{{ row.count }} listing{{ row.count|pluralize }}</p>
         </a>
@@ -330,26 +337,35 @@
       <h2 class="pp-about-heading">What Clients Say</h2>
       {% if review_count %}<p style="color:var(--pp-text-muted);">{{ review_avg|floatformat:1 }} average from {{ review_count }} review{{ review_count|pluralize }}</p>{% endif %}
     </div>
-    <div id="pp-reviews-track" style="display:flex;gap:1.5rem;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:0.5rem;" class="pp-reveal">
-      {% if reviews %}
-        {% for review in reviews %}
-        <div class="pp-testimonial-card" style="flex:0 0 min(340px,85vw);scroll-snap-align:start;">
-          <div style="color:var(--pp-gold);margin-bottom:0.75rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
-          <p style="color:var(--pp-text-muted);line-height:1.7;margin-bottom:1rem;">&ldquo;{{ review.comment|truncatewords:35 }}&rdquo;</p>
-          <p style="font-weight:600;font-size:0.9rem;">{{ review.user.get_full_name|default:review.user.username }}</p>
-          <p style="font-size:0.78rem;color:var(--pp-text-muted);">{{ review.property.title }}</p>
+    {% with review_list=reviews|default:fallback_testimonials %}
+    <div class="pp-review-carousel pp-reveal">
+      <div class="pp-review-track">
+        {% for item in review_list %}
+        <div class="pp-review-panel{% if forloop.first %} pp-review-panel-active{% endif %}" data-pp-review-slide>
+          <div class="pp-testimonial-card pp-review-card">
+            {% if reviews %}
+              <div class="pp-review-stars">{% for i in "12345" %}{% if forloop.counter <= item.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+              <p class="pp-review-quote">&ldquo;{{ item.comment|truncatewords:35 }}&rdquo;</p>
+              <p class="pp-review-author">{{ item.user.get_full_name|default:item.user.username }}</p>
+              <p class="pp-review-property">{{ item.property.title }}</p>
+            {% else %}
+              <span class="pp-testimonial-fallback-tag">Example</span>
+              <p class="pp-review-quote">&ldquo;{{ item.text }}&rdquo;</p>
+              <p class="pp-review-author">{{ item.role }}</p>
+            {% endif %}
+          </div>
         </div>
         {% endfor %}
-      {% else %}
-        {% for t in fallback_testimonials %}
-        <div class="pp-testimonial-card" style="flex:0 0 min(340px,85vw);scroll-snap-align:start;">
-          <span class="pp-testimonial-fallback-tag">Example</span>
-          <p style="color:var(--pp-text-muted);line-height:1.7;margin-bottom:1rem;">&ldquo;{{ t.text }}&rdquo;</p>
-          <p style="font-weight:600;font-size:0.9rem;">{{ t.role }}</p>
-        </div>
+      </div>
+      {% if review_list|length > 1 %}
+      <div class="pp-review-dots">
+        {% for item in review_list %}
+          <button type="button" class="pp-review-dot{% if forloop.first %} pp-review-dot-active{% endif %}" data-pp-review-dot="{{ forloop.counter0 }}" aria-label="Show review {{ forloop.counter }}"></button>
         {% endfor %}
+      </div>
       {% endif %}
     </div>
+    {% endwith %}
   </div>
 </section>
 
@@ -432,6 +448,42 @@
         el.style.opacity = 1;
       }, 500);
     }, 4000);
+  })();
+
+  (function () {
+    // "What Clients Say" carousel - same crossfade approach as the hero
+    // slideshow above: one review panel visible at a time, fading
+    // between them on an interval, looping forever. Dots (if more than
+    // one review) let a visitor jump straight to one and also restart
+    // the timer from there, so manual navigation doesn't immediately
+    // get overridden by the next automatic tick.
+    var panels = document.querySelectorAll('[data-pp-review-slide]');
+    var dots = document.querySelectorAll('[data-pp-review-dot]');
+    if (panels.length < 2) return;
+    var current = 0;
+    var timer;
+
+    function show(i) {
+      panels[current].classList.remove('pp-review-panel-active');
+      dots.forEach(function (d) { d.classList.remove('pp-review-dot-active'); });
+      current = i;
+      panels[current].classList.add('pp-review-panel-active');
+      if (dots[current]) dots[current].classList.add('pp-review-dot-active');
+    }
+
+    function startAutoplay() {
+      timer = setInterval(function () { show((current + 1) % panels.length); }, 5500);
+    }
+
+    dots.forEach(function (dot) {
+      dot.addEventListener('click', function () {
+        clearInterval(timer);
+        show(parseInt(dot.dataset.ppReviewDot, 10));
+        startAutoplay();
+      });
+    });
+
+    startAutoplay();
   })();
 
   (function () {
