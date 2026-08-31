@@ -23,6 +23,18 @@ from django.urls import reverse
 logger = logging.getLogger('mpesa')
 
 
+def _safe_int(value):
+    """result_code is an IntegerField, but Safaricom sends two different
+    kinds of codes into this same code path: numeric STK ResultCodes (0,
+    1032, 2001...) and dotted Apigee gateway error codes ("400.002.02").
+    Only the former fits the column - anything else (including None)
+    saves as NULL instead of crashing the failure-handling path itself."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def get_access_token():
     """OAuth token from Safaricom. Returns the token string, or None on
     any failure -- never raises."""
@@ -65,17 +77,31 @@ def initiate_subscription_stk_push(payment):
 
         if not passkey or not business_short_code:
             logger.error("M-Pesa credentials not configured")
-            payment.mark_failed(999, "M-Pesa credentials not configured")
+            payment.mark_failed(None, "M-Pesa credentials not configured")
             return False
 
         if not site_url:
             logger.error("SITE_URL not configured - needed to build the M-Pesa callback URL")
-            payment.mark_failed(999, "Callback URL not configured")
+            payment.mark_failed(None, "Callback URL not configured")
+            return False
+
+        callback_url = f"{site_url.rstrip('/')}{reverse('subscriptions:subscription_callback')}"
+        if not callback_url.startswith('https://'):
+            # Safaricom rejects this outright with "Invalid CallBackURL" -
+            # fail fast locally with a message that actually says why,
+            # instead of burning an API round-trip to find out. The usual
+            # cause: SITE_URL is missing from .env in production and is
+            # silently falling back to the dev default (http://127.0.0.1:8000).
+            logger.error("Refusing to send non-HTTPS CallBackURL to Safaricom: %s", callback_url)
+            payment.mark_failed(
+                None,
+                f"SITE_URL must be a public HTTPS URL for M-Pesa callbacks (currently resolves to: {callback_url})",
+            )
             return False
 
         access_token = get_access_token()
         if not access_token:
-            payment.mark_failed(999, "Failed to get access token")
+            payment.mark_failed(None, "Failed to get access token")
             return False
 
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -101,7 +127,7 @@ def initiate_subscription_stk_push(payment):
             "PartyA": payment.phone_number,
             "PartyB": till_number or business_short_code,
             "PhoneNumber": payment.phone_number,
-            "CallBackURL": f"{site_url.rstrip('/')}{reverse('subscriptions:subscription_callback')}",
+            "CallBackURL": callback_url,
             "AccountReference": f"SUB{payment.id}",
             "TransactionDesc": f"{payment.plan.name} subscription"[:100],
         }
@@ -117,7 +143,7 @@ def initiate_subscription_stk_push(payment):
                 return True
             error_desc = data.get('ResponseDescription', 'Unknown error')
             logger.error("STK push rejected (200 but ResponseCode != 0): %s", data)
-            payment.mark_failed(data.get('ResponseCode'), error_desc)
+            payment.mark_failed(_safe_int(data.get('ResponseCode')), error_desc)
             return False
 
         # Non-200 from Safaricom's gateway. This is almost always their
@@ -134,10 +160,17 @@ def initiate_subscription_stk_push(payment):
         except ValueError:
             error_code = response.status_code
             error_message = response.text[:300]
-        payment.mark_failed(error_code, f"HTTP {response.status_code}: {error_message}")
+        # error_code from this envelope is often a dotted string like
+        # "400.002.02", not a number - result_code is an IntegerField, so
+        # keep the code in the text (result_desc) and only pass a number
+        # (or nothing) to result_code itself. A crash here would leave the
+        # payment stuck instead of cleanly marked failed.
+        payment.mark_failed(
+            _safe_int(error_code), f"[{error_code}] HTTP {response.status_code}: {error_message}",
+        )
         return False
 
     except Exception as e:
         logger.error("STK push error: %s", str(e))
-        payment.mark_failed(999, str(e))
+        payment.mark_failed(None, str(e))
         return False
