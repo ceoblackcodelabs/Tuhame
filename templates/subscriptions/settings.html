@@ -128,29 +128,29 @@
   <!-- content-wrapper ends -->
 
   <!-- M-Pesa STK Push modal -->
-  <div id="mpesa-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:10px;max-width:380px;width:92%;padding:1.75rem;">
-      <h5 id="mpesa-modal-title" style="margin-bottom:0.25rem;">Upgrade plan</h5>
-      <p id="mpesa-modal-price" class="text-muted" style="font-size:0.85rem;margin-bottom:1rem;"></p>
+  <div id="mpesa-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);max-width:380px;width:100%;padding:1.75rem;color:var(--text);">
+      <h5 id="mpesa-modal-title" style="margin-bottom:0.25rem;color:var(--text);font-weight:600;">Upgrade plan</h5>
+      <p id="mpesa-modal-price" style="font-size:0.85rem;margin-bottom:1.25rem;color:var(--text-muted);">KES 0</p>
 
       <div id="mpesa-step-form">
-        <label class="form-label" for="mpesa-phone" style="font-size:0.85rem;font-weight:600;">M-Pesa phone number</label>
-        <input type="text" id="mpesa-phone" class="form-control" placeholder="07XX XXX XXX" style="margin-bottom:0.5rem;" />
-        <p id="mpesa-error" class="text-danger" style="font-size:0.8rem;display:none;margin-bottom:0.5rem;"></p>
+        <label class="form-label" for="mpesa-phone" style="font-size:0.85rem;font-weight:600;color:var(--text);">M-Pesa phone number</label>
+        <input type="text" id="mpesa-phone" class="form-control" placeholder="07XX XXX XXX" style="margin-bottom:0.5rem;background:var(--surface-2);border:1px solid var(--border);color:var(--text);" />
+        <p id="mpesa-error" style="font-size:0.8rem;display:none;margin-bottom:0.5rem;color:var(--danger);"></p>
         <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
-          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeMpesaModal()" style="flex:1;">Cancel</button>
+          <button type="button" class="btn btn-sm" onclick="closeMpesaModal()" style="flex:1;background:transparent;border:1px solid var(--border-strong);color:var(--text);">Cancel</button>
           <button type="button" id="mpesa-pay-btn" class="btn btn-sm btn-primary" onclick="submitMpesaPayment()" style="flex:1;">Send STK Push</button>
         </div>
       </div>
 
       <div id="mpesa-step-pending" style="display:none;text-align:center;">
-        <p style="font-size:0.88rem;margin-bottom:0.5rem;">Check your phone and enter your M-Pesa PIN to complete the payment.</p>
+        <p style="font-size:0.88rem;margin-bottom:0.5rem;color:var(--text);">Check your phone and enter your M-Pesa PIN to complete the payment.</p>
         <div class="spinner-border text-primary" role="status" style="width:2rem;height:2rem;margin:0.5rem 0;"></div>
-        <p id="mpesa-status-text" class="text-muted" style="font-size:0.78rem;">Waiting for confirmation…</p>
+        <p id="mpesa-status-text" style="font-size:0.78rem;color:var(--text-muted);">Waiting for confirmation…</p>
       </div>
 
       <div id="mpesa-step-done" style="display:none;text-align:center;">
-        <p id="mpesa-done-text" style="font-size:0.9rem;"></p>
+        <p id="mpesa-done-text" style="font-size:0.9rem;color:var(--text);"></p>
         <button type="button" class="btn btn-sm btn-primary" onclick="location.reload()" style="margin-top:0.5rem;">Close</button>
       </div>
     </div>

@@ -116,10 +116,25 @@ def initiate_subscription_stk_push(payment):
                 payment.save(update_fields=['merchant_request_id', 'checkout_request_id'])
                 return True
             error_desc = data.get('ResponseDescription', 'Unknown error')
+            logger.error("STK push rejected (200 but ResponseCode != 0): %s", data)
             payment.mark_failed(data.get('ResponseCode'), error_desc)
             return False
 
-        payment.mark_failed(response.status_code, f"HTTP Error: {response.text[:100]}")
+        # Non-200 from Safaricom's gateway. This is almost always their
+        # Apigee error envelope: {"requestId": "...", "errorCode": "...",
+        # "errorMessage": "..."} - NOT a ResponseDescription. Parse it
+        # properly instead of chopping the raw text at an arbitrary length,
+        # which previously hid the one field (errorMessage) that actually
+        # explains what's wrong.
+        logger.error("STK push HTTP %s: %s", response.status_code, response.text[:2000])
+        try:
+            err = response.json()
+            error_code = err.get('errorCode', str(response.status_code))
+            error_message = err.get('errorMessage', response.text[:300])
+        except ValueError:
+            error_code = response.status_code
+            error_message = response.text[:300]
+        payment.mark_failed(error_code, f"HTTP {response.status_code}: {error_message}")
         return False
 
     except Exception as e:
