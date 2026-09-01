@@ -193,7 +193,7 @@ class SubscribeInitiateView(LoginRequiredMixin, View):
         )
         logger.info(
             "payment=%s created: user=%s plan=%s amount=%s phone=%s",
-            payment.id, request.user_id, plan.id, plan.price, phone,
+            payment.id, request.user.id, plan.id, plan.price, phone,
         )
 
         if initiate_subscription_stk_push(payment):

@@ -6,3 +6,4 @@
 db.sqlite3
 django_errors.log
 /var
+mpesa.log
