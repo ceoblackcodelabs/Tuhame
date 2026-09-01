@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import SubscriptionPlan, Offer, OfferClaim, OwnerSubscription, SubscriptionPayment, BillingPeriod, add_months
 from .forms import OfferForm, SubscriptionPlanForm
-from .mpesa import initiate_subscription_stk_push
+from .mpesa import initiate_subscription_stk_push, apply_result_code, query_stk_status
 
 logger = logging.getLogger('mpesa')
 
@@ -191,6 +191,10 @@ class SubscribeInitiateView(LoginRequiredMixin, View):
         payment = SubscriptionPayment.objects.create(
             user=request.user, plan=plan, amount=plan.price, phone_number=phone,
         )
+        logger.info(
+            "payment=%s created: user=%s plan=%s amount=%s phone=%s",
+            payment.id, request.user_id, plan.id, plan.price, phone,
+        )
 
         if initiate_subscription_stk_push(payment):
             return JsonResponse({
@@ -219,7 +223,13 @@ class SubscriptionCallbackView(View):
             result_code = stk.get('ResultCode')
             result_desc = stk.get('ResultDesc', '')
 
+            logger.info(
+                "Callback received: checkout_request_id=%s result_code=%s result_desc=%r",
+                checkout_request_id, result_code, result_desc,
+            )
+
             if not checkout_request_id:
+                logger.error("Callback missing CheckoutRequestID: %s", callback_data)
                 return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Missing CheckoutRequestID'})
 
             try:
@@ -228,29 +238,12 @@ class SubscriptionCallbackView(View):
                 logger.error("SubscriptionPayment not found for %s", checkout_request_id)
                 return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Transaction Not Found'})
 
-            # Idempotency guard -- Safaricom retries callbacks that don't
-            # get a fast, valid 200. Without this a retry double-processes
-            # the same payment (e.g. double-extends the subscription).
-            if payment.status != SubscriptionPayment.STATUS_PENDING:
-                return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Already processed'})
-
-            if result_code == 0:
-                items = stk.get('CallbackMetadata', {}).get('Item', [])
-                receipt = next((i.get('Value') for i in items if i.get('Name') == 'MpesaReceiptNumber'), None)
-                if receipt:
-                    payment.mark_completed(receipt_number=receipt, callback_data=callback_data)
-                    return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
-                payment.mark_failed(999, "Missing receipt", callback_data)
-                return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Missing Receipt'})
-
-            if result_code in (1032, 1037):
-                payment.mark_cancelled(result_desc, callback_data)
-            elif result_code == 2001:
-                payment.mark_failed(2001, "Insufficient funds", callback_data)
-            else:
-                payment.mark_failed(result_code, result_desc, callback_data)
-
-            return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Failure'})
+            # apply_result_code() itself is idempotent (checks payment is
+            # still pending before doing anything), which is what actually
+            # guards against Safaricom's callback retries double-processing
+            # a payment - not this view.
+            apply_result_code(payment, result_code, result_desc, callback_data=callback_data, source='callback')
+            return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
 
         except Exception as e:
             logger.error("Subscription M-Pesa callback error: %s", str(e))
@@ -259,12 +252,30 @@ class SubscriptionCallbackView(View):
 
 class SubscriptionPaymentStatusView(LoginRequiredMixin, View):
     """Polled by the frontend every 2-3s while the STK prompt is pending on
-    the user's phone. Reads local state only - never talks to Safaricom."""
+    the user's phone. If Safaricom's callback hasn't arrived yet and the
+    push has been pending for a little while, this proactively asks
+    Safaricom directly (query_stk_status) for the definitive outcome
+    instead of ever letting the frontend guess "it's probably timed out
+    by now" - the status shown to the user is always either the real,
+    server-confirmed state or an honest "still pending"."""
+
+    # Give Safaricom's own callback a head start before we start actively
+    # querying - avoids hammering the query endpoint on every single poll
+    # for the first few seconds of a completely normal, fast payment.
+    RECONCILE_AFTER_SECONDS = 8
 
     def get(self, request, pk):
         payment = get_object_or_404(SubscriptionPayment, pk=pk, user=request.user)
+
+        if payment.status == SubscriptionPayment.STATUS_PENDING:
+            age = (timezone.now() - payment.created_at).total_seconds()
+            if age >= self.RECONCILE_AFTER_SECONDS:
+                query_stk_status(payment)
+                payment.refresh_from_db()
+
         return JsonResponse({
             'status': payment.status,
+            'status_label': payment.get_status_display(),
             'result_desc': payment.result_desc,
             'mpesa_receipt': payment.mpesa_receipt_number,
         })

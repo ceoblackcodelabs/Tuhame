@@ -1,0 +1,315 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}Subscription Revenue{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
+
+{% block content %}
+<div class="main-panel">
+  <div class="content-wrapper">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Subscription Revenue</h3>
+      <div class="btn-group" role="group" aria-label="Date range">
+        {% for key, label in range_choices %}
+          <a href="?range={{ key }}"
+             class="btn btn-sm {% if key == selected_range %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% comment %} 4 top stats {% endcomment %}
+    <div class="row">
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">KES {{ stats.total_revenue|floatformat:0|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-cash-multiple icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Revenue Collected</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ stats.completed_count|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-check-circle-outline icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Successful Payments</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ stats.total_attempts|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-swap-horizontal icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Total Attempts</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ stats.success_rate }}%</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-success">
+                  <span class="mdi mdi-chart-donut icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Success Rate</h6>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end top stats {% endcomment %}
+
+    {% comment %} bar + line charts side by side {% endcomment %}
+    <div class="row">
+      <div class="col-md-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Revenue Over Time</h4>
+            <canvas id="revenueBarChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Transaction Volume</h4>
+            <canvas id="volumeLineChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end charts {% endcomment %}
+
+    {% comment %} transactions table {% endcomment %}
+    <div class="row">
+      <div class="col-12 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Recent Transactions</h4>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>User</th>
+                    <th>Plan</th>
+                    <th>Phone</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>M-Pesa Receipt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for tx in transactions %}
+                  <tr>
+                    <td class="text-nowrap">{{ tx.created_at|date:"d M Y, H:i" }}</td>
+                    <td>{{ tx.user }}</td>
+                    <td>{{ tx.plan.name }}</td>
+                    <td>{{ tx.phone_number }}</td>
+                    <td>KES {{ tx.amount|floatformat:0|intcomma }}</td>
+                    <td>
+                      {% if tx.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                      {% elif tx.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                      {% elif tx.status == 'cancelled' %}
+                        <span class="badge bg-secondary">Cancelled</span>
+                      {% elif tx.status == 'timeout' %}
+                        <span class="badge bg-info text-dark">Timeout</span>
+                      {% else %}
+                        <span class="badge bg-danger">Failed</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ tx.mpesa_receipt_number|default:"—" }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="7" class="text-muted">No transactions in this period yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end transactions table {% endcomment %}
+
+    {% comment %} 3 stats below table {% endcomment %}
+    <div class="row">
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ status_breakdown.failed_count|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-danger">
+                  <span class="mdi mdi-close-circle-outline icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Failed</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ status_breakdown.cancelled_count|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-warning">
+                  <span class="mdi mdi-cancel icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Cancelled</h6>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-9">
+                <div class="d-flex align-items-center align-self-start">
+                  <h3 class="mb-0">{{ status_breakdown.timeout_count|intcomma }}</h3>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="icon icon-box-info">
+                  <span class="mdi mdi-timer-sand icon-item"></span>
+                </div>
+              </div>
+            </div>
+            <h6 class="text-muted font-weight-normal">Timed Out</h6>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% comment %} end bottom stats {% endcomment %}
+
+    <!-- partial:partials/_footer.html -->
+    <footer class="footer">
+      <div class="d-sm-flex justify-content-center justify-content-sm-between">
+        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2023 <a href="https://www.blackcodelab.com/" target="_blank">BlackCodeLabs</a>. All rights reserved.</span>
+      </div>
+    </footer>
+    <!-- partial -->
+  </div>
+</div>
+
+{{ revenue_labels|json_script:"revenue-chart-labels" }}
+{{ revenue_values|json_script:"revenue-chart-values" }}
+{{ volume_labels|json_script:"volume-chart-labels" }}
+{{ volume_values|json_script:"volume-chart-values" }}
+
+<script>
+window.addEventListener('load', function () {
+  // Same pattern as templates/analytics/traffic.html.
+  function freshChart(canvasId, config) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === 'undefined') return null;
+    var existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+    return new Chart(canvas.getContext('2d'), config);
+  }
+
+  var revenueLabels = JSON.parse(document.getElementById('revenue-chart-labels').textContent);
+  var revenueValues = JSON.parse(document.getElementById('revenue-chart-values').textContent);
+  var volumeLabels = JSON.parse(document.getElementById('volume-chart-labels').textContent);
+  var volumeValues = JSON.parse(document.getElementById('volume-chart-values').textContent);
+
+  freshChart('revenueBarChart', {
+    type: 'bar',
+    data: {
+      labels: revenueLabels,
+      datasets: [{
+        label: 'Revenue (KES)',
+        data: revenueValues,
+        backgroundColor: 'rgba(34, 197, 94, 0.65)',
+        borderColor: 'rgba(34, 197, 94, 1)',
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+    },
+  });
+
+  freshChart('volumeLineChart', {
+    type: 'line',
+    data: {
+      labels: volumeLabels,
+      datasets: [{
+        label: 'Transaction attempts',
+        data: volumeValues,
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.35,
+        fill: true,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+    },
+  });
+});
+</script>
+{% endblock content %}

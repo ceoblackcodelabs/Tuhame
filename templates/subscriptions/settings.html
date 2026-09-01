@@ -150,6 +150,7 @@
       </div>
 
       <div id="mpesa-step-done" style="display:none;text-align:center;">
+        <div id="mpesa-done-icon" style="font-size:2.25rem;line-height:1;margin-bottom:0.5rem;"></div>
         <p id="mpesa-done-text" style="font-size:0.9rem;color:var(--text);"></p>
         <button type="button" class="btn btn-sm btn-primary" onclick="location.reload()" style="margin-top:0.5rem;">Close</button>
       </div>
@@ -175,6 +176,7 @@
     document.getElementById('mpesa-modal-price').textContent = 'KES ' + price;
     document.getElementById('mpesa-phone').value = '';
     document.getElementById('mpesa-error').style.display = 'none';
+    document.getElementById('mpesa-status-text').textContent = 'Waiting for confirmation…';
     document.getElementById('mpesa-step-form').style.display = 'block';
     document.getElementById('mpesa-step-pending').style.display = 'none';
     document.getElementById('mpesa-step-done').style.display = 'none';
@@ -236,22 +238,58 @@
   }
 
   function pollMpesaStatus(paymentId) {
+    // No client-side guessing about outcome, ever - this only reflects
+    // whatever `status` the backend reports, and the backend itself only
+    // reports a terminal status once Safaricom's callback (or, if that's
+    // slow, a direct query to Safaricom - see SubscriptionPaymentStatusView)
+    // has actually confirmed it.
+    const statusText = document.getElementById('mpesa-status-text');
+    let elapsed = 0;
+
     mpesaPollTimer = setInterval(() => {
+      elapsed += 3;
+      if (elapsed >= 30 && elapsed < 60) {
+        statusText.textContent = 'Still waiting — make sure you enter your PIN on the phone prompt.';
+      } else if (elapsed >= 60) {
+        statusText.textContent = 'This is taking longer than usual. Still checking with Safaricom…';
+      }
+
       fetch('/settings/payments/' + paymentId + '/status/')
         .then((r) => r.json())
         .then((data) => {
-          if (data.status === 'pending') return;
+          if (data.status === 'pending') {
+            // Stop polling forever after 3 minutes - a payment that's
+            // still unresolved by then needs a human look, not an
+            // endless background timer. The record itself stays
+            // "pending" (honest) rather than being force-labelled.
+            if (elapsed >= 180) {
+              clearInterval(mpesaPollTimer);
+              document.getElementById('mpesa-step-pending').style.display = 'none';
+              document.getElementById('mpesa-step-done').style.display = 'block';
+              document.getElementById('mpesa-done-icon').textContent = '⏳';
+              document.getElementById('mpesa-done-text').textContent =
+                "Still waiting on confirmation from Safaricom. This will update automatically once it comes through — you can safely close this and check back in Settings.";
+            }
+            return;
+          }
 
           clearInterval(mpesaPollTimer);
           document.getElementById('mpesa-step-pending').style.display = 'none';
           document.getElementById('mpesa-step-done').style.display = 'block';
 
+          const icon = document.getElementById('mpesa-done-icon');
           const doneText = document.getElementById('mpesa-done-text');
           if (data.status === 'completed') {
+            icon.textContent = '✅';
             doneText.textContent = 'Payment received! Your plan has been upgraded.';
           } else if (data.status === 'cancelled') {
+            icon.textContent = '🚫';
             doneText.textContent = 'Payment was cancelled on your phone.';
+          } else if (data.status === 'timeout') {
+            icon.textContent = '⏱️';
+            doneText.textContent = "The M-Pesa prompt timed out before you responded. Nothing was charged — you can try again.";
           } else {
+            icon.textContent = '❌';
             doneText.textContent = data.result_desc || 'Payment failed. Please try again.';
           }
         });

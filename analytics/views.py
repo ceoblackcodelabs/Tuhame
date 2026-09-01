@@ -9,6 +9,7 @@ from properties.models import Property, PropertyStatus
 from . import reports
 from .geolocation import resolve_pending_locations
 from .models import PageVisit
+from subscriptions import revenue_reports
 
 
 class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -341,5 +342,45 @@ class LeadsView(VerifiedOwnerRequiredMixin, TemplateView):
             'my_properties_ranked': my_properties_ranked,
             'trending_properties': trending,
             'has_properties': bool(my_properties),
+        })
+        return context
+
+
+class SubscriptionRevenueView(SuperuserRequiredMixin, TemplateView):
+    """Admin-only: money coming in through subscription payments. Same
+    range-picker + card/chart/table layout as TrafficDashboardView, but
+    reading from SubscriptionPayment instead of PageVisit."""
+    template_name = 'analytics/revenue.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        range_key = self.request.GET.get('range', reports.DEFAULT_RANGE)
+        valid_keys = {k for k, _ in reports.RANGE_CHOICES}
+        if range_key not in valid_keys:
+            range_key = reports.DEFAULT_RANGE
+        start, end, group_by = reports.get_range_bounds(range_key)
+
+        from subscriptions.models import SubscriptionPayment
+        all_attempts = SubscriptionPayment.objects.all()
+        completed = all_attempts.filter(status=SubscriptionPayment.STATUS_COMPLETED)
+
+        revenue_labels, revenue_values = revenue_reports.build_sum_series(
+            completed, 'completed_at', 'amount', start, end, group_by,
+        )
+        volume_labels, volume_values = revenue_reports.build_count_series(
+            all_attempts, 'created_at', start, end, group_by,
+        )
+
+        context.update({
+            'range_choices': reports.RANGE_CHOICES,
+            'selected_range': range_key,
+            'stats': revenue_reports.get_summary_stats(start, end),
+            'status_breakdown': revenue_reports.get_status_breakdown(start, end),
+            'revenue_labels': revenue_labels,
+            'revenue_values': revenue_values,
+            'volume_labels': volume_labels,
+            'volume_values': volume_values,
+            'transactions': revenue_reports.get_recent_transactions(start, end),
         })
         return context

@@ -32,9 +32,9 @@
          uses. This is what makes the redesign apply everywhere at once. -->
     <link rel="stylesheet" href="{% static "2Hame/assets/css/theme-v2.css" %}">
     <!-- End layout styles -->
-    <link rel="icon" type="image/svg+xml" href="{% static "2Hame/assets/images/favicon.svg" %}" />
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static "2Hame/assets/images/favicon-32.png" %}" />
-    <link rel="shortcut icon" href="{% static "2Hame/assets/images/favicon.ico" %}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static "assets/images/favicon-32x32.png" %}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static "assets/images/favicon-16x16.png" %}" />
+    <link rel="shortcut icon" href="{% static "assets/images/favicon.ico" %}" />
   </head>
   <body>
     <div class="container-scroller">
@@ -59,8 +59,8 @@
       <!-- partial:partials/_sidebar.html -->
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
         <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
-          <a class="sidebar-brand brand-logo" href="{% url "dashboard" %}"><img src="{% static "2Hame/assets/images/logo-full.svg" %}" alt="2Hame" /></a>
-          <a class="sidebar-brand brand-logo-mini" href="{% url "dashboard" %}"><img src="{% static "2Hame/assets/images/logo-mini.svg" %}" alt="2Hame" /></a>
+          <a class="sidebar-brand brand-logo" href="{% url "dashboard" %}"><img src="{% static "assets/img/logo.png" %}" alt="2Hame" style="max-height:42px;" /></a>
+          <a class="sidebar-brand brand-logo-mini" href="{% url "dashboard" %}"><img src="{% static "assets/img/logo.png" %}" alt="2Hame" /></a>
         </div>
         <ul class="nav">
           <li class="nav-item profile">
@@ -307,6 +307,19 @@
           {% endif %}
 
           {% if request.user.is_superuser %}
+          {% comment %} Subscription Revenue (superuser only) {% endcomment %}
+          <li class="nav-item menu-items">
+            <a class="nav-link" href="{% url 'analytics:subscription_revenue' %}">
+              <span class="menu-icon">
+                <i class="mdi mdi-cash-multiple"></i>
+              </span>
+              <span class="menu-title">Revenue</span>
+            </a>
+          </li>
+          {% comment %} end Subscription Revenue {% endcomment %}
+          {% endif %}
+
+          {% if request.user.is_superuser %}
           {% comment %} Owner Verification (superuser only) {% endcomment %}
           <li class="nav-item menu-items">
             <a class="nav-link" href="{% url "owner_verification_queue" %}">
@@ -366,7 +379,7 @@
         <!-- partial:partials/_navbar.html -->
         <nav class="navbar p-0 fixed-top d-flex flex-row">
           <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
-            <a class="navbar-brand brand-logo-mini" href="{% url "dashboard" %}"><img src="{% static "2Hame/assets/images/logo-mini.svg" %}" alt="2Hame" /></a>
+            <a class="navbar-brand brand-logo-mini" href="{% url "dashboard" %}"><img src="{% static "assets/img/logo.png" %}" alt="2Hame" /></a>
           </div>
           <div class="navbar-menu-wrapper flex-grow d-flex align-items-stretch">
             <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">

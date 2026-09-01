@@ -192,6 +192,20 @@ LOGGING = {
             'backupCount': 5,
             'formatter': 'verbose',
         },
+        'mpesa_file': {
+            # Separate, dedicated log for every M-Pesa subscription
+            # transaction (initiation, Safaricom's response, callback,
+            # query reconciliation, final status) - this is real money
+            # moving, so every attempt needs to be traceable on its own,
+            # not mixed in with unrelated Django errors. 10MB x 10 backups
+            # (100MB) since this logs at INFO, not just ERROR, so it fills
+            # up faster than django_errors.log.
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'mpesa.log',
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
@@ -210,6 +224,11 @@ LOGGING = {
         'django.request': {
             'handlers': ['file'] + (['console'] if DEBUG else []),
             'level': 'ERROR',
+            'propagate': False,
+        },
+        'mpesa': {
+            'handlers': ['mpesa_file'] + (['console'] if DEBUG else []),
+            'level': 'INFO',
             'propagate': False,
         },
     },

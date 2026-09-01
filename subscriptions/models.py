@@ -126,11 +126,13 @@ class SubscriptionPayment(models.Model):
     STATUS_COMPLETED = 'completed'
     STATUS_FAILED = 'failed'
     STATUS_CANCELLED = 'cancelled'
+    STATUS_TIMEOUT = 'timeout'
     STATUS_CHOICES = [
         (STATUS_PENDING, 'Pending'),
         (STATUS_COMPLETED, 'Completed'),
         (STATUS_FAILED, 'Failed'),
         (STATUS_CANCELLED, 'Cancelled'),
+        (STATUS_TIMEOUT, 'Timeout'),
     ]
 
     user = models.ForeignKey(
@@ -182,6 +184,19 @@ class SubscriptionPayment(models.Model):
     def mark_cancelled(self, result_desc=None, callback_data=None):
         self.status = self.STATUS_CANCELLED
         self.result_desc = result_desc or 'User cancelled the transaction'
+        if callback_data:
+            self.callback_payload = callback_data
+        self.save(update_fields=['status', 'result_desc', 'callback_payload'])
+
+    def mark_timeout(self, result_desc=None, callback_data=None):
+        """Distinct from mark_cancelled: the user never actively declined -
+        Safaricom's own DS timeout (ResultCode 1037) means the STK prompt
+        was never responded to (phone off, unreachable, or they just
+        didn't act). Kept separate so the user sees an accurate "prompt
+        expired" message instead of being told they cancelled something
+        they never saw."""
+        self.status = self.STATUS_TIMEOUT
+        self.result_desc = result_desc or 'The M-Pesa prompt timed out before it was actioned'
         if callback_data:
             self.callback_payload = callback_data
         self.save(update_fields=['status', 'result_desc', 'callback_payload'])
