@@ -391,8 +391,16 @@ a { color: inherit; text-decoration: none; }
      + ctas + counters) in the hero can place its top edge - the hero's
      own logo image - underneath the header on shorter viewports,
      regardless of how tall the hero section itself is. This reserves
-     the space up front so centering only ever happens in what's left. */
-  padding-top: calc(var(--pp-topbar-h) + 100px);
+     the space up front so centering only ever happens in what's left.
+     padding-bottom mirrors it (rather than being 0) so the centered
+     content block reads as sitting in the middle of the hero, with
+     even breathing room top and bottom - with only padding-top set,
+     justify-content:center still centers the content in the remaining
+     space, but that remaining space itself is pushed low by the
+     one-sided reserve, so the block visibly hugs the header instead of
+     looking centered. */
+  padding-top: calc(var(--pp-topbar-h) + 130px);
+  padding-bottom: 130px;
 }
 
 @media (max-width: 640px) {
@@ -401,10 +409,16 @@ a { color: inherit; text-decoration: none; }
      needs to reserve room for centering within a capped box - it just
      needs enough clearance to clear the fixed topbar+header, plus a
      bottom breather before the next section. Slightly tighter than the
-     100px desktop reserve since the mobile header is shorter too. */
+     100px desktop reserve since the mobile header is shorter too.
+     padding-bottom mirrors the 76px (the part of padding-top that
+     isn't specifically the topbar clearance - nothing needs clearing
+     at the bottom) rather than being a much smaller, unrelated value -
+     same reasoning as the matching desktop fix: one-sided padding-top
+     pushes the centered content up against the header instead of
+     looking centered in the section. */
   .pp-hero-content {
     padding-top: calc(var(--pp-topbar-h) + 76px);
-    padding-bottom: 2.5rem;
+    padding-bottom: 76px;
     /* Left-alignment on desktop reads well because it's anchored by the
        logo sitting above it at the same left edge. With the logo hidden
        below 640px (see .pp-hero-logo above), that anchor is gone and
