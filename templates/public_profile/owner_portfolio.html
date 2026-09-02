@@ -67,6 +67,10 @@
       </div>
     </div>
   </div>
+
+  <a href="#about" class="pp-hero-scroll-cue" aria-label="Scroll down">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </a>
 </section>
 
 <!-- ─── FEATURE STRIP ─── -->
@@ -410,6 +414,18 @@
   <p class="pp-footer-sub">Powered by 2Hame</p>
 </footer>
 
+<!-- ─── FLOATING ACTIONS (WhatsApp quick-contact + back-to-top) ─── -->
+{% if owner_profile.owner_whatsapp_number %}
+<a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi {{ brand_name }}, I found your profile on 2Hame and would love to know more about your listings.{% endfilter %}"
+   target="_blank" rel="noopener noreferrer" class="pp-float-whatsapp" aria-label="Chat on WhatsApp">
+  {% brand_icon "whatsapp" size=26 class_name="pp-whatsapp-icon" %}
+</a>
+{% endif %}
+
+<button type="button" class="pp-float-top" id="pp-back-to-top" aria-label="Back to top">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
 {% endblock content %}
 
 {% block extra_js %}
@@ -595,6 +611,26 @@
       if (e.state && e.state.ppListingsUrl) {
         loadPage(e.state.ppListingsUrl, false);
       }
+    });
+  })();
+  (function () {
+    // Back-to-top button: hidden until the visitor has scrolled a full
+    // viewport height, then fades in. Kept as a simple scroll listener
+    // (not IntersectionObserver) since it needs a continuously-updating
+    // scroll position, not a one-time "entered view" trigger.
+    var btn = document.getElementById('pp-back-to-top');
+    if (!btn) return;
+    function toggle() {
+      if (window.scrollY > window.innerHeight * 0.8) {
+        btn.classList.add('pp-float-top-visible');
+      } else {
+        btn.classList.remove('pp-float-top-visible');
+      }
+    }
+    window.addEventListener('scroll', toggle, { passive: true });
+    toggle();
+    btn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   })();
 </script>

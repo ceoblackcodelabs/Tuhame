@@ -50,6 +50,10 @@ body.pp-body {
   color: var(--pp-text);
   transition: background 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
+  /* Numbered section eyebrows below (see .pp-eyebrow::before) - reset
+     once here at the page root, incremented once per numbered section
+     in document order (About, Categories, Listings, Reviews, Connect). */
+  counter-reset: pp-section-counter;
 }
 
 .pp-container {
@@ -758,12 +762,29 @@ a { color: inherit; text-decoration: none; }
 
 .pp-section {
   padding: 5rem 0;
+  counter-increment: pp-section-counter;
 }
 
 .pp-section-header {
   text-align: center;
   max-width: 560px;
   margin: 0 auto 3rem;
+}
+
+/* Small "01 —" style index before every numbered section's eyebrow label
+   (About, Categories, Listings, Reviews, Connect - anywhere .pp-eyebrow
+   is used as a section label) - a small editorial touch that costs
+   nothing structurally since it hooks the existing .pp-eyebrow class,
+   no template changes needed. .pp-about increments its own counter too
+   (it isn't a .pp-section) since it's the first section in reading
+   order, so numbering starts there rather than at 00. */
+.pp-about { counter-increment: pp-section-counter; }
+
+.pp-about .pp-eyebrow::before,
+.pp-section .pp-eyebrow::before {
+  content: "0" counter(pp-section-counter) "  ";
+  color: var(--pp-text-muted);
+  font-weight: 700;
 }
 
 @media (max-width: 640px) {
@@ -896,6 +917,20 @@ a { color: inherit; text-decoration: none; }
   height: 200px;
   object-fit: cover;
   background: var(--pp-black-soft);
+  transition: transform 0.5s ease;
+}
+
+/* Elevation + a subtle image zoom, desktop/mouse only - guarded by
+   hover:hover + pointer:fine so this never fires as a "sticky" hover
+   state on touch devices, where :hover only clears on a second, unrelated
+   tap and would otherwise leave a card looking permanently lifted. */
+@media (hover: hover) and (pointer: fine) {
+  .pp-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 36px -16px rgba(0,0,0,0.22);
+  }
+  .pp-card:hover .pp-card-image { transform: scale(1.06); }
+  .pp-region-card:hover { transform: translateY(-3px); }
 }
 
 .pp-card-image-fallback {
@@ -1310,7 +1345,6 @@ a { color: inherit; text-decoration: none; }
   flex-wrap: wrap;
   justify-content: flex-start;
 }
-
 .pp-hero-counter-value {
   font-family: var(--pp-font-display);
   color: var(--pp-gold-light);
@@ -1325,6 +1359,48 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-top: 0.35rem;
+}
+
+/* ── Hero: scroll cue ── */
+.pp-hero-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 1.75rem;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: rgba(251,250,248,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(251,250,248,0.3);
+  border-radius: 50%;
+  transition: var(--pp-transition);
+  animation: pp-scroll-cue-bounce 2.2s ease-in-out infinite;
+}
+
+.pp-hero-scroll-cue:hover {
+  border-color: var(--pp-gold);
+  color: var(--pp-gold-light);
+}
+
+@keyframes pp-scroll-cue-bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-hero-scroll-cue { animation: none; }
+}
+
+/* Dropped below 640px: the hero is already content-driven (height:auto,
+   see .pp-hero above) rather than a fixed viewport box with guaranteed
+   spare room at the bottom for this to float in, and it's a "nice to
+   have" nudge, not a functional control - not worth adding it back into
+   the vertical space budget on the smallest screens. */
+@media (max-width: 640px) {
+  .pp-hero-scroll-cue { display: none; }
 }
 
 /* ── Region marquee (below hero) ── */
@@ -1549,6 +1625,22 @@ a { color: inherit; text-decoration: none; }
   height: auto;
   text-align: center;
   padding: 2.5rem;
+  position: relative;
+}
+
+/* Large decorative quotation glyph - purely visual, low-opacity so it
+   never competes with the actual quote text for attention. */
+.pp-review-card::before {
+  content: "\201C";
+  position: absolute;
+  top: 0.4rem;
+  left: 1.25rem;
+  font-family: var(--pp-font-display);
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--pp-gold);
+  opacity: 0.18;
+  pointer-events: none;
 }
 
 .pp-review-stars {
@@ -1857,4 +1949,82 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 480px) {
   .pp-pd-amenities { grid-template-columns: 1fr; }
   .pp-pd-facts { gap: 1.25rem; }
+}
+/* ── Floating actions: WhatsApp quick-contact + back-to-top ──
+   Fixed to the viewport (not the page), so both float above every
+   section regardless of scroll position or which section's own
+   background/z-index is in play. z-index above .pp-header (100)/
+   .pp-topbar (101)/mobile nav drawer (200) so they're never hidden
+   behind the header or an open filter/nav drawer. */
+.pp-float-whatsapp {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 250;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,0.35);
+  transition: var(--pp-transition);
+}
+
+.pp-float-whatsapp:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 28px -6px rgba(0,0,0,0.4);
+}
+
+.pp-float-whatsapp .pp-whatsapp-icon { width: 28px; height: 28px; }
+
+.pp-float-top {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 5.5rem;
+  z-index: 250;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-surface);
+  color: var(--pp-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -8px rgba(0,0,0,0.25);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+.pp-float-top.pp-float-top-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.pp-float-top:hover { border-color: var(--pp-gold); color: var(--pp-gold); }
+
+/* No WhatsApp button configured (owner hasn't set owner_whatsapp_number)
+   -> back-to-top takes that slot instead of leaving an empty gap above
+   nothing. :has() (not :only-of-type, which only compares elements of
+   the same tag name and can't detect a different element's presence) is
+   the correct tool here. */
+body:not(:has(.pp-float-whatsapp)) .pp-float-top { bottom: 1.25rem; }
+
+@media (max-width: 640px) {
+  .pp-float-whatsapp { width: 50px; height: 50px; right: 1rem; bottom: 1rem; }
+  .pp-float-whatsapp .pp-whatsapp-icon { width: 24px; height: 24px; }
+  .pp-float-top { width: 40px; height: 40px; right: 1rem; bottom: 4.75rem; }
+  body:not(:has(.pp-float-whatsapp)) .pp-float-top { bottom: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-float-whatsapp:hover { transform: none; }
+  .pp-float-top { transition: opacity 0.25s ease; transform: none; }
 }
