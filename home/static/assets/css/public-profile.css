@@ -295,6 +295,28 @@ a { color: inherit; text-decoration: none; }
   background: var(--pp-black);
 }
 
+/* Below ~640px the fixed 85vh/460px box stops being safe: the full content
+   stack (logo + eyebrow badge + heading + rotating tagline + bio + CTAs +
+   counters, all stacked in a single column here) can genuinely run to
+   ~700-750px on a phone with only ~567-620px of hero height available
+   (e.g. a 375x667 iPhone SE) - taller names, a present rotating tagline,
+   or a longer bio push it further still. With overflow:hidden that's a
+   silent clip, not a scrollbar - exactly what reads as "content
+   overlapping/cut off". Switching to height:auto + a generous min-height
+   + overflow:visible lets the section grow to fit whatever content is
+   actually there instead of guessing a height that fits most of the time.
+   The background slides/overlay below are position:absolute;inset:0, so
+   they stretch to match this new, content-driven height automatically -
+   nothing else needs to change for the photo to still fill the section. */
+@media (max-width: 640px) {
+  .pp-hero {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh; /* excludes the mobile browser's address-bar chrome, where plain 100vh can itself trigger the address-bar-collapses-and-reflows jump this rule exists to avoid */
+    overflow: visible;
+  }
+}
+
 .pp-hero-slide {
   position: absolute;
   inset: 0;
@@ -373,6 +395,19 @@ a { color: inherit; text-decoration: none; }
   padding-top: calc(var(--pp-topbar-h) + 100px);
 }
 
+@media (max-width: 640px) {
+  /* .pp-hero is now height:auto here (see the @media block on .pp-hero
+     above) rather than a fixed viewport fraction, so this no longer
+     needs to reserve room for centering within a capped box - it just
+     needs enough clearance to clear the fixed topbar+header, plus a
+     bottom breather before the next section. Slightly tighter than the
+     100px desktop reserve since the mobile header is shorter too. */
+  .pp-hero-content {
+    padding-top: calc(var(--pp-topbar-h) + 76px);
+    padding-bottom: 2.5rem;
+  }
+}
+
 .pp-hero-logo {
   height: clamp(70px, 14vh, 110px);
   width: auto;
@@ -390,6 +425,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pp-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
   color: var(--pp-gold-light);
   font-size: 0.78rem;
   font-weight: 600;
@@ -489,6 +527,14 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 480px) {
   .pp-hero-ctas { flex-direction: column; width: 100%; max-width: 320px; }
   .pp-hero-cta { width: 100%; justify-content: center; }
+  /* Tightens the stack a little further right where it's tallest relative
+     to the viewport - none of this is required for correctness (the
+     height:auto fix above already guarantees nothing clips), just keeps
+     the hero from growing taller than it needs to before a visitor
+     reaches the feature strip below it. */
+  .pp-hero-logo { margin-bottom: 1.25rem; }
+  .pp-hero-tagline { margin-bottom: 1.5rem; }
+  .pp-hero-counters { margin-top: 1.75rem; gap: 1.75rem; }
 }
 
 .pp-feature-strip {
