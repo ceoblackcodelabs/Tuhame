@@ -424,6 +424,16 @@ a { color: inherit; text-decoration: none; }
   .pp-hero-logo { height: clamp(110px, 18vh, 170px); }
 }
 
+/* Below 640px the hero's already tight on vertical space (see the
+   height:auto fix on .pp-hero above) - the owner's avatar isn't load
+   -bearing information here (it's shown again, larger, in the About
+   section further down), so on small screens it's dropped entirely
+   rather than just shrunk, freeing up that space for the name/badge/
+   CTAs to start higher. */
+@media (max-width: 640px) {
+  .pp-hero-logo { display: none; }
+}
+
 .pp-hero-eyebrow {
   display: inline-flex;
   align-items: center;
