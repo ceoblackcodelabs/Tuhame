@@ -405,7 +405,19 @@ a { color: inherit; text-decoration: none; }
   .pp-hero-content {
     padding-top: calc(var(--pp-topbar-h) + 76px);
     padding-bottom: 2.5rem;
+    /* Left-alignment on desktop reads well because it's anchored by the
+       logo sitting above it at the same left edge. With the logo hidden
+       below 640px (see .pp-hero-logo above), that anchor is gone and
+       left-aligned text just looks like it's drifting off the left side
+       of an otherwise-empty width - centering everything reads more
+       intentional once there's nothing left-aligned to line up with. */
+    align-items: center;
+    text-align: center;
   }
+
+  .pp-hero-tagline { margin-left: auto; margin-right: auto; }
+  .pp-hero-ctas { justify-content: center; }
+  .pp-hero-counters { justify-content: center; }
 }
 
 .pp-hero-logo {
@@ -669,7 +681,7 @@ a { color: inherit; text-decoration: none; }
 
 .pp-about-image {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: var(--pp-radius-lg);
   box-shadow: 0 20px 45px -15px rgba(0,0,0,0.35), 0 0 0 1px rgba(201,162,75,0.12);
@@ -677,7 +689,7 @@ a { color: inherit; text-decoration: none; }
 
 .pp-about-image-fallback {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   border-radius: var(--pp-radius-lg);
   background: var(--pp-black);
   color: var(--pp-gold);
@@ -723,7 +735,10 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 860px) {
   .pp-about-grid { grid-template-columns: 1fr; gap: 2rem; }
-  .pp-about-image, .pp-about-image-fallback { aspect-ratio: 16 / 10; }
+  /* Square (1/1) is now set once above and applies at every screen size -
+     this used to override it to 16/10 here specifically for the stacked
+     single-column mobile layout, which is exactly what's not wanted
+     anymore. */
   .pp-about { padding: 3.5rem 0; }
 }
 
