@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views.generic import TemplateView, ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from properties.models import Property, PropertyStatus, PropertyType, Amenity, PropertyReview
 from django.db import models
-from .forms import ViewingScheduleForm, ReviewForm, ContactForm
+from .forms import ViewingScheduleForm, ReviewForm, ContactForm, OwnerContactForm
 from .models import Partner, Testimonial, HeroSlide
 from django.contrib import messages
 import json
@@ -1038,8 +1039,40 @@ class OwnerPortfolioView(DetailView):
             'review_count': review_stats['count'] or 0,
             'fallback_testimonials': fallback_testimonials,
             'querystring': querystring,
+            'contact_form': OwnerContactForm(),
         })
         return context
+
+
+class OwnerContactSubmitView(View):
+    """Handles the contact form on a property owner's public TuHame
+    portfolio page (owner_portfolio.html, #connect section) - a visitor
+    reaching out directly to that owner. Deliberately a separate,
+    post-only view rather than a post() method on OwnerPortfolioView
+    itself: that view's get_context_data() does a fair amount of work
+    (filtering, pagination, category/region aggregation) that a form
+    submission has no need to re-run just to redirect straight back.
+    No login required - this is the whole point, a random visitor to the
+    page shouldn't need a 2Hame account to say "I'm interested"."""
+
+    def post(self, request, username):
+        profile = get_object_or_404(
+            Profile.objects.select_related('user'),
+            user__username=username, role='owner', is_active=True, user__is_active=True,
+        )
+        form = OwnerContactForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.owner = profile.user
+            if request.user.is_authenticated:
+                message.user = request.user
+            message.save()
+            messages.success(request, "Message sent! The owner will be in touch soon.")
+        else:
+            messages.error(request, "Please check the form - " + " ".join(
+                f"{field}: {', '.join(errs)}" for field, errs in form.errors.items()
+            ))
+        return redirect(reverse('home:owner_portfolio', kwargs={'username': username}) + '#connect')
 
 
 class PublicProfilePropertyDetailView(DetailView):

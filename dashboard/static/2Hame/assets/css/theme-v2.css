@@ -50,39 +50,13 @@
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Light mode - same toggle mechanism (data-theme attribute + the shared
-   "2Hame-theme" localStorage key from main.js), original blue palette
-   remapped so the lightest tones become page/surface backgrounds and the
-   darker tones become text/primary. */
-[data-theme="light"] {
-  --bg: #F8FAFC;
-  --surface: #FFFFFF;
-  --surface-2: #F1F5F9;
-  --surface-hover: #E2E8F0;
-  --border: rgba(15,23,42,0.10);
-  --border-strong: rgba(15,23,42,0.18);
-  --text: #0F172A;
-  --text-muted: #475569;
-  --text-faint: #64748B;
-
-  --primary: #2563EB;
-  --primary-dark: #1D4ED8;
-  --primary-light: #3B82F6;
-  --primary-tint: rgba(37,99,235,0.10);
-
-  --success: #16A34A;
-  --success-tint: rgba(22,163,74,0.12);
-  --warning: #F59E0B;
-  --warning-tint: rgba(245,158,11,0.12);
-  --danger: #EF4444;
-  --danger-tint: rgba(239,68,68,0.12);
-  --info: #38BDF8;
-  --info-tint: rgba(56,189,248,0.12);
-
-  --shadow-sm: 0 1px 2px rgba(15,23,42,0.08);
-  --shadow: 0 4px 16px rgba(15,23,42,0.08);
-  --shadow-lg: 0 12px 32px rgba(15,23,42,0.12);
-}
+/* Light mode removed entirely - the dashboard is dark-only now. :root
+   above already carries the dark values unconditionally (not gated
+   behind [data-theme="dark"] alone), so simply deleting the old
+   [data-theme="light"] override block here is sufficient: nothing sets
+   data-theme="light" anymore (see AdminBase.html - the toggle button and
+   its JS were removed with this), and even if something still did, there
+   would be no matching CSS left to change anything. */
 
 /* ── Base ── */
 body {
@@ -115,6 +89,28 @@ hr, .dropdown-divider { border-color: var(--border) !important; }
   width: var(--sidebar-w) !important;
   height: 64px !important;
 }
+/* The legacy theme's rule for this exact selector (style.css) forces a
+   fixed 124x28 box with no object-fit - fine for the old logo-full.svg
+   (a short, wide wordmark drawn at roughly that ratio), but it badly
+   squishes the actual square TuHame logo.png now used here (see the
+   earlier favicon/logo fix) into a thin smear. Same selector, loaded
+   after style.css, so this wins on source order per this file's own
+   override strategy (see the file header comment) - no !important
+   needed. object-fit:contain as a second line of defence in case any
+   future logo asset isn't already the right proportions either. */
+.sidebar .sidebar-brand-wrapper .sidebar-brand img {
+  width: auto;
+  height: 42px;
+  max-width: 160px;
+  object-fit: contain;
+}
+.sidebar .sidebar-brand-wrapper .sidebar-brand.brand-logo-mini img,
+.navbar .navbar-brand-wrapper .navbar-brand.brand-logo-mini img {
+  width: auto;
+  height: 32px;
+  max-width: 32px;
+  object-fit: contain;
+}
 .sidebar .nav-item.profile {
   background: var(--surface-2);
   border-radius: var(--radius);
@@ -122,8 +118,30 @@ hr, .dropdown-divider { border-color: var(--border) !important; }
   padding: 12px !important;
 }
 .sidebar .profile-desc { width: 100%; }
-.sidebar .profile-name h5 { color: var(--text) !important; font-size: 0.86rem; font-weight: 600; }
-.sidebar .profile-name span { color: var(--text-faint); font-size: 0.72rem; }
+/* profile-desc is display:flex (legacy rule) with no min-width:0 on its
+   children, so a long value in profile-name (e.g. an email) can force
+   that flex item wider than the sidebar and spill out of the card
+   instead of wrapping or truncating - min-width:0 lets it actually
+   shrink to the available space, and the ellipsis rules below stop the
+   overflow cleanly instead of letting it run off the edge. */
+.sidebar .profile-desc .profile-pic { min-width: 0; flex: 1 1 auto; }
+.sidebar .profile-name { min-width: 0; overflow: hidden; }
+.sidebar .profile-name h5 {
+  color: var(--text) !important;
+  font-size: 0.86rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.sidebar .profile-name span {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
 .sidebar .nav-category .nav-link {
   color: var(--text-faint) !important;
   font-size: 0.68rem !important;

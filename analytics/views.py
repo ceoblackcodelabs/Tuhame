@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 
 from blog.models import BlogComment, BlogPost
-from home.models import ViewingSchedule
+from home.models import ViewingSchedule, ContactMessage
 from properties.models import Property, PropertyStatus
 from . import reports
 from .geolocation import resolve_pending_locations
@@ -383,4 +383,29 @@ class SubscriptionRevenueView(SuperuserRequiredMixin, TemplateView):
             'volume_values': volume_values,
             'transactions': revenue_reports.get_recent_transactions(start, end),
         })
+        return context
+
+
+class DirectContactView(SuperuserRequiredMixin, TemplateView):
+    """"Direct Contact" - messages a visitor sent through this admin's own
+    public TuHame portfolio page (see OwnerContactSubmitView and the
+    #connect form in owner_portfolio.html). Scoped to owner=request.user,
+    not every ContactMessage in the system - this is "who contacted me",
+    not a platform-wide inbox (the platform's own general Contact Us
+    submissions, where owner is null, are handled separately via Django
+    admin - home.admin.ContactMessageAdmin)."""
+    template_name = 'analytics/direct_contact.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        messages_qs = ContactMessage.objects.filter(owner=self.request.user).order_by('-created_at')
+
+        # Mark as read once viewed here, so the sidebar (if a badge count
+        # is ever added later) and this list agree on what's new.
+        unread_ids = list(messages_qs.filter(is_read=False).values_list('id', flat=True))
+        if unread_ids:
+            ContactMessage.objects.filter(id__in=unread_ids).update(is_read=True)
+
+        context['contact_messages'] = messages_qs
+        context['new_count'] = len(unread_ids)
         return context

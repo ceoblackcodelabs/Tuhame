@@ -194,7 +194,12 @@
           </li>
           {% comment %} end review request {% endcomment %}
 
-          {% comment %} contact {% endcomment %}
+          {% if request.user.is_superuser %}
+          {% comment %} Direct Contact - messages sent through this admin's
+          own public TuHame portfolio page (owner_portfolio.html #connect
+          form). Admin-only per explicit request, not tied to the
+          verified-owner check used elsewhere (Leads, Revenue) since this
+          reads request.user's own ContactMessage inbox specifically. {% endcomment %}
           <li class="nav-item menu-items">
             <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic2" aria-expanded="false" aria-controls="ui-basic">
               <span class="menu-icon">
@@ -205,11 +210,12 @@
             </a>
             <div class="collapse" id="ui-basic2">
               <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> <a class="nav-link" href="{% url "property_list" %}">Messages</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "analytics:direct_contact" %}">Messages</a></li>
               </ul>
             </div>
           </li>
           {% comment %} end contact {% endcomment %}
+          {% endif %}
 
           {% comment %} Clients {% endcomment %}
           <li class="nav-item menu-items">
@@ -393,12 +399,6 @@
               </li>
             </ul>
             <ul class="navbar-nav navbar-nav-right">
-              <li class="nav-item d-none d-lg-block">
-                <button type="button" class="nav-link dashboard-theme-toggle" id="dashboardThemeToggle" title="Toggle light/dark mode" style="background:none;border:none;cursor:pointer;">
-                  <i class="mdi mdi-weather-night" id="dashboardThemeIconDark"></i>
-                  <i class="mdi mdi-white-balance-sunny" id="dashboardThemeIconLight" style="display:none;"></i>
-                </button>
-              </li>
               <li class="nav-item dropdown d-none d-lg-block">
               </li>
               <li class="nav-item nav-settings d-none d-lg-block">
@@ -608,39 +608,5 @@
     </script>
     {% endif %}
 
-    <script>
-    // Dashboard light/dark toggle. Reuses the exact same localStorage key
-    // ("2Hame-theme") and data-theme attribute the public site's own dark
-    // toggle already uses (see home/static/assets/js/main.js), so the
-    // preference is the same concept across the whole product - the
-    // dashboard's default is dark (matching its established look) rather
-    // than light like the public site, but the mechanism is identical.
-    (function () {
-      var root = document.documentElement;
-      var toggleBtn = document.getElementById('dashboardThemeToggle');
-      var iconDark = document.getElementById('dashboardThemeIconDark');
-      var iconLight = document.getElementById('dashboardThemeIconLight');
-
-      function applyTheme(theme) {
-        root.setAttribute('data-theme', theme);
-        if (iconDark && iconLight) {
-          iconDark.style.display = theme === 'dark' ? 'inline-block' : 'none';
-          iconLight.style.display = theme === 'light' ? 'inline-block' : 'none';
-        }
-        document.dispatchEvent(new CustomEvent('2hame:theme-changed', { detail: { theme: theme } }));
-      }
-
-      var saved = localStorage.getItem('2Hame-theme');
-      applyTheme(saved === 'light' ? 'light' : 'dark');
-
-      if (toggleBtn) {
-        toggleBtn.addEventListener('click', function () {
-          var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-          applyTheme(next);
-          localStorage.setItem('2Hame-theme', next);
-        });
-      }
-    })();
-    </script>
   </body>
 </html>

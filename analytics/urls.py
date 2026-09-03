@@ -10,5 +10,6 @@ urlpatterns = [
     path('blog/', views.BlogAnalyticsView.as_view(), name='blog_analytics'),
     path('leads/', views.LeadsView.as_view(), name='leads'),
     path('revenue/', views.SubscriptionRevenueView.as_view(), name='subscription_revenue'),
+    path('direct-contact/', views.DirectContactView.as_view(), name='direct_contact'),
     path('profile/<str:username>/', views.ProfileAnalyticsView.as_view(), name='profile_analytics'),
 ]

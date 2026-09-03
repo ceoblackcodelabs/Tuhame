@@ -86,18 +86,18 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         expense_growth = ((monthly_expenses - prev_month_expenses) / prev_month_expenses * 100) if prev_month_expenses > 0 else 0
 
         # Update context with stats data
-        context['potential_growth_value'] = f"${float(potential_growth):.2f}"
+        context['potential_growth_value'] = f"KSh {float(potential_growth):,.2f}"
         context['potential_growth_percent'] = f"+{float(potential_growth):.1f}%"
 
-        context['revenue_current_value'] = f"${float(monthly_revenue):.2f}"
+        context['revenue_current_value'] = f"KSh {float(monthly_revenue):,.2f}"
         context['revenue_current_percent'] = f"+{float(revenue_growth):.0f}%"
 
-        context['daily_income_value'] = f"${float(daily_income):.2f}"
+        context['daily_income_value'] = f"KSh {float(daily_income):,.2f}"
         context['daily_income_percent'] = f"{'+' if daily_income_growth >= 0 else ''}{float(daily_income_growth):.1f}%"
         context['daily_income_class'] = 'text-success' if daily_income_growth >= 0 else 'text-danger'
         context['daily_income_icon'] = 'arrow-top-right' if daily_income_growth >= 0 else 'arrow-bottom-left'
 
-        context['expense_current_value'] = f"${float(monthly_expenses):.2f}"
+        context['expense_current_value'] = f"KSh {float(monthly_expenses):,.2f}"
         context['expense_current_percent'] = f"+{float(expense_growth):.1f}%"
 
         # ============ CHART DATA ============
@@ -171,7 +171,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
         context['doughnut_labels'] = doughnut_labels
         context['doughnut_data'] = doughnut_data
-        context['total_transactions_value'] = f"${float(total_payments):.0f}"
+        context['total_transactions_value'] = f"KSh {float(total_payments):,.0f}"
 
         # Recent transactions list
         recent_transactions = own_payments.filter(status='paid').select_related('client').order_by('-payment_date')[:2]
@@ -181,7 +181,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
             transaction_list.append({
                 'description': f"Payment from {transaction.client.name}",
                 'date': transaction.payment_date.strftime('%d %b %Y, %I:%M%p'),
-                'amount': f"${float(transaction.amount):.0f}"
+                'amount': f"KSh {float(transaction.amount):,.0f}"
             })
 
         context['recent_transactions'] = transaction_list
@@ -218,9 +218,9 @@ class Dashboard(LoginRequiredMixin, TemplateView):
             total=Sum('maintenance_fee')
         )['total'] or Decimal('0')
 
-        context['revenue_value'] = f"${float(total_revenue_all):.0f}"
-        context['sales_value'] = f"${float(active_properties_value):.0f}"
-        context['purchase_value'] = f"${float(total_maintenance):.0f}"
+        context['revenue_value'] = f"KSh {float(total_revenue_all):,.0f}"
+        context['sales_value'] = f"KSh {float(active_properties_value):,.0f}"
+        context['purchase_value'] = f"KSh {float(total_maintenance):,.0f}"
 
         # Calculate percentages for bottom stats
         last_month_revenue = own_payments.filter(

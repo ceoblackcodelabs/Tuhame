@@ -316,6 +316,16 @@ class ContactMessage(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_messages'
     )
 
+    # Set when this message came from a property owner's public TuHame
+    # portfolio page (templates/public_profile/owner_portfolio.html) rather
+    # than the platform's own general Contact Us page - the "Direct
+    # Contact" section on that owner's dashboard reads messages filtered
+    # to owner=that user. Null for messages sent through the general
+    # Contact Us page, which aren't addressed to any specific owner.
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True, related_name='profile_contact_messages'
+    )
+
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

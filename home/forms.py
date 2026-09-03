@@ -87,3 +87,30 @@ class ContactForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs.setdefault('class', 'form-input')
         self.fields['phone'].required = False
+
+
+class OwnerContactForm(forms.ModelForm):
+    """Form on a property owner's public TuHame portfolio page
+    (templates/public_profile/owner_portfolio.html) - a visitor reaching
+    out directly to that owner. No `subject` field (that's specific to
+    the platform's own general Contact Us page, ContactForm above) - the
+    `owner` FK on the saved instance is what routes it to that owner's
+    "Direct Contact" list instead, set by the view, not this form."""
+
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'phone', 'message']
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Your full name', 'class': 'pp-form-input'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'you@example.com', 'class': 'pp-form-input'}),
+            'phone': forms.TextInput(attrs={'placeholder': '+254 712 000 000 (optional)', 'class': 'pp-form-input'}),
+            'message': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': "What are you looking for?",
+                'class': 'pp-form-input',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['phone'].required = False
