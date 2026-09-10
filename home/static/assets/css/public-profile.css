@@ -242,6 +242,17 @@ a { color: inherit; text-decoration: none; }
   flex-shrink: 0;
 }
 
+/* Small laptop screens (~1024px and down, e.g. 1024x600) are tight on
+   both width and height at once - the nav links + Analytics/Dashboard/
+   Contact buttons already need most of the horizontal room, and the
+   header still has to clear out of the way for the hero content below
+   on a short viewport. The logo isn't load-bearing next to the full
+   nav here (the brand name is repeated big in the hero heading right
+   underneath), so it's dropped rather than shrunk further. */
+@media (max-width: 1024px) {
+  .pp-header-brand { display: none; }
+}
+
 .pp-header-actions {
   display: flex;
   align-items: center;
