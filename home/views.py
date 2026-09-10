@@ -982,6 +982,25 @@ class OwnerPortfolioView(DetailView):
             avg_rating=Avg('rating'), count=Count('id')
         )
 
+        # ── Featured properties strip: this owner's most recent listings
+        #    that actually have a photo, each carrying its own aggregate
+        #    rating (if it has reviews). Deliberately independent of the
+        #    paginated/filtered `properties` queryset above so it always
+        #    shows genuine highlights regardless of whatever filter a
+        #    visitor currently has applied to the main listings grid.
+        featured_properties = list(
+            Property.objects.filter(owner=owner_user, is_active=True)
+            .exclude(main_image='')
+            .annotate(avg_rating=Avg('reviews__rating'), rating_count=Count('reviews'))
+            .order_by('-created_at')[:3]
+        )
+        if not featured_properties:
+            featured_properties = list(
+                Property.objects.filter(owner=owner_user, is_active=True)
+                .annotate(avg_rating=Avg('reviews__rating'), rating_count=Count('reviews'))
+                .order_by('-created_at')[:3]
+            )
+
         # Preserve applied filters across pagination links, but not the page
         # number itself - that's supplied fresh by each link
         # (?page=N&{{ querystring }}). Leaving 'page' in here stacked
@@ -1015,6 +1034,13 @@ class OwnerPortfolioView(DetailView):
             {'role': 'Long-term Tenant', 'text': "Responsive, professional, and easy to reach whenever I had a question about the property."},
         ]
 
+        # Chunk reviews (or the fallback set) into groups of up to 3 so the
+        # "What Clients Say" section reads as a tidy 3-card row on wide
+        # screens - each group becomes one carousel panel, rather than one
+        # oversized card shown at a time.
+        review_display_list = list(reviews) if reviews else fallback_testimonials
+        review_groups = [review_display_list[i:i + 3] for i in range(0, len(review_display_list), 3)]
+
         from decimal import Decimal
         years_active = max(1, (timezone.now() - owner_user.date_joined).days // 365)
 
@@ -1037,7 +1063,9 @@ class OwnerPortfolioView(DetailView):
             'reviews': reviews,
             'review_avg': review_stats['avg_rating'] or 0,
             'review_count': review_stats['count'] or 0,
+            'featured_properties': featured_properties,
             'fallback_testimonials': fallback_testimonials,
+            'review_groups': review_groups,
             'querystring': querystring,
             'contact_form': OwnerContactForm(),
         })

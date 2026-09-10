@@ -450,7 +450,7 @@ a { color: inherit; text-decoration: none; }
      true viewport edge (matching .pp-header's own padding) instead of
      sitting inside a 1200px box centered with empty space to its left
      on wide screens. */
-  padding-left: clamp(1.5rem, 4vw, 4.5rem);
+  padding-left: clamp(2rem, 7vw, 7rem);
   padding-right: 1.5rem;
   /* Guaranteed clearance below the fixed topbar+header (they float
      above the hero, transparent, at a higher z-index) - without this,
@@ -646,10 +646,7 @@ a { color: inherit; text-decoration: none; }
 .pp-feature-strip {
   background: var(--pp-black);
   border-top: 1px solid rgba(255,255,255,0.08);
-  height: 15vh;
-  min-height: 130px;
-  display: flex;
-  align-items: center;
+  padding: 3rem 0;
 }
 
 .pp-feature-strip .pp-container {
@@ -659,26 +656,29 @@ a { color: inherit; text-decoration: none; }
 .pp-feature-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 1.5rem 1rem;
+  gap: 1rem;
 }
 
+/* Each feature is now its own bordered card (rather than a bare column
+   separated by a divider line) - sits closer to a real "why choose us"
+   panel than a loose icon strip, and gives hover something to lift. */
 .pp-feature {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 0.9rem;
+  padding: 1.75rem 1rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--pp-radius-lg);
+  background: rgba(255,255,255,0.02);
+  transition: var(--pp-transition), transform 0.3s ease;
 }
 
-/* Thin divider between icons on desktop, where they sit in one row -
-   a small boutique-editorial touch. Skipped below 901px: once the grid
-   wraps to multiple rows (see the 900px breakpoint further down), a
-   border-right on every item creates an odd half-finished line at the
-   end of each wrapped row instead of a clean single-row rhythm. */
-@media (min-width: 901px) {
-  .pp-feature:not(:last-child) {
-    border-right: 1px solid rgba(255,255,255,0.1);
-  }
+.pp-feature:hover {
+  border-color: rgba(184,147,90,0.5);
+  background: rgba(184,147,90,0.06);
+  transform: translateY(-4px);
 }
 
 .pp-feature-icon {
@@ -695,8 +695,8 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pp-feature:hover .pp-feature-icon {
-  background: rgba(201,162,75,0.1);
-  transform: translateY(-3px);
+  background: var(--pp-gold);
+  color: var(--pp-black);
 }
 
 .pp-feature-label {
@@ -709,16 +709,13 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 900px) {
   .pp-feature-grid { grid-template-columns: repeat(3, 1fr); }
-  /* The exact 80vh/20vh hero+strip split only works while all 6 icons
-     fit on one row (see .pp-feature-strip above) - once the grid wraps
-     to 2-3 rows below this breakpoint, a fixed 20vh would squeeze them,
-     so the strip goes back to sizing itself from its content instead. */
-  .pp-feature-strip { height: auto; min-height: 0; padding: 2.5rem 0; }
+  .pp-feature-strip { padding: 2.5rem 0; }
 }
 
 @media (max-width: 480px) {
-  .pp-feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .pp-feature-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
   .pp-feature-strip { padding: 2.25rem 0; }
+  .pp-feature { padding: 1.4rem 0.75rem; }
 }
 
 .pp-marquee {
@@ -1196,21 +1193,121 @@ a { color: inherit; text-decoration: none; }
 .pp-footer {
   background: var(--pp-black);
   color: rgba(251,250,248,0.7);
-  padding: 3rem 0;
-  text-align: center;
 }
 
-.pp-footer-text {
+.pp-footer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.pp-footer-cta-text {
   font-family: var(--pp-font-display);
   color: #FBFAF8;
-  font-size: 1.35rem;
-  margin: 0 0 1.25rem;
+  font-size: 1.2rem;
+  margin: 0;
 }
 
-.pp-footer-sub {
+.pp-footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr;
+  gap: 2rem;
+  padding: 3rem 0;
+}
+
+@media (max-width: 980px) {
+  .pp-footer-grid { grid-template-columns: repeat(2, 1fr); }
+  .pp-footer-brand { grid-column: 1 / -1; }
+}
+
+@media (max-width: 560px) {
+  .pp-footer-grid { grid-template-columns: 1fr; gap: 1.75rem; }
+}
+
+.pp-footer-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--pp-gold);
+  margin-bottom: 0.85rem;
+}
+
+.pp-footer-brand-name {
+  font-family: var(--pp-font-display);
+  color: #FBFAF8;
+  font-size: 1.15rem;
+  margin: 0 0 0.6rem;
+}
+
+.pp-footer-desc {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  max-width: 320px;
+  margin: 0;
+}
+
+.pp-footer-heading {
+  color: var(--pp-gold-light);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 1rem;
+}
+
+.pp-footer-col { display: flex; flex-direction: column; gap: 0.65rem; }
+
+.pp-footer-col a,
+.pp-footer-location {
+  color: rgba(251,250,248,0.7);
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.pp-footer-col a:hover { color: var(--pp-gold-light); }
+
+.pp-footer-social {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.pp-footer-social a {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(251,250,248,0.75);
+  transition: var(--pp-transition);
+}
+
+.pp-footer-social a:hover {
+  border-color: var(--pp-gold);
+  color: var(--pp-gold-light);
+}
+
+.pp-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
   font-size: 0.75rem;
+}
+
+.pp-footer-bottom p { margin: 0; }
+
+.pp-footer-sub {
   letter-spacing: 0.05em;
-  margin-top: 1.5rem;
   color: rgba(251,250,248,0.4);
 }
 
@@ -1401,11 +1498,37 @@ a { color: inherit; text-decoration: none; }
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  /* While the header is still transparent (floating over the dark hero
+     photo/overlay, both themes), nav links need a light color regardless
+     of the page theme - in light mode, var(--pp-text) is near-black and
+     unreadable over the dark hero. Once .pp-header-solid kicks in below,
+     the header itself becomes var(--pp-surface) (light in light mode,
+     dark in dark mode), so links switch to the theme-aware var(--pp-text)
+     there instead. */
+  color: rgba(251,250,248,0.92);
+  opacity: 0.9;
+}
+
+.pp-header-nav a:not(.pp-btn):hover { opacity: 1; color: var(--pp-gold-light); }
+
+.pp-header-solid .pp-header-nav a:not(.pp-btn) {
   color: var(--pp-text);
   opacity: 0.85;
 }
 
-.pp-header-nav a:not(.pp-btn):hover { opacity: 1; color: var(--pp-gold); }
+.pp-header-solid .pp-header-nav a:not(.pp-btn):hover { opacity: 1; color: var(--pp-gold); }
+
+/* Below the 860px breakpoint the nav becomes a slide-in drawer with its
+   own solid var(--pp-surface) background (see the drawer rules further
+   down) regardless of whether .pp-header-solid is set - so links inside
+   it always need the theme-aware dark-on-light/light-on-dark color, never
+   the light-on-transparent-hero color above. */
+@media (max-width: 860px) {
+  .pp-header-nav a:not(.pp-btn) {
+    color: var(--pp-text);
+    opacity: 0.85;
+  }
+}
 
 .pp-header-nav-actions {
   display: flex;
@@ -1663,19 +1786,40 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pp-category-card {
+  position: relative;
   background: var(--pp-surface);
   border: 1px solid var(--pp-border);
   border-radius: var(--pp-radius-lg);
-  padding: 1.5rem 1rem;
+  padding: 1.75rem 1.25rem 1.5rem;
   text-align: center;
-  transition: var(--pp-transition);
+  transition: var(--pp-transition), box-shadow 0.3s ease;
   cursor: pointer;
+  overflow: hidden;
+}
+
+/* Thin gold accent bar across the top - hidden until hover, when it
+   slides fully into view, echoing the lift/border-color treatment used
+   on hover elsewhere in this design system. */
+.pp-category-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--pp-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .pp-category-card:hover {
   border-color: var(--pp-gold);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -12px rgba(11,11,12,0.25);
 }
+
+.pp-category-card:hover::before { transform: scaleX(1); }
 
 .pp-category-card-icon {
   width: 48px;
@@ -1691,7 +1835,8 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pp-category-card:hover .pp-category-card-icon {
-  background: rgba(201,162,75,0.1);
+  background: var(--pp-gold);
+  color: var(--pp-black);
   transform: translateY(-2px);
 }
 
@@ -1699,23 +1844,173 @@ a { color: inherit; text-decoration: none; }
   font-family: var(--pp-font-display);
   font-size: 1.05rem;
   font-weight: 600;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.3rem;
 }
 
 .pp-category-card-count {
   color: var(--pp-text-muted);
   font-size: 0.78rem;
+  margin: 0 0 0.85rem;
 }
 
-/* ── Testimonials ── */
-.pp-testimonial-card {
+.pp-category-card-link {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--pp-gold);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.pp-category-card:hover .pp-category-card-link {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Featured properties ── */
+.pp-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 980px) {
+  .pp-featured-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .pp-featured-grid { grid-template-columns: 1fr; }
+}
+
+.pp-featured-card {
   background: var(--pp-surface);
   border: 1px solid var(--pp-border);
   border-radius: var(--pp-radius-lg);
-  padding: 1.75rem;
-  height: 100%;
+  overflow: hidden;
+  transition: var(--pp-transition), box-shadow 0.3s ease;
 }
 
+.pp-featured-card:hover {
+  border-color: var(--pp-gold);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -14px rgba(11,11,12,0.3);
+}
+
+.pp-featured-media {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--pp-black);
+}
+
+.pp-featured-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.pp-featured-card:hover .pp-featured-media img { transform: scale(1.06); }
+
+.pp-featured-badge {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--pp-gold);
+  color: var(--pp-black);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+}
+
+.pp-featured-body { padding: 1.35rem; }
+
+.pp-featured-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pp-featured-title {
+  font-family: var(--pp-font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.pp-featured-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pp-gold);
+  flex-shrink: 0;
+}
+
+.pp-featured-location {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--pp-text-muted);
+  font-size: 0.82rem;
+  margin: 0.4rem 0 0.75rem;
+}
+
+.pp-featured-desc {
+  color: var(--pp-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 0 0 0.9rem;
+}
+
+.pp-featured-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--pp-text-muted);
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--pp-border);
+  margin-bottom: 0.9rem;
+}
+
+.pp-featured-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pp-featured-price {
+  font-family: var(--pp-font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--pp-gold);
+  margin: 0;
+}
+
+.pp-featured-link {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--pp-text);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.pp-featured-link:hover { color: var(--pp-gold); }
+
+/* ── Testimonials ── */
 .pp-testimonial-fallback-tag {
   display: inline-block;
   font-size: 0.65rem;
@@ -1728,15 +2023,20 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.75rem;
 }
 
-/* ── Reviews: crossfade carousel (same approach as the hero slideshow -
-   stacked absolutely-positioned panels, one fully opaque at a time) ── */
+/* ── Reviews: a 3-up card grid per "page", crossfading between pages
+   when there are more than 3 - stacked absolutely-positioned panels
+   (same approach as the hero slideshow), one fully opaque at a time.
+   The track's height is set from JS (see the review-carousel script)
+   to match whichever panel is active, since a 1-column mobile stack of
+   3 cards is far taller than the same 3 cards in a desktop row. */
 .pp-review-carousel {
   position: relative;
 }
 
 .pp-review-track {
   position: relative;
-  min-height: 300px;
+  min-height: 280px;
+  transition: height 0.35s ease;
 }
 
 .pp-review-panel {
@@ -1744,10 +2044,6 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   opacity: 0;
   transition: opacity 1s ease-in-out;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 1rem;
 }
 
 .pp-review-panel.pp-review-panel-active {
@@ -1755,60 +2051,84 @@ a { color: inherit; text-decoration: none; }
   z-index: 1;
 }
 
-.pp-review-card {
-  max-width: 640px;
-  width: 100%;
-  height: auto;
-  text-align: center;
-  padding: 2.5rem;
-  position: relative;
+.pp-review-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
-/* Large decorative quotation glyph - purely visual, low-opacity so it
-   never competes with the actual quote text for attention. */
-.pp-review-card::before {
-  content: "\201C";
-  position: absolute;
-  top: 0.4rem;
-  left: 1.25rem;
-  font-family: var(--pp-font-display);
-  font-size: 3.5rem;
-  line-height: 1;
-  color: var(--pp-gold);
-  opacity: 0.18;
-  pointer-events: none;
+@media (max-width: 900px) {
+  .pp-review-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .pp-review-grid { grid-template-columns: 1fr; }
+}
+
+.pp-review-card {
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius-lg);
+  padding: 1.75rem;
+  height: 100%;
+  text-align: left;
 }
 
 .pp-review-stars {
   color: var(--pp-gold);
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
 }
 
 .pp-review-quote {
   color: var(--pp-text-muted);
-  line-height: 1.8;
-  font-size: 1.05rem;
+  line-height: 1.7;
+  font-size: 0.95rem;
   font-style: italic;
-  margin-bottom: 1.25rem;
+  margin: 0 0 1.5rem;
+  min-height: 3.4em;
+}
+
+.pp-review-person {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--pp-border);
+}
+
+.pp-review-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--pp-black);
+  color: var(--pp-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--pp-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
 }
 
 .pp-review-author {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .pp-review-property {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--pp-text-muted);
-  margin-top: 0.15rem;
+  margin: 0.1rem 0 0;
 }
 
 .pp-review-dots {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
 }
 
 .pp-review-dot {
@@ -1816,7 +2136,7 @@ a { color: inherit; text-decoration: none; }
   height: 8px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.25);
+  background: var(--pp-border);
   cursor: pointer;
   padding: 0;
   transition: background 0.3s ease, transform 0.3s ease;
@@ -1825,11 +2145,6 @@ a { color: inherit; text-decoration: none; }
 .pp-review-dot-active {
   background: var(--pp-gold);
   transform: scale(1.3);
-}
-
-@media (max-width: 480px) {
-  .pp-review-track { min-height: 340px; }
-  .pp-review-card { padding: 2rem 1.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2097,8 +2412,8 @@ a { color: inherit; text-decoration: none; }
   right: 1.25rem;
   bottom: 1.25rem;
   z-index: 250;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: #25D366;
   color: #FFFFFF;
@@ -2114,7 +2429,15 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 12px 28px -6px rgba(0,0,0,0.4);
 }
 
-.pp-float-whatsapp .pp-whatsapp-icon { width: 28px; height: 28px; }
+/* Overrides both the inline width/height and the standalone
+   .pp-whatsapp-icon color rule (which sets the brand green - invisible
+   against this button's own green circle background) with a higher-
+   specificity, higher-cascade-order rule so the mark actually shows. */
+.pp-float-whatsapp .pp-whatsapp-icon {
+  width: 24px !important;
+  height: 24px !important;
+  color: #FFFFFF;
+}
 
 .pp-float-top {
   position: fixed;
@@ -2155,7 +2478,7 @@ body:not(:has(.pp-float-whatsapp)) .pp-float-top { bottom: 1.25rem; }
 
 @media (max-width: 640px) {
   .pp-float-whatsapp { width: 50px; height: 50px; right: 1rem; bottom: 1rem; }
-  .pp-float-whatsapp .pp-whatsapp-icon { width: 24px; height: 24px; }
+  .pp-float-whatsapp .pp-whatsapp-icon { width: 22px !important; height: 22px !important; }
   .pp-float-top { width: 40px; height: 40px; right: 1rem; bottom: 4.75rem; }
   body:not(:has(.pp-float-whatsapp)) .pp-float-top { bottom: 1rem; }
 }
