@@ -36,9 +36,9 @@ HERO_SLIDE_COUNT = 3
 # Hotlinked from Unsplash (same approach already used for the homepage
 # hero and auth pages elsewhere in this codebase).
 STATIC_HERO_IMAGES = [
-    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1600&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&auto=format&fit=crop&q=80",
+    "/static/assets/Hero/hero-1.png",
+    "/static/assets/Hero/hero-2.png",
+    "/static/assets/Hero/hero-3.png",
 ]
 
 
