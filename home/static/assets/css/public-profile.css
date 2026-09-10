@@ -321,6 +321,69 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
+/* Short viewports - small/older laptops in the 1024x600-1366x768 range -
+   have the opposite problem from narrow phones: plenty of *width* (so the
+   max-width rules above never fire and .pp-hero-name keeps sizing off its
+   6vw clamp, landing near its 4rem ceiling), but very little *height* to
+   fit that large text plus the logo, eyebrow, hr, taglines, CTAs and
+   counters into. With .pp-hero pinned to a fixed 85vh/460px and
+   overflow:hidden, the stack simply overshoots that box - and because
+   .pp-hero-content is vertically centered, the overshoot pushes the top
+   of the stack up behind the fixed header instead of showing as a
+   scrollbar, which is exactly what reads as "the eyebrow is tucked under
+   the logo". Fixed here the same way as the narrow-phone case: let the
+   section grow to fit its content instead of clipping it, and shrink the
+   text/spacing so there's less to fit in the first place. Keyed off
+   max-height rather than max-width so it also catches wide-but-short
+   screens the width breakpoints above don't touch. */
+@media (max-height: 760px) and (min-width: 641px) {
+  .pp-hero {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: visible;
+  }
+
+  .pp-hero-content {
+    /* Tighter than the 130px desktop reserve - a short screen can't
+       spare that much just for clearance above/below the centered
+       stack. Still clears the fixed topbar+header. */
+    padding-top: calc(var(--pp-topbar-h) + 90px);
+    padding-bottom: 90px;
+  }
+
+  .pp-hero-logo {
+    height: clamp(56px, 10vh, 90px);
+    margin-bottom: 1rem;
+  }
+
+  .pp-hero-eyebrow {
+    font-size: 0.7rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .pp-hero-name {
+    /* Same idea as the width-based clamp above, just capped lower so a
+       short-but-wide viewport can't push it toward its 4rem ceiling. */
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: 0.4rem;
+  }
+
+  .pp-hero-hr { margin-top: 0.85rem; }
+
+  .pp-hero-rotating-tagline {
+    font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+    margin: 0.75rem 0 0.15rem;
+  }
+
+  .pp-hero-tagline {
+    font-size: clamp(0.85rem, 1.4vw, 0.95rem);
+    margin-bottom: 1.25rem;
+  }
+
+  .pp-hero-counters { margin-top: 1.25rem; }
+}
+
 .pp-hero-slide {
   position: absolute;
   inset: 0;
