@@ -464,6 +464,13 @@ a { color: inherit; text-decoration: none; }
        intentional once there's nothing left-aligned to line up with. */
     align-items: center;
     text-align: center;
+    /* The shared padding-left above is deliberately larger than
+       padding-right (it's tuned for the left-aligned desktop hero,
+       hugging the true left edge) - kept symmetric here instead, or
+       align-items:center ends up centering everything inside a box
+       that itself isn't centered on the screen, reading as "slightly
+       left of center" for every line, the hr, and the buttons. */
+    padding-left: 1.5rem;
   }
 
   .pp-hero-tagline { margin-left: auto; margin-right: auto; }
