@@ -42,6 +42,28 @@
 
 * { box-sizing: border-box; }
 
+html {
+  /* Whole-page scroll snapping between major sections (hero, feature
+     strip, about, categories, featured, listings, reviews, connect,
+     footer - see scroll-snap-align below). "proximity" (not
+     "mandatory") snaps once the scroll naturally comes to rest near a
+     section boundary rather than forcing every scroll gesture to a
+     snap point - "mandatory" fights normal scrolling inside the long,
+     interactive Listings section (filters, pagination) and the
+     Contact form, which is exactly the kind of trapped-scroll feeling
+     that makes snap scrolling frustrating rather than pleasant. */
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  /* Keeps a snapped section's top edge clear of the fixed
+     topbar-less header (~90px tall) instead of tucking straight
+     under it. */
+  scroll-padding-top: 90px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-snap-type: none; scroll-behavior: auto; }
+}
+
 body.pp-body {
   margin: 0;
   font-family: var(--pp-font-body);
@@ -223,13 +245,24 @@ a { color: inherit; text-decoration: none; }
 
 .pp-hero {
   position: relative;
-  height: 85vh;
+  scroll-snap-align: start;
+  /* Deliberately shorter than a full 100dvh: the goal is for the top
+     sliver of .pp-feature-strip (below) to already be visible on
+     first load, within the same viewport - a visual cue that there's
+     more to scroll to, rather than a hero that fills the whole screen
+     and hides everything below it. vh first as a safe fallback for
+     browsers without dvh support; the dvh rule after it wins where
+     supported and tracks the *actual* visible viewport on mobile
+     (excluding the address bar), so the peek amount stays consistent
+     instead of shifting as browser chrome shows/hides. */
+  height: 78vh;
+  height: 78dvh;
   min-height: 460px;
   overflow: hidden;
   background: var(--pp-black);
 }
 
-/* Below ~640px the fixed 85vh/460px box stops being safe: the full content
+/* Below ~640px the fixed 78vh/460px box stops being safe: the full content
    stack (logo + eyebrow badge + heading + rotating tagline + bio + CTAs +
    counters, all stacked in a single column here) can genuinely run to
    ~700-750px on a phone with only ~567-620px of hero height available
@@ -245,8 +278,14 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 640px) {
   .pp-hero {
     height: auto;
-    min-height: 100vh;
-    min-height: 100svh; /* excludes the mobile browser's address-bar chrome, where plain 100vh can itself trigger the address-bar-collapses-and-reflows jump this rule exists to avoid */
+    /* Same "peek the next section" intent as the desktop 78dvh rule
+       above, just via min-height + auto growth (rather than a hard
+       height) since the stacked mobile content is more likely to need
+       more room than the peek amount allows - if it does, the section
+       simply grows past 84dvh rather than clipping, same as before. */
+    min-height: 84vh;
+    min-height: 84svh;
+    min-height: 84dvh;
     overflow: visible;
   }
 }
@@ -256,7 +295,7 @@ a { color: inherit; text-decoration: none; }
    max-width rules above never fire and .pp-hero-name keeps sizing off its
    6vw clamp, landing near its 4rem ceiling), but very little *height* to
    fit that large text plus the logo, eyebrow, hr, taglines, CTAs and
-   counters into. With .pp-hero pinned to a fixed 85vh/460px and
+   counters into. With .pp-hero pinned to a fixed 78vh/460px and
    overflow:hidden, the stack simply overshoots that box - and because
    .pp-hero-content is vertically centered, the overshoot pushes the top
    of the stack up behind the fixed header instead of showing as a
@@ -577,6 +616,7 @@ a { color: inherit; text-decoration: none; }
   background: var(--pp-black);
   border-top: 1px solid rgba(255,255,255,0.08);
   padding: 3rem 0;
+  scroll-snap-align: start;
 }
 
 .pp-feature-strip .pp-container {
@@ -681,6 +721,7 @@ a { color: inherit; text-decoration: none; }
 
 .pp-about {
   padding: 5rem 0;
+  scroll-snap-align: start;
 }
 
 .pp-about-grid {
@@ -756,6 +797,7 @@ a { color: inherit; text-decoration: none; }
 .pp-section {
   padding: 5rem 0;
   counter-increment: pp-section-counter;
+  scroll-snap-align: start;
 }
 
 .pp-section-header {
@@ -1123,6 +1165,7 @@ a { color: inherit; text-decoration: none; }
 .pp-footer {
   background: var(--pp-black);
   color: rgba(251,250,248,0.7);
+  scroll-snap-align: start;
 }
 
 .pp-footer-cta {
