@@ -278,14 +278,15 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 640px) {
   .pp-hero {
     height: auto;
-    /* Same "peek the next section" intent as the desktop 78dvh rule
-       above, just via min-height + auto growth (rather than a hard
-       height) since the stacked mobile content is more likely to need
-       more room than the peek amount allows - if it does, the section
-       simply grows past 84dvh rather than clipping, same as before. */
-    min-height: 84vh;
-    min-height: 84svh;
-    min-height: 84dvh;
+    /* Unlike the desktop 78dvh peek above, phones get the full
+       viewport height here - the feature strip should sit fully
+       below the fold on first load, not peek into it. svh/dvh (not
+       plain vh) excludes the mobile browser's address-bar chrome,
+       where plain vh can itself trigger the address-bar-collapses-
+       and-reflows jump this rule exists to avoid. */
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
     overflow: visible;
   }
 }
