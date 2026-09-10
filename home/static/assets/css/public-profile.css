@@ -26,11 +26,10 @@
   --pp-radius-lg: 8px;
   --pp-transition: all 0.25s ease;
   --pp-container: 1200px;
-  --pp-topbar-h: 38px;
-}
-
-@media (max-width: 640px) {
-  :root { --pp-topbar-h: 34px; }
+  /* Topbar has been removed - kept at 0 (rather than deleting the
+     variable outright) so every existing calc(var(--pp-topbar-h) + Npx)
+     below still resolves correctly without hunting down each usage. */
+  --pp-topbar-h: 0px;
 }
 
 [data-pp-theme="dark"] {
@@ -120,76 +119,7 @@ a { color: inherit; text-decoration: none; }
   .pp-splash-avatar, .pp-splash-name, .pp-splash-rule { animation: none; opacity: 1; }
 }
 
-/* ── Top contact bar (sits above the nav, hides on scroll) ── */
-.pp-topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 101;
-  height: var(--pp-topbar-h);
-  background: var(--pp-black);
-  color: rgba(251,250,248,0.78);
-  font-size: 0.78rem;
-  padding: 0 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.25rem;
-  overflow: hidden;
-  transition: transform 0.35s ease, opacity 0.35s ease;
-}
-
-.pp-topbar.pp-topbar-hidden {
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.pp-topbar-contacts {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  min-width: 0;
-}
-
-.pp-topbar-contacts a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pp-topbar-contacts a svg { flex-shrink: 0; opacity: 0.85; }
-.pp-topbar-contacts a:hover { color: var(--pp-gold-light); }
-
-.pp-topbar-social {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  flex-shrink: 0;
-}
-
-.pp-topbar-social a {
-  display: flex;
-  color: inherit;
-  opacity: 0.8;
-  transition: var(--pp-transition);
-}
-
-.pp-topbar-social a:hover { color: var(--pp-gold-light); opacity: 1; }
-
-@media (max-width: 640px) {
-  /* Icons only on small screens - phone number / email text hidden,
-     but the icon (and its tap target) stays so contact is one tap away. */
-  .pp-topbar-text { display: none; }
-  .pp-topbar-contacts { gap: 1.1rem; }
-  .pp-topbar-contacts a { gap: 0; }
-  .pp-topbar-social { gap: 0.75rem; }
-}
+/* Top contact bar removed - see public_profile_base.html. */
 
 .pp-header {
   position: fixed;
@@ -2405,7 +2335,7 @@ a { color: inherit; text-decoration: none; }
    Fixed to the viewport (not the page), so both float above every
    section regardless of scroll position or which section's own
    background/z-index is in play. z-index above .pp-header (100)/
-   .pp-topbar (101)/mobile nav drawer (200) so they're never hidden
+   mobile nav drawer (200) so they're never hidden
    behind the header or an open filter/nav drawer. */
 .pp-float-whatsapp {
   position: fixed;
