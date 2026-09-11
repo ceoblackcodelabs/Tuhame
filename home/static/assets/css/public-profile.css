@@ -246,6 +246,19 @@ a { color: inherit; text-decoration: none; }
 .pp-hero {
   position: relative;
   scroll-snap-align: start;
+  /* display:flex (rather than leaving vertical centering to
+     .pp-hero-content's own height:100%) so centering keeps working
+     even when this section's height comes from min-height instead of
+     an explicit height - see the mobile override below, where height
+     is "auto" and only min-height is set. A child's height:100% does
+     NOT reliably resolve against a min-height floor on an auto-height
+     parent (the spec falls back to "auto" in that case), which is
+     exactly why the mobile hero text used to end up hugging the top
+     with a dead gap below it instead of sitting in the middle. Flex
+     alignment doesn't have that problem - it centers the child within
+     whatever height the section actually ends up with. */
+  display: flex;
+  flex-direction: column;
   /* Deliberately shorter than a full 100dvh: the goal is for the top
      sliver of .pp-feature-strip (below) to already be visible on
      first load, within the same viewport - a visual cue that there's
@@ -456,26 +469,13 @@ a { color: inherit; text-decoration: none; }
   .pp-hero-content {
     padding-top: calc(var(--pp-topbar-h) + 76px);
     padding-bottom: 76px;
-    /* Left-alignment on desktop reads well because it's anchored by the
-       logo sitting above it at the same left edge. With the logo hidden
-       below 640px (see .pp-hero-logo above), that anchor is gone and
-       left-aligned text just looks like it's drifting off the left side
-       of an otherwise-empty width - centering everything reads more
-       intentional once there's nothing left-aligned to line up with. */
-    align-items: center;
-    text-align: center;
-    /* The shared padding-left above is deliberately larger than
-       padding-right (it's tuned for the left-aligned desktop hero,
-       hugging the true left edge) - kept symmetric here instead, or
-       align-items:center ends up centering everything inside a box
-       that itself isn't centered on the screen, reading as "slightly
-       left of center" for every line, the hr, and the buttons. */
-    padding-left: 1.5rem;
+    /* Left-aligned, matching desktop - the vertical centering fix on
+       .pp-hero above (display:flex; flex-direction:column) does the
+       real work of putting this block in the middle of the screen
+       instead of hugging the top with empty space below it. */
+    align-items: flex-start;
+    text-align: left;
   }
-
-  .pp-hero-tagline { margin-left: auto; margin-right: auto; }
-  .pp-hero-ctas { justify-content: center; }
-  .pp-hero-counters { justify-content: center; }
 }
 
 .pp-hero-logo {
