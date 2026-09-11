@@ -259,6 +259,13 @@ a { color: inherit; text-decoration: none; }
      whatever height the section actually ends up with. */
   display: flex;
   flex-direction: column;
+  /* Belt-and-suspenders with .pp-hero-content's own height:100% +
+     justify-content:center: if that percentage height doesn't end up
+     resolving for any reason, this still centers the (then
+     shrink-to-fit) content block within the section's actual height
+     directly, since flex justify-content never depends on the item
+     having a resolved height in the first place. */
+  justify-content: center;
   /* Deliberately shorter than a full 100dvh: the goal is for the top
      sliver of .pp-feature-strip (below) to already be visible on
      first load, within the same viewport - a visual cue that there's
@@ -1551,6 +1558,12 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 860px) {
   .pp-hamburger { display: flex; }
 
+  /* The standalone header toggle only makes sense while the full nav is
+     visible inline (desktop) - once it collapses into the drawer below
+     860px, .pp-nav-theme-toggle inside that drawer takes over instead,
+     so this doesn't just duplicate it as a second control up top. */
+  .pp-header-actions > .pp-theme-toggle { display: none; }
+
   .pp-header-nav {
     position: fixed;
     top: 0;
@@ -1576,7 +1589,40 @@ a { color: inherit; text-decoration: none; }
   }
 
   .pp-header-nav-actions .pp-btn { width: 100%; justify-content: center; }
+
+  .pp-nav-theme-toggle {
+    display: flex;
+  }
 }
+
+/* Hidden by default (only meant for the drawer) - shown by the 860px
+   rule above once the standalone header toggle disappears. */
+.pp-nav-theme-toggle {
+  display: none;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+  margin-top: auto;
+  padding-top: 1.5rem;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  border-top: 1px solid var(--pp-border);
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  background: none;
+  color: var(--pp-text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pp-nav-theme-toggle-label { flex: 1; text-align: left; }
 
 /* ── Hero: animated counters ── */
 .pp-hero-counters {

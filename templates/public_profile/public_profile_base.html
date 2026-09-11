@@ -71,12 +71,23 @@
         {% endif %}
         <a href="#connect" class="pp-btn pp-btn-gold">Contact</a>
       </div>
+      <!-- Mobile-only: the standalone header toggle (.pp-header-actions
+           below) is hidden once the hamburger drawer takes over (see the
+           860px breakpoint in CSS), so its light/dark control lives here
+           in the drawer instead - one shared "pp-theme-toggle" class (see
+           the script below) keeps both buttons, desktop and in-drawer, in
+           sync rather than needing separate wiring. -->
+      <button type="button" class="pp-nav-theme-toggle pp-theme-toggle" aria-label="Toggle dark mode">
+        <span class="pp-theme-icon-dark" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
+        <span class="pp-theme-icon-light" aria-hidden="true" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+        <span class="pp-nav-theme-toggle-label">Light Mode</span>
+      </button>
     </nav>
 
     <div class="pp-header-actions">
-      <button type="button" class="pp-theme-toggle" id="pp-theme-toggle" aria-label="Toggle dark mode">
-        <svg id="pp-theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        <svg id="pp-theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display:none;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <button type="button" class="pp-theme-toggle" aria-label="Toggle dark mode">
+        <span class="pp-theme-icon-dark" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
+        <span class="pp-theme-icon-light" aria-hidden="true" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
       </button>
       <button type="button" class="pp-hamburger" id="pp-hamburger" aria-label="Open menu" aria-expanded="false">
         <span></span><span></span><span></span>
@@ -117,16 +128,23 @@
         }, { passive: true });
       }
 
-      var toggle = document.getElementById('pp-theme-toggle');
-      var iconDark = document.getElementById('pp-theme-icon-dark');
-      var iconLight = document.getElementById('pp-theme-icon-light');
+      var toggles = document.querySelectorAll('.pp-theme-toggle');
+      var navToggleLabel = document.querySelector('.pp-nav-theme-toggle-label');
       function syncIcon() {
         var isDark = document.documentElement.getAttribute('data-pp-theme') === 'dark';
-        if (iconDark) iconDark.style.display = isDark ? 'none' : 'block';
-        if (iconLight) iconLight.style.display = isDark ? 'block' : 'none';
+        toggles.forEach(function (btn) {
+          var dark = btn.querySelector('.pp-theme-icon-dark');
+          var light = btn.querySelector('.pp-theme-icon-light');
+          if (dark) dark.style.display = isDark ? 'none' : '';
+          if (light) light.style.display = isDark ? '' : 'none';
+        });
+        // The in-drawer toggle carries a text label too (the standalone
+        // header icon doesn't have room for one) - it names the mode
+        // you'd switch *to*, matching the icon it's currently showing.
+        if (navToggleLabel) navToggleLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
       }
       syncIcon();
-      if (toggle) {
+      toggles.forEach(function (toggle) {
         toggle.addEventListener('click', function () {
           var isDark = document.documentElement.getAttribute('data-pp-theme') === 'dark';
           var next = isDark ? 'light' : 'dark';
@@ -134,7 +152,7 @@
           localStorage.setItem('pp-theme', next);
           syncIcon();
         });
-      }
+      });
 
       var hamburger = document.getElementById('pp-hamburger');
       var nav = document.getElementById('pp-header-nav');
