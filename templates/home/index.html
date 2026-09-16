@@ -106,6 +106,7 @@
 
 <!-- ─── HERO ─── -->
 <section class="hero" aria-label="Find your next home in Kenya">
+<div class="hero-main">
   <div class="hero-carousel">
     {% if hero_slides %}
       {% for slide in hero_slides %}
@@ -194,23 +195,26 @@
       <span class="hero-dot" role="button" aria-label="Slide 4"></span>
     {% endif %}
   </div>
+</div>
 
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-num" data-target="12500" data-suffix="+">0</div>
-      <div class="hero-stat-label">Properties Listed</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num" data-target="8200" data-suffix="+">0</div>
-      <div class="hero-stat-label">Happy Tenants</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num" data-target="2300" data-suffix="+">0</div>
-      <div class="hero-stat-label">Property Owners</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num" data-target="47">0</div>
-      <div class="hero-stat-label">Cities Across Kenya</div>
+  <div class="hero-stats-bar">
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num" data-target="12500" data-suffix="+">0</div>
+        <div class="hero-stat-label">Properties Listed</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" data-target="8200" data-suffix="+">0</div>
+        <div class="hero-stat-label">Happy Tenants</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" data-target="2300" data-suffix="+">0</div>
+        <div class="hero-stat-label">Property Owners</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" data-target="47">0</div>
+        <div class="hero-stat-label">Cities Across Kenya</div>
+      </div>
     </div>
   </div>
 </section>
@@ -474,6 +478,76 @@
   </div>
 </section>
 
+<!-- ─── MOVE SCORE ─── -->
+<section class="section" style="background:var(--white);" aria-labelledby="movescore-heading">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
+      <div>
+        <div class="badge badge-primary" style="margin-bottom:1rem;">{% icon "award" %} Exclusive Feature</div>
+        <h2 id="movescore-heading" class="section-title" style="text-align:left;margin-bottom:1rem;">2Hame Move Score™</h2>
+        <p style="color:var(--gray-500);margin-bottom:1.5rem;line-height:1.7;">Every property receives a comprehensive score that helps you quickly understand how good a move it really is — before you even visit.</p>
+        <div style="display:flex;flex-direction:column;gap:0.875rem;">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(37,99,235,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "shield" %}</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Safety Score</strong><p style="font-size:0.82rem;color:var(--gray-400);">Neighbourhood security, lighting, crime rates</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(34,197,94,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "bus" %}</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Transport Access</strong><p style="font-size:0.82rem;color:var(--gray-400);">Proximity to bus stops, matatus, expressways</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(245,158,11,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "store" %}</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Nearby Amenities</strong><p style="font-size:0.82rem;color:var(--gray-400);">Schools, hospitals, supermarkets, banks</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;background:rgba(239,68,68,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "money" %}</div>
+            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Cost &amp; Value</strong><p style="font-size:0.82rem;color:var(--gray-400);">Price vs. market average, utilities included</p></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="move-score-card">
+          <div class="move-score-title">{% icon "award" %} 2Hame Move Score™ — Kilimani Heights</div>
+          <div class="move-score-main">
+            <div class="move-score-circle"><span class="move-score-num">91</span></div>
+            <div class="move-score-bars">
+              <div class="score-bar-item">
+                <span class="score-bar-label">Safety</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="94%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">94%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Accessibility</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="88%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">88%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Cost Value</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="82%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">82%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Amenities</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="96%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">96%</span>
+              </div>
+              <div class="score-bar-item">
+                <span class="score-bar-label">Transport</span>
+                <div class="score-bar-track"><div class="score-bar-fill" data-width="90%" style="width:0%"></div></div>
+                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">90%</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:1rem;background:rgba(255,255,255,0.05);border-radius:10px;text-align:center;">
+            <div style="color:var(--accent);font-weight:800;font-size:1.1rem;">Excellent Move {% icon "sparkles" %}</div>
+            <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:0.25rem;">Top 8% of properties in Nairobi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ─── FEATURED LISTINGS ─── -->
 <section class="section" style="background:var(--light-bg);" aria-labelledby="featured-heading">
   <div class="container">
@@ -543,76 +617,6 @@
     </div>
     <div style="text-align:center;margin-top:2.5rem;">
       <a href="{% url 'home:properties' %}" class="btn btn-outline-dark btn-lg">View All Properties →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ─── MOVE SCORE ─── -->
-<section class="section" style="background:var(--white);" aria-labelledby="movescore-heading">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;" class="move-score-section-grid">
-      <div>
-        <div class="badge badge-primary" style="margin-bottom:1rem;">{% icon "award" %} Exclusive Feature</div>
-        <h2 id="movescore-heading" class="section-title" style="text-align:left;margin-bottom:1rem;">2Hame Move Score™</h2>
-        <p style="color:var(--gray-500);margin-bottom:1.5rem;line-height:1.7;">Every property receives a comprehensive score that helps you quickly understand how good a move it really is — before you even visit.</p>
-        <div style="display:flex;flex-direction:column;gap:0.875rem;">
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(37,99,235,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "shield" %}</div>
-            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Safety Score</strong><p style="font-size:0.82rem;color:var(--gray-400);">Neighbourhood security, lighting, crime rates</p></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(34,197,94,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "bus" %}</div>
-            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Transport Access</strong><p style="font-size:0.82rem;color:var(--gray-400);">Proximity to bus stops, matatus, expressways</p></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(245,158,11,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "store" %}</div>
-            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Nearby Amenities</strong><p style="font-size:0.82rem;color:var(--gray-400);">Schools, hospitals, supermarkets, banks</p></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="width:42px;height:42px;background:rgba(239,68,68,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;" aria-hidden="true">{% icon "money" %}</div>
-            <div><strong style="font-size:0.9rem;color:var(--gray-800);">Cost &amp; Value</strong><p style="font-size:0.82rem;color:var(--gray-400);">Price vs. market average, utilities included</p></div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="move-score-card">
-          <div class="move-score-title">{% icon "award" %} 2Hame Move Score™ — Kilimani Heights</div>
-          <div class="move-score-main">
-            <div class="move-score-circle"><span class="move-score-num">91</span></div>
-            <div class="move-score-bars">
-              <div class="score-bar-item">
-                <span class="score-bar-label">Safety</span>
-                <div class="score-bar-track"><div class="score-bar-fill" data-width="94%" style="width:0%"></div></div>
-                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">94%</span>
-              </div>
-              <div class="score-bar-item">
-                <span class="score-bar-label">Accessibility</span>
-                <div class="score-bar-track"><div class="score-bar-fill" data-width="88%" style="width:0%"></div></div>
-                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">88%</span>
-              </div>
-              <div class="score-bar-item">
-                <span class="score-bar-label">Cost Value</span>
-                <div class="score-bar-track"><div class="score-bar-fill" data-width="82%" style="width:0%"></div></div>
-                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">82%</span>
-              </div>
-              <div class="score-bar-item">
-                <span class="score-bar-label">Amenities</span>
-                <div class="score-bar-track"><div class="score-bar-fill" data-width="96%" style="width:0%"></div></div>
-                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">96%</span>
-              </div>
-              <div class="score-bar-item">
-                <span class="score-bar-label">Transport</span>
-                <div class="score-bar-track"><div class="score-bar-fill" data-width="90%" style="width:0%"></div></div>
-                <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;width:28px;text-align:right;">90%</span>
-              </div>
-            </div>
-          </div>
-          <div style="padding:1rem;background:rgba(255,255,255,0.05);border-radius:10px;text-align:center;">
-            <div style="color:var(--accent);font-weight:800;font-size:1.1rem;">Excellent Move {% icon "sparkles" %}</div>
-            <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:0.25rem;">Top 8% of properties in Nairobi</div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>

@@ -1,6 +1,6 @@
 # apps/clients/forms.py
 from django import forms
-from .models import Client, ClientDocument, Watchlist, Bill, BillCategory
+from .models import Client, ClientDocument, Watchlist, Bill, BillCategory, Payment
 from django.utils import timezone
 from users.models import Profile
 from home.models import Property
@@ -326,3 +326,89 @@ class BillForm(forms.ModelForm):
                     self.add_error('user', f'This user is not associated with the selected property.')
 
         return cleaned_data
+
+# ─────────────────────────────────────────────────────────────────────────
+# Tenant management — landlords adding tenants to a property, and tenants
+# paying their own rent from the front end.
+# ─────────────────────────────────────────────────────────────────────────
+
+class TenantAssignForm(forms.Form):
+    """Landlord-facing: attach an existing 2Hame user (by email) to one of
+    their properties as a tenant, optionally generating the first rent
+    bill for them right away."""
+
+    property = forms.ModelChoiceField(
+        queryset=Property.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Property',
+    )
+    tenant_email = forms.EmailField(
+        label="Tenant's Email",
+        help_text='The tenant must already have a 2Hame account with this email.',
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'tenant@example.com'}),
+    )
+    monthly_rent = forms.DecimalField(
+        max_digits=12, decimal_places=2, min_value=0,
+        label='Monthly Rent (KES)',
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+    )
+    moved_in_date = forms.DateField(
+        initial=timezone.now,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+    )
+    generate_first_bill = forms.BooleanField(
+        required=False, initial=True,
+        label='Generate this month\u2019s rent bill immediately',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        preset_property = kwargs.pop('preset_property', None)
+        super().__init__(*args, **kwargs)
+
+        if self.user and self.user.is_superuser:
+            self.fields['property'].queryset = Property.objects.filter(is_active=True)
+        else:
+            self.fields['property'].queryset = Property.objects.filter(owner=self.user, is_active=True)
+
+        if preset_property is not None:
+            self.fields['property'].initial = preset_property.pk
+            self.fields['monthly_rent'].initial = preset_property.price
+
+    def clean_tenant_email(self):
+        email = self.cleaned_data['tenant_email'].strip()
+        try:
+            tenant_user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            raise forms.ValidationError(
+                'No 2Hame account found with that email. Ask the tenant to sign up first, then try again.'
+            )
+        self.cleaned_data['tenant_user'] = tenant_user
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        property_obj = cleaned_data.get('property')
+        tenant_user = cleaned_data.get('tenant_user')
+
+        if property_obj and tenant_user and property_obj.owner_id == tenant_user.id:
+            self.add_error('tenant_email', "You can't add yourself as a tenant on your own property.")
+
+        return cleaned_data
+
+
+class TenantPaymentForm(forms.Form):
+    """Tenant-facing: confirm and record their own rent/bill payment. Uses
+    the public site's .form-input styling (not the admin panel's Bootstrap
+    classes) since this form is shown on the front end."""
+
+    payment_method = forms.ChoiceField(
+        choices=Payment.PAYMENT_METHODS,
+        widget=forms.Select(attrs={'class': 'form-input'}),
+    )
+    transaction_id = forms.CharField(
+        max_length=100, required=False,
+        label='M-Pesa Code / Reference (optional)',
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. QK7X8Y9Z1A'}),
+    )

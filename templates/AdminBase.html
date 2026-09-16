@@ -254,6 +254,24 @@
           </li>
           {% comment %} end Clients {% endcomment %}
 
+          {% comment %} Tenants {% endcomment %}
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic3t" aria-expanded="false" aria-controls="ui-basic">
+              <span class="menu-icon">
+                <i class="mdi mdi-account-group"></i>
+              </span>
+              <span class="menu-title">My Tenants</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-basic3t">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url "tenant_list" %}">All Tenants</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "tenant_add" %}">Add Tenant</a></li>
+              </ul>
+            </div>
+          </li>
+          {% comment %} end Tenants {% endcomment %}
+
           {% comment %} Invoices {% endcomment %}
           <li class="nav-item menu-items">
             <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic4" aria-expanded="false" aria-controls="ui-basic">

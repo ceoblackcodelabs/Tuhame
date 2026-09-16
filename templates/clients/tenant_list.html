@@ -1,0 +1,162 @@
+{% extends "AdminBase.html" %}
+{% load humanize %}
+
+{% block title %}My Tenants{% endblock title %}
+
+{% block robots %}noindex, nofollow{% endblock robots %}
+
+{% block content %}
+<div class="main-panel">
+    <div class="content-wrapper">
+
+        {% comment %} stats {% endcomment %}
+        <div class="row">
+            <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">{{ total_tenants }}</h3>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-info">
+                                    <span class="mdi mdi-account-group icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">Total Tenants</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">{{ paid_this_month }}</h3>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-success">
+                                    <span class="mdi mdi-check-circle icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">Paid This Month</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="d-flex align-items-center align-self-start">
+                                    <h3 class="mb-0">{{ unpaid_this_month }}</h3>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="icon icon-box-warning">
+                                    <span class="mdi mdi-clock-alert icon-item"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-muted font-weight-normal">Unpaid / Pending</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h4 class="card-title mb-0">My Tenants</h4>
+                            <a href="{% url 'tenant_add' %}" class="btn btn-success">
+                                <i class="mdi mdi-plus"></i> Add Tenant
+                            </a>
+                        </div>
+                        <p class="card-description">Everyone currently living in one of your properties, and whether this month's rent is settled.</p>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant</th>
+                                        <th>Property</th>
+                                        <th>Moved In</th>
+                                        <th>Rent</th>
+                                        <th>This Month</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in tenant_rows %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ row.profile.user.get_full_name|default:row.profile.user.username }}</strong>
+                                            <br><small class="text-muted">{{ row.profile.user.email }}</small>
+                                        </td>
+                                        <td>{{ row.profile.current_property.title|truncatechars:28 }}</td>
+                                        <td>{{ row.profile.moved_in_date|date:"M d, Y"|default:"\u2014" }}</td>
+                                        <td><strong>KES {{ row.profile.current_property.price|floatformat:2|intcomma }}</strong></td>
+                                        <td>
+                                            {% if row.rent_bill %}
+                                                {% if row.rent_bill.status == 'paid' %}
+                                                    <span class="badge badge-success">Paid</span>
+                                                {% elif row.rent_bill.is_overdue %}
+                                                    <span class="badge badge-danger">Overdue</span>
+                                                {% else %}
+                                                    <span class="badge badge-warning">Pending</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge badge-secondary">No bill yet</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'profile_detail' row.profile.user.username %}" class="btn btn-sm btn-info">
+                                                <i class="mdi mdi-eye"></i> View
+                                            </a>
+                                            <form method="post" action="{% url 'tenant_remove' row.profile.pk %}" style="display:inline;" onsubmit="return confirm('Mark {{ row.profile.user.get_full_name|default:row.profile.user.username }} as moved out?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-secondary">
+                                                    <i class="mdi mdi-logout"></i> Move Out
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            No tenants yet. Use "Add Tenant" to link a tenant's account to one of your properties.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if is_paginated %}
+                        <nav>
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                                {% endif %}
+                                <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                                {% if page_obj.has_next %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -24,4 +24,13 @@ urlpatterns = [
     path('admin/bills/<int:pk>/update/', views.BillUpdateView.as_view(), name='bill_update'),
     path('admin/bills/<int:pk>/delete/', views.BillDeleteView.as_view(), name='bill_delete'),
     path('admin/bills/<int:pk>/mark-paid/', views.BillMarkPaidView.as_view(), name='bill_mark_paid'),
+
+    # Tenant management (landlord side)
+    path('tenants/', views.TenantListView.as_view(), name='tenant_list'),
+    path('tenants/add/', views.TenantAssignView.as_view(), name='tenant_add'),
+    path('tenants/add/<int:property_pk>/', views.TenantAssignView.as_view(), name='tenant_add_for_property'),
+    path('tenants/<int:pk>/remove/', views.TenantRemoveView.as_view(), name='tenant_remove'),
+
+    # Rent payment (tenant side)
+    path('bills/<int:pk>/pay/', views.TenantBillPayView.as_view(), name='tenant_bill_pay'),
 ]

@@ -1,15 +1,16 @@
 # apps/clients/views.py
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.db.models import Q, Sum, Count
-from .models import Client, ClientDocument, Watchlist, ClientType, Bill, BillCategory
-from .forms import ClientForm, ClientDocumentForm, WatchlistForm, BillForm
+from .models import Client, ClientDocument, Watchlist, ClientType, Bill, BillCategory, Payment
+from .forms import ClientForm, ClientDocumentForm, WatchlistForm, BillForm, TenantAssignForm, TenantPaymentForm
 from properties.models import Property
+from users.models import Profile
 from django.db import models
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.utils import timezone
 from datetime import timedelta
 
@@ -576,3 +577,189 @@ class BillMarkPaidView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Mark Bill as Paid'
         return context
+
+# ─────────────────────────────────────────────────────────────────────────
+# Tenant management — landlords add/remove tenants on their properties;
+# tenants view and pay their own rent from the front end.
+#
+# A "tenant" here is simply a User whose Profile.current_property points
+# at one of the landlord's properties (see users/models.py Profile). Bills
+# are clients.Bill rows scoped to that property/user.
+# ─────────────────────────────────────────────────────────────────────────
+
+def _owned_property_ids(user):
+    if user.is_superuser:
+        return Property.objects.filter(is_active=True).values_list('id', flat=True)
+    return Property.objects.filter(owner=user, is_active=True).values_list('id', flat=True)
+
+
+class TenantListView(LoginRequiredMixin, ListView):
+    """Landlord roster: every tenant currently living in one of my
+    properties, with this month's rent status so it's obvious at a glance
+    who has and hasn't paid."""
+    model = Profile
+    template_name = 'clients/tenant_list.html'
+    context_object_name = 'tenants'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Profile.objects.filter(
+            current_property_id__in=_owned_property_ids(self.request.user)
+        ).select_related('user', 'current_property').order_by('current_property__title', 'user__first_name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.now().date()
+        month_start = today.replace(day=1)
+
+        rows = []
+        for profile in context['tenants']:
+            rent_bill = Bill.objects.filter(
+                property=profile.current_property,
+                user=profile.user,
+                bill_type='rent',
+                due_date__gte=month_start,
+            ).order_by('due_date').first()
+            rows.append({
+                'profile': profile,
+                'rent_bill': rent_bill,
+            })
+        context['tenant_rows'] = rows
+        context['total_tenants'] = len(rows)
+        context['paid_this_month'] = sum(1 for r in rows if r['rent_bill'] and r['rent_bill'].status == 'paid')
+        context['unpaid_this_month'] = context['total_tenants'] - context['paid_this_month']
+        context['properties'] = Property.objects.filter(id__in=_owned_property_ids(self.request.user))
+        return context
+
+
+class TenantAssignView(LoginRequiredMixin, FormView):
+    """Landlord adds an existing 2Hame user as a tenant on one of their
+    properties, wiring up Profile.current_property and (optionally) the
+    first rent bill in one step."""
+    template_name = 'clients/tenant_assign_form.html'
+    form_class = TenantAssignForm
+    success_url = reverse_lazy('tenant_list')
+
+    def get_initial_property(self):
+        property_pk = self.kwargs.get('property_pk')
+        if not property_pk:
+            return None
+        return get_object_or_404(Property, pk=property_pk, id__in=_owned_property_ids(self.request.user))
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        kwargs['preset_property'] = self.get_initial_property()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Add Tenant'
+        context['preset_property'] = self.get_initial_property()
+        return context
+
+    def form_valid(self, form):
+        property_obj = form.cleaned_data['property']
+        tenant_user = form.cleaned_data['tenant_user']
+        monthly_rent = form.cleaned_data['monthly_rent']
+        moved_in_date = form.cleaned_data['moved_in_date']
+
+        profile, _ = Profile.objects.get_or_create(user=tenant_user)
+        previous_property = profile.current_property
+        profile.move_to_property(property_obj, moved_in_date=moved_in_date)
+
+        if form.cleaned_data.get('generate_first_bill'):
+            Bill.objects.get_or_create(
+                property=property_obj,
+                user=tenant_user,
+                bill_type='rent',
+                due_date=moved_in_date,
+                defaults={
+                    'description': f'Rent \u2013 {property_obj.title}',
+                    'amount': monthly_rent,
+                    'status': 'pending',
+                    'is_recurring': True,
+                    'recurrence_interval': 'monthly',
+                },
+            )
+
+        tenant_name = tenant_user.get_full_name() or tenant_user.username
+        if previous_property and previous_property != property_obj:
+            messages.success(
+                self.request,
+                f'{tenant_name} has been moved from {previous_property.title} to {property_obj.title}.'
+            )
+        else:
+            messages.success(self.request, f'{tenant_name} has been added as a tenant at {property_obj.title}.')
+
+        return super().form_valid(form)
+
+
+class TenantRemoveView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Landlord marks a tenant as moved out - clears Profile.current_property.
+    Existing bills/payments are left untouched for the record."""
+
+    def test_func(self):
+        profile = get_object_or_404(Profile, pk=self.kwargs['pk'])
+        if not profile.current_property:
+            return False
+        return self.request.user.is_superuser or profile.current_property.owner_id == self.request.user.id
+
+    def post(self, request, *args, **kwargs):
+        profile = get_object_or_404(Profile, pk=self.kwargs['pk'])
+        tenant_name = profile.user.get_full_name() or profile.user.username
+        property_title = profile.current_property.title if profile.current_property else ''
+        profile.leave_current_property()
+        messages.success(request, f'{tenant_name} has been marked as moved out of {property_title}.')
+        return redirect('tenant_list')
+
+    def get(self, request, *args, **kwargs):
+        return redirect('tenant_list')
+
+
+class TenantBillPayView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Tenant-facing: pay a bill of their own and mark it paid. This is the
+    front-end counterpart to the landlord-only BillMarkPaidView above."""
+    template_name = 'bill/tenant_pay_bill.html'
+
+    def get_bill(self):
+        return get_object_or_404(Bill, pk=self.kwargs['pk'])
+
+    def test_func(self):
+        bill = self.get_bill()
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+        is_billed_tenant = bill.user_id == user.id
+        is_resident = profile and profile.current_property_id == bill.property_id
+        return is_billed_tenant or is_resident
+
+    def get(self, request, *args, **kwargs):
+        bill = self.get_bill()
+        if bill.status == 'paid':
+            messages.info(request, 'This bill is already marked as paid.')
+            return redirect('my_profile')
+        form = TenantPaymentForm()
+        return render(request, self.template_name, {'bill': bill, 'form': form})
+
+    def post(self, request, *args, **kwargs):
+        bill = self.get_bill()
+        if bill.status == 'paid':
+            messages.info(request, 'This bill is already marked as paid.')
+            return redirect('my_profile')
+
+        form = TenantPaymentForm(request.POST)
+        if form.is_valid():
+            reference = form.cleaned_data.get('transaction_id', '')
+            payment = Payment.objects.create(
+                user=request.user,
+                bill=bill,
+                amount=bill.amount,
+                payment_method=form.cleaned_data['payment_method'],
+                payment_status='pending',
+                transaction_id=reference,
+            )
+            payment.mark_completed(transaction_id=reference)  # also marks the bill paid
+            messages.success(request, f'Payment recorded \u2013 "{bill.description}" is now marked as paid.')
+            return redirect('my_profile')
+
+        return render(request, self.template_name, {'bill': bill, 'form': form})
