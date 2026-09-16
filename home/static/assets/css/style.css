@@ -201,7 +201,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-outline {
   background: transparent;
-  color: var(--white);
+  color: #fff; /* always white — this button only ever sits on the dark
+                  hero photo overlay, so it must not follow the site's
+                  --white variable, which flips to a dark gray in dark
+                  mode for card surfaces and made this button invisible */
   border: 2px solid rgba(255,255,255,0.7);
   backdrop-filter: blur(10px);
 }
@@ -591,6 +594,42 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
 }
 
+/* Split hero — a solid panel for headline/search/CTAs (left) and a photo
+   panel (right). Splitting them means hero text never sits directly on
+   a photo, so contrast is guaranteed regardless of the image or theme. */
+.hero-split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-panel-left {
+  position: relative;
+  flex: 0 0 46%;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  background: radial-gradient(ellipse at 15% 10%, rgba(37,99,235,0.35) 0%, transparent 55%), var(--secondary);
+  z-index: 2;
+}
+
+.hero-panel-right {
+  position: relative;
+  flex: 1 1 auto;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Soft blend so the split reads as one composition, not a hard seam */
+.hero-panel-right::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(90deg, var(--secondary) 0%, rgba(15,23,42,0.4) 10%, transparent 24%);
+  pointer-events: none;
+}
+
 .hero-carousel {
   position: relative;
   width: 100%;
@@ -612,31 +651,20 @@ h1, h2, h3, h4, h5, h6 {
   object-fit: cover;
 }
 
+/* Light vignette — just enough for the chip/dots to read over any photo,
+   not the heavy wash a photo-behind-text layout used to need. */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(15,23,42,0.75) 0%,
-    rgba(37,99,235,0.35) 50%,
-    rgba(15,23,42,0.55) 100%
-  );
+  background: linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.5) 100%);
 }
 
 .hero-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 2rem 1.25rem;
-  padding-top: calc(var(--nav-height) + 2rem);
-  padding-bottom: 2.5rem;
-  z-index: 2;
+  position: relative;
   width: 100%;
-  overflow-y: auto;
+  padding: calc(var(--nav-height) + 1.5rem) clamp(1.5rem, 5vw, 4rem) 2rem clamp(1.5rem, 5vw, 4rem);
+  text-align: left;
+  z-index: 2;
 }
 
 .hero-badge {
@@ -660,10 +688,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .hero-title {
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 7vw, 4.5rem);
+  font-size: clamp(1.8rem, 3.6vw, 3.1rem);
   font-weight: 800;
   color: #fff;
-  max-width: 800px;
+  max-width: 100%;
   margin-bottom: 1.1rem;
   line-height: 1.15;
   width: 100%;
@@ -676,9 +704,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-subtitle {
-  font-size: clamp(0.95rem, 2.2vw, 1.25rem);
+  font-size: clamp(0.9rem, 1.3vw, 1.1rem);
   color: rgba(255,255,255,0.85);
-  max-width: 550px;
+  max-width: 100%;
   margin-bottom: 2rem;
   width: 100%;
   transition: opacity 0.25s ease;
@@ -688,7 +716,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   margin-bottom: 2.5rem;
   width: 100%;
 }
@@ -696,7 +724,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Hero Search Bar — rebuilt to be robust at every width */
 .hero-search {
   width: 100%;
-  max-width: 700px;
+  max-width: 100%;
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.25);
@@ -706,7 +734,7 @@ h1, h2, h3, h4, h5, h6 {
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
-  margin: 0 auto 2.5rem;
+  margin: 0 0 2.5rem;
 }
 
 .hero-search-icon {
@@ -782,6 +810,75 @@ h1, h2, h3, h4, h5, h6 {
 .hero-dot.active {
   width: 28px;
   background: #fff;
+}
+
+/* Trust chip floating over the photo panel */
+.hero-chip {
+  position: absolute;
+  left: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(15,23,42,0.55);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  max-width: calc(100% - 3rem);
+}
+
+.hero-chip-icon { color: var(--accent); display: flex; flex-shrink: 0; }
+
+/* Route line — the hero's one signature animated moment. A "find" pin
+   fades in, the route sketches in, then a "move-in" pin drops into
+   place. Ties the two halves of the product (finding a place, then
+   moving into it) into a single visual beat instead of scattered
+   decoration. Purely decorative, so it's aria-hidden, and it backs off
+   entirely for reduced-motion. */
+.hero-route {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: clamp(110px, 15vw, 180px);
+  height: auto;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hero-route-path,
+.hero-route-origin,
+.hero-route-pin {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-route-path { animation: hero-route-fade 0.8s 0.5s ease forwards; }
+  .hero-route-origin { animation: hero-route-fade 0.4s 0.5s ease forwards; }
+  .hero-route-pin {
+    transform-origin: 200px 30px;
+    animation: hero-route-pin-drop 0.6s 1.1s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-route-path,
+  .hero-route-origin,
+  .hero-route-pin {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-route-fade { to { opacity: 1; } }
+
+@keyframes hero-route-pin-drop {
+  0%   { opacity: 0; transform: translateY(-16px) scale(0.6); }
+  60%  { opacity: 1; transform: translateY(2px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Stats strip — the bottom 20% of the hero. A theme-aware surface (light
@@ -3277,7 +3374,12 @@ input[type="range"] {
   .nav-logo-img { height: 62px; max-width: 210px; }
 
   .hero { min-height: 620px; }
-  .hero-content { padding-left: 1rem; padding-right: 1rem; }
+  .hero-split { flex-direction: column; }
+  .hero-panel-left { flex: 1 1 auto; max-width: 100%; }
+  .hero-panel-right { flex: 1 1 auto; min-height: 220px; }
+  .hero-panel-right::before { display: none; }
+  .hero-content { padding-left: 1.25rem; padding-right: 1.25rem; padding-top: calc(var(--nav-height) + 1.25rem); padding-bottom: 1.5rem; }
+  .hero-route { display: none; }
   .hero-stats { gap: 1.5rem 2rem; }
 
   .category-card { flex-basis: calc(50% - 0.625rem); max-width: calc(50% - 0.625rem); }
