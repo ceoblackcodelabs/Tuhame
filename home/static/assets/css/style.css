@@ -784,9 +784,11 @@ h1, h2, h3, h4, h5, h6 {
   background: #fff;
 }
 
-/* Stats strip — the bottom 20% of the hero. A solid dark band (not the
-   carousel image) so the white stat text always has guaranteed contrast,
-   in both light and dark site themes. */
+/* Stats strip — the bottom 20% of the hero. A theme-aware surface (light
+   in light mode, dark in dark mode via --white/--gray-800, same as the
+   rest of the site) instead of a fixed color, so it always matches the
+   current theme. Spreads across the full width instead of clustering in
+   the middle. */
 .hero-stats-bar {
   position: relative;
   flex: 0 0 20%;
@@ -797,39 +799,41 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem clamp(1rem, 4vw, 2rem);
-  background: linear-gradient(120deg, var(--secondary) 0%, #14264a 55%, var(--primary-dark) 100%);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 0.5rem clamp(1.5rem, 5vw, 4rem);
+  background: var(--white);
+  border-top: 1px solid var(--gray-200);
 }
 
 .hero-stats {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: clamp(1rem, 5vw, 3.5rem);
+  justify-content: space-between;
+  gap: 1rem;
   flex-wrap: wrap;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1400px;
 }
 
 .hero-stat {
   text-align: center;
-  color: #fff;
+  color: var(--gray-800);
+  flex: 1 1 0;
+  min-width: 120px;
 }
 
 .hero-stat-num {
   font-family: var(--font-display);
-  font-size: clamp(1.15rem, 3vw, 1.75rem);
+  font-size: clamp(1.15rem, 3vw, 1.9rem);
   font-weight: 800;
   line-height: 1;
+  color: var(--gray-800);
 }
 
 .hero-stat-label {
-  font-size: clamp(0.62rem, 1.4vw, 0.75rem);
-  opacity: 0.8;
+  font-size: clamp(0.62rem, 1.4vw, 0.78rem);
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.85);
+  color: var(--gray-500);
 }
 
 /* ─── Category Cards ─── */
