@@ -3,21 +3,21 @@
 {% load static %}
 
 <!-- ─── SEO BLOCKS ─── -->
-{% block meta_description %}2Hame is Kenya's platform to find, list, manage and move. Search apartments, houses and rentals, list your property, manage tenants and rent, and get your own branded property website — free — hosted right on 2Hame.{% endblock meta_description %}
+{% block meta_description %}2Hame is Kenya's find-list-manage-move property platform: search apartments, houses and rentals, list your property free, run a full rental management system with rent payment tracking and tenant billing, and get your own branded property website — all on 2Hame.{% endblock meta_description %}
 
-{% block meta_keywords %}2Hame, real estate Kenya, property listings Kenya, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property management Kenya, landlord tools, property agents, real estate investors, find movers, housing marketplace, free property website Kenya, real estate agent website Kenya, landlord website, Kenya property{% endblock meta_keywords %}
+{% block meta_keywords %}2Hame, real estate Kenya, property listings Kenya, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property management Kenya, rental management system Kenya, rent payment tracking, rent collection app Kenya, landlord tenant management, landlord tools, tenant portal, pay rent online Kenya, property agents, real estate investors, find movers, housing marketplace, free property website Kenya, real estate agent website Kenya, landlord website, Kenya property{% endblock meta_keywords %}
 
-{% block og_title %}2Hame – Find, List, Manage & Move | Kenya Property Platform{% endblock og_title %}
+{% block og_title %}2Hame – Find, List, Manage & Move | Kenya Property & Rent Management Platform{% endblock og_title %}
 
-{% block og_description %}Search property listings, list your own property, manage tenants and rent, and get your own branded property website — free, hosted on 2Hame, no coding needed — all on Kenya's find-list-manage-move platform.{% endblock og_description %}
+{% block og_description %}Search property listings, list your own property, run rent payment tracking and tenant management, and get your own branded property website — free, hosted on 2Hame, no coding needed.{% endblock og_description %}
 
 {% block twitter_title %}2Hame – Find, List, Manage & Move{% endblock twitter_title %}
 
-{% block twitter_description %}Search property listings, list your own property, manage tenants and rent, and get your own free branded property website on 2Hame.{% endblock twitter_description %}
+{% block twitter_description %}Search listings, list your property, track rent payments and manage tenants, and get your own free branded property website on 2Hame.{% endblock twitter_description %}
 
 {% block canonical_url %}https://2hame.com{% endblock canonical_url %}
 
-{% block title %}2Hame – Find, List, Manage & Move | Kenya Property Platform{% endblock title %}
+{% block title %}2Hame – Find, List, Manage & Move | Kenya Property & Rental Management Platform{% endblock title %}
 
 <!-- ─── HOMEPAGE JSON-LD ─── -->
 {% block property_schema %}
@@ -78,6 +78,14 @@
           "@type": "Service",
           "name": "Free Branded Property Website",
           "description": "Verified 2Hame owners get their own branded portfolio website (e.g. 2hame.com/owners/yourname) to showcase listings, in place of building a separate website."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Rental Management & Rent Payment Tracking",
+          "description": "Landlords add tenants to their properties, bill them for rent each month, and see at a glance who has and hasn't paid. Tenants view their bills and pay rent directly from their 2Hame profile."
         }
       }
     ]
@@ -171,7 +179,7 @@
           </div>
           <div class="hero-overlay"></div>
         </div>
-        <div class="hero-slide" data-title="List Your Property &amp; <em>Find Tenants</em> Fast" data-subtitle="Reach thousands of verified tenants and buyers. Free listings, premium exposure, and direct communication.">
+        <div class="hero-slide" data-title="List Your Property &amp; <em>Manage Rent</em> With Ease" data-subtitle="Free listings, thousands of verified tenants, and a built-in rental management system — bill rent and track who's paid.">
           <div class="hero-bg" style="position:absolute;inset:0;">
             <div style="position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;"></div>
           </div>
@@ -275,7 +283,7 @@
           2Hame is Kenya's all-in-one real estate platform — connecting tenants, landlords, buyers, and agents directly with verified listings, transparent pricing, and the tools to search, list, and move with confidence.
         </p>
         <p style="color:var(--gray-500);line-height:1.7;margin-top:0.5rem;">
-          Our AI-powered search, interactive maps, and exclusive 2Hame Move Score™ make it easy to compare homes. For property owners, we offer free listings, real-time analytics, secure payments, and a dedicated movers marketplace to create a seamless experience from listing to move-in.
+          Our AI-powered search, interactive maps, and exclusive 2Hame Move Score™ make it easy to compare homes. For property owners, we offer free listings, a full rental management system with rent payment tracking, real-time analytics, secure payments, and a dedicated movers marketplace — a seamless experience from listing to move-in and every rent cycle after.
         </p>
         <div class="about-highlights">
           <div class="about-highlight-item">
@@ -302,8 +310,8 @@
           <div class="about-highlight-item">
             <div class="about-highlight-icon">{% icon "bar-chart" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Owner Dashboard &amp; Free Listings</strong>
-              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">List properties for free with real-time analytics, payment processing, and performance tracking.</p>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Rent Tracking &amp; Owner Dashboard</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Add tenants, bill rent monthly, and see who's paid at a glance — plus free listings and real-time analytics.</p>
             </div>
           </div>
           <div class="about-highlight-item">
@@ -352,7 +360,7 @@
         <div class="badge badge-primary" style="margin-bottom:1rem;color:green;">{% icon "building" %} For Property Owners</div>
         <h2 id="owner-heading" class="section-title" style="text-align:left;margin-bottom:1rem;">List Your Property &amp; <span style="color:green;">Find Tenants Fast</span></h2>
         <p style="color:var(--gray-500);margin-bottom:0.5rem;line-height:1.7;">
-          Whether you're a landlord, real estate agent, or developer — reach thousands of verified tenants and buyers actively searching for their next home through our AI-powered search and interactive map platform.
+          Whether you're a landlord, real estate agent, or developer — reach thousands of verified tenants and buyers actively searching for their next home, and run your rentals with a built-in rental management system for rent billing and payment tracking.
         </p>
         <p style="color:var(--gray-500);line-height:1.7;">
           List your property for free and get your own branded property website on 2Hame — plus real-time analytics, secure payment processing, and direct communication tools. Track views, inquiries, and engagement metrics to understand what's working.
@@ -396,8 +404,8 @@
           <div class="about-highlight-item">
             <div class="about-highlight-icon">{% icon "user" %}</div>
             <div>
-              <strong style="font-size:0.9rem;color:var(--gray-800);">Digital Tenant Profiles &amp; Verification</strong>
-              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Access verified tenant profiles with rental history, documents, and preferences for faster decision-making.</p>
+              <strong style="font-size:0.9rem;color:var(--gray-800);">Add Tenants &amp; Track Rent Payments</strong>
+              <p style="font-size:0.82rem;color:var(--gray-400);margin-top:0.15rem;">Add tenants to your property, bill them monthly, and see who has and hasn't paid — tenants pay and mark rent as paid right from their profile.</p>
             </div>
           </div>
           <div class="about-highlight-item">
@@ -511,8 +519,8 @@
       </div>
       <div class="feature-card fade-up">
         <div class="feature-icon">{% icon "bar-chart" %}</div>
-        <div class="feature-title">Owner Analytics Dashboard</div>
-        <div class="feature-desc">Track views, inquiries, and performance metrics for your listed properties — know exactly what's working.</div>
+        <div class="feature-title">Rent Payment Tracking</div>
+        <div class="feature-desc">A full rental management system — add tenants, bill rent monthly, and see who has and hasn't paid, all in one dashboard.</div>
       </div>
       <div class="feature-card fade-up">
         <div class="feature-icon">{% icon "lock" %}</div>
