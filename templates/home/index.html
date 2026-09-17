@@ -192,20 +192,8 @@
         {% endif %}
       </div>
 
-      <!-- Signature moment: a route sketches itself from a "find" pin to
-           a "move in" pin once on load. Static (no draw animation) for
-           anyone with reduced-motion set. -->
-      <svg class="hero-route" viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path class="hero-route-path" d="M20 100 C 60 100, 55 40, 95 45 S 150 90, 200 30" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 8" />
-        <g class="hero-route-origin">
-          <circle cx="20" cy="100" r="6" fill="var(--accent)" />
-          <circle cx="20" cy="100" r="2.5" fill="#fff" />
-        </g>
-        <g class="hero-route-pin">
-          <circle cx="200" cy="30" r="9" fill="var(--primary-light)" />
-          <path d="M196 26.5 l4 -3.2 l4 3.2 v6.5 h-8 z" fill="#fff" />
-        </g>
-      </svg>
+      <!-- Signature moment lives outside this panel now (see .hero-split)
+           so it can straddle the seam between the two halves. -->
 
       <div class="hero-chip">
         <span class="hero-chip-icon">{% icon "shield" %}</span>
@@ -225,6 +213,21 @@
         {% endif %}
       </div>
     </div>
+
+    <!-- Route line — straddles the seam between the two panels, tying
+         "find" (left/text panel) to "move in" (right/photo panel) into
+         one connective visual beat. -->
+    <svg class="hero-route" viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path class="hero-route-path" d="M20 100 C 60 100, 55 40, 95 45 S 150 90, 200 30" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 8" />
+      <g class="hero-route-origin">
+        <circle cx="20" cy="100" r="7" fill="var(--accent)" />
+        <circle cx="20" cy="100" r="3" fill="#fff" />
+      </g>
+      <g class="hero-route-pin">
+        <circle cx="200" cy="30" r="11" fill="var(--primary-light)" />
+        <path d="M195.5 25.8 l4.5 -3.6 l4.5 3.6 v7.2 h-9 z" fill="#fff" />
+      </g>
+    </svg>
 
   </div>
 </div>

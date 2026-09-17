@@ -592,12 +592,16 @@ h1, h2, h3, h4, h5, h6 {
   height: 80%;
   min-height: 0;
   overflow: hidden;
+  background: var(--secondary); /* shows through the clipped diagonal
+    sliver of .hero-panel-right below, so the seam reads as one angled
+    cut instead of two rectangles glued together */
 }
 
 /* Split hero — a solid panel for headline/search/CTAs (left) and a photo
    panel (right). Splitting them means hero text never sits directly on
    a photo, so contrast is guaranteed regardless of the image or theme. */
 .hero-split {
+  position: relative;
   display: flex;
   width: 100%;
   height: 100%;
@@ -611,6 +615,22 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   background: radial-gradient(ellipse at 15% 10%, rgba(37,99,235,0.35) 0%, transparent 55%), var(--secondary);
   z-index: 2;
+  overflow: hidden;
+}
+
+/* Oversized ghost house-mark for texture on what would otherwise be a
+   flat color block. Purely decorative. */
+.hero-panel-left::after {
+  content: "";
+  position: absolute;
+  right: -6%;
+  bottom: -12%;
+  width: 60%;
+  aspect-ratio: 1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='0.6'%3E%3Cpath d='M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8'/%3E%3Cpath d='M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .hero-panel-right {
@@ -618,16 +638,7 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1 1 auto;
   height: 100%;
   overflow: hidden;
-}
-
-/* Soft blend so the split reads as one composition, not a hard seam */
-.hero-panel-right::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: linear-gradient(90deg, var(--secondary) 0%, rgba(15,23,42,0.4) 10%, transparent 24%);
-  pointer-events: none;
+  clip-path: polygon(3.5vw 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .hero-carousel {
@@ -649,14 +660,17 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 65%; /* favor skyline/street level over sky */
+  filter: saturate(1.05) contrast(1.06);
 }
 
-/* Light vignette — just enough for the chip/dots to read over any photo,
-   not the heavy wash a photo-behind-text layout used to need. */
+/* Color-grades the photo toward the brand navy/blue instead of showing
+   it raw, so the two panels read as one composition rather than "text
+   panel + random stock photo". */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.5) 100%);
+  background: linear-gradient(200deg, rgba(15,23,42,0.4) 0%, rgba(37,99,235,0.16) 45%, rgba(15,23,42,0.55) 100%);
 }
 
 .hero-content {
@@ -834,20 +848,22 @@ h1, h2, h3, h4, h5, h6 {
 
 .hero-chip-icon { color: var(--accent); display: flex; flex-shrink: 0; }
 
-/* Route line — the hero's one signature animated moment. A "find" pin
-   fades in, the route sketches in, then a "move-in" pin drops into
-   place. Ties the two halves of the product (finding a place, then
-   moving into it) into a single visual beat instead of scattered
-   decoration. Purely decorative, so it's aria-hidden, and it backs off
-   entirely for reduced-motion. */
+/* Route line — the hero's one signature animated moment. Straddles the
+   seam between the two panels: a "find" pin (in the text panel) fades
+   in, the route sketches across the seam, then a "move-in" pin (in the
+   photo) drops into place — ties the two halves of the product into one
+   visual beat instead of scattered decoration. Purely decorative, so
+   it's aria-hidden, and it backs off entirely for reduced-motion. */
 .hero-route {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  width: clamp(110px, 15vw, 180px);
+  top: calc(var(--nav-height) + 0.75rem);
+  left: 50%;
+  transform: translateX(-34%);
+  width: clamp(200px, 24vw, 340px);
   height: auto;
-  z-index: 3;
+  z-index: 5;
   pointer-events: none;
+  filter: drop-shadow(0 2px 10px rgba(0,0,0,0.35));
 }
 
 .hero-route-path,
@@ -3376,8 +3392,8 @@ input[type="range"] {
   .hero { min-height: 620px; }
   .hero-split { flex-direction: column; }
   .hero-panel-left { flex: 1 1 auto; max-width: 100%; }
-  .hero-panel-right { flex: 1 1 auto; min-height: 220px; }
-  .hero-panel-right::before { display: none; }
+  .hero-panel-left::after { opacity: 0.045; }
+  .hero-panel-right { flex: 1 1 auto; min-height: 220px; clip-path: none; }
   .hero-content { padding-left: 1.25rem; padding-right: 1.25rem; padding-top: calc(var(--nav-height) + 1.25rem); padding-bottom: 1.5rem; }
   .hero-route { display: none; }
   .hero-stats { gap: 1.5rem 2rem; }
