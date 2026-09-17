@@ -134,7 +134,7 @@
         </form>
 
         <div class="hero-buttons">
-          <a href="{% url 'home:properties' %}" class="btn btn-primary btn-lg">{% icon "neighborhood" %} Explore Properties</a>
+          <a href="{% url 'home:properties' %}" class="btn btn-primary btn-lg hero-cta-primary">{% icon "neighborhood" %} Explore Properties</a>
           <a href="{% url 'home:property_map' %}" class="btn btn-outline btn-lg">{% icon "map" %} View Map</a>
           <a href="{% url 'edit_profile' %}" class="btn btn-outline btn-lg">{% icon "edit" %} List Your Property</a>
         </div>
@@ -216,12 +216,22 @@
 
     <!-- Route line — straddles the seam between the two panels, tying
          "find" (left/text panel) to "move in" (right/photo panel) into
-         one connective visual beat. -->
+         one connective visual beat. A second, smaller branch + waypoints
+         read it as an actual little route map rather than one line. -->
     <svg class="hero-route" viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path class="hero-route-path" d="M20 100 C 60 100, 55 40, 95 45 S 150 90, 200 30" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 8" />
+      <path class="hero-route-path-alt" d="M95 45 C 115 60, 130 78, 150 100" stroke="rgba(255,255,255,0.55)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7" />
+      <g class="hero-route-waypoints">
+        <circle cx="70" cy="70" r="2.5" fill="rgba(255,255,255,0.7)" />
+        <circle cx="160" cy="60" r="2.5" fill="rgba(255,255,255,0.7)" />
+      </g>
       <g class="hero-route-origin">
         <circle cx="20" cy="100" r="7" fill="var(--accent)" />
         <circle cx="20" cy="100" r="3" fill="#fff" />
+      </g>
+      <g class="hero-route-branch-pin">
+        <circle cx="150" cy="100" r="6" fill="rgba(255,255,255,0.9)" />
+        <circle cx="150" cy="100" r="2.5" fill="var(--primary)" />
       </g>
       <g class="hero-route-pin">
         <circle cx="200" cy="30" r="11" fill="var(--primary-light)" />
