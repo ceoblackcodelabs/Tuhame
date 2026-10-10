@@ -7,11 +7,28 @@ from django.contrib import messages
 from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from datetime import timedelta
+from . import ledger
 from .models import Invoice, Payment, PaymentStatus, PaymentCategory
 from .forms import InvoiceForm, PaymentForm, InvoiceFilterForm, PaymentFilterForm
 from django.db import models
 from decimal import Decimal
 from django.http import Http404
+
+
+class LegacyReadOnlyMixin:
+    """Invoices and invoice payments are a retired, read-only system - new
+    charges and payments go through Bills (clients app). Any create/edit/
+    delete URL (bookmarks, old links) lands on the bills screen instead."""
+    redirect_to = 'bill_list'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        messages.info(
+            request,
+            'Invoices are now read-only history. Add and track charges and payments under Rent & Bills.'
+        )
+        return redirect(self.redirect_to)
 
 
 class InvoiceListView(LoginRequiredMixin, ListView):
@@ -130,7 +147,8 @@ class InvoiceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class InvoiceCreateView(LoginRequiredMixin, CreateView):
+class InvoiceCreateView(LegacyReadOnlyMixin, LoginRequiredMixin, CreateView):
+    redirect_to = 'bill_create'
     model = Invoice
     form_class = InvoiceForm
     template_name = 'payments/invoice_form.html'
@@ -160,7 +178,8 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class InvoiceUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class InvoiceUpdateView(LegacyReadOnlyMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    redirect_to = 'bill_list'
     model = Invoice
     form_class = InvoiceForm
     template_name = 'payments/invoice_form.html'
@@ -188,7 +207,8 @@ class InvoiceUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return context
 
 
-class InvoiceDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class InvoiceDeleteView(LegacyReadOnlyMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    redirect_to = 'bill_list'
     model = Invoice
     template_name = 'payments/invoice_confirm_delete.html'
     success_url = reverse_lazy('invoice_list')
@@ -264,14 +284,13 @@ class PaymentListView(LoginRequiredMixin, ListView):
         own_payments = Payment.objects.all() if self.request.user.is_superuser else Payment.objects.filter(invoice__property__owner=self.request.user)
 
         # Statistics
-        context['total_payments'] = own_payments.count()
-        context['total_amount'] = own_payments.filter(status='paid').aggregate(total=Sum('amount'))['total'] or 0
+        # (money-in figures include tenant bill payments the landlord confirmed)
+        user = self.request.user
+        context['total_payments'] = own_payments.exclude(status='paid').count() + ledger.count(user)
+        context['total_amount'] = ledger.collected(user)
 
         # Payment method breakdown
-        context['payment_methods'] = own_payments.values('payment_method').annotate(
-            count=Count('id'),
-            total=Sum('amount')
-        )
+        context['payment_methods'] = ledger.by_method(user)
 
         # Recent payments (last 30 days)
         thirty_days_ago = timezone.now().date() - timedelta(days=30)
@@ -285,9 +304,7 @@ class PaymentListView(LoginRequiredMixin, ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            daily_total = own_payments.filter(
-                status='paid', payment_date=date
-            ).aggregate(total=Sum('amount'))['total'] or 0
+            daily_total = ledger.collected(user, payment_date=date)
             line_chart_labels.append(date.strftime('%m/%d'))
             line_chart_data.append(float(daily_total))
 
@@ -319,7 +336,8 @@ class PaymentDetailView(LoginRequiredMixin, DetailView):
         return queryset
 
 
-class PaymentCreateView(LoginRequiredMixin, CreateView):
+class PaymentCreateView(LegacyReadOnlyMixin, LoginRequiredMixin, CreateView):
+    redirect_to = 'bill_list'
     model = Payment
     form_class = PaymentForm
     template_name = 'payments/payment_form.html'
@@ -396,7 +414,8 @@ class PaymentCreateView(LoginRequiredMixin, CreateView):
 
         return context
 
-class PaymentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class PaymentUpdateView(LegacyReadOnlyMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    redirect_to = 'bill_list'
     model = Payment
     form_class = PaymentForm
     template_name = 'payments/payment_form.html'
@@ -424,7 +443,8 @@ class PaymentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return context
 
 
-class PaymentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class PaymentDeleteView(LegacyReadOnlyMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    redirect_to = 'bill_list'
     model = Payment
     template_name = 'payments/payment_confirm_delete.html'
 

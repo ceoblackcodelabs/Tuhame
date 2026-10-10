@@ -377,15 +377,6 @@
                             <i class="mdi mdi-printer"></i> Print Receipt
                         </button>
                         {% endif %}
-                        {% if user.is_staff %}
-                        <a href="{% url 'payment_edit' payment.pk %}" class="btn btn-warning">
-                            <i class="mdi mdi-pencil"></i> Edit Payment
-                        </a>
-                        <a href="{% url 'payment_delete' payment.pk %}" class="btn btn-danger"
-                           onclick="return confirm('Are you sure you want to delete this payment?')">
-                            <i class="mdi mdi-delete"></i> Delete Payment
-                        </a>
-                        {% endif %}
                         <a href="{% url 'payment_list' %}" class="btn btn-dark">
                             <i class="mdi mdi-arrow-left"></i> Back to Payments
                         </a>

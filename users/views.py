@@ -8,7 +8,7 @@ from django.conf import settings
 import uuid
 
 from django.urls import reverse
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Q
 from home.models import ViewingSchedule, SavedProperty
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -458,9 +458,11 @@ class MyProfileView(LoginRequiredMixin, DetailView):
         # Get bills for user's current property
         profile, _ = Profile.objects.get_or_create(user=self.request.user)
         if profile.current_property:
-            # Get all bills for the current property
+            # Only this tenant's own bills, plus building-wide bills not
+            # assigned to anyone - never a neighbour's rent or utilities.
             context['bills'] = profile.current_property.bills.filter(
-                is_active=True
+                Q(user=self.request.user) | Q(user__isnull=True),
+                is_active=True,
             ).order_by('-due_date', '-created_at')
 
             # Get bill statistics

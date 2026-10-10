@@ -11,6 +11,14 @@ from django.views.generic import RedirectView, TemplateView
 
 from .sitemaps import PropertySitemap, OwnerPortfolioSitemap, BlogPostSitemap, StaticViewSitemap
 
+def favicon_redirect(request):
+    # Resolved per request, not at import time: with a manifest storage a
+    # not-yet-collected static file would otherwise crash URL loading.
+    return RedirectView.as_view(
+        url=staticfiles_storage.url('assets/images/favicon.ico'), permanent=True,
+    )(request)
+
+
 sitemaps = {
     'properties': PropertySitemap,
     'owners': OwnerPortfolioSitemap,
@@ -34,11 +42,7 @@ urlpatterns = [
     # why Search Console can fail to pick it up while the tab icon looks
     # correct. staticfiles_storage.url() resolves to the same
     # cache-busted, hashed path {% static %} produces elsewhere.
-    path(
-        'favicon.ico',
-        RedirectView.as_view(url=staticfiles_storage.url('assets/images/favicon.ico'), permanent=True),
-        name='favicon',
-    ),
+    path('favicon.ico', favicon_redirect, name='favicon'),
     path('admin/', admin.site.urls),
     path('analytics/', include('analytics.urls')),
     path("", include('home.urls')),

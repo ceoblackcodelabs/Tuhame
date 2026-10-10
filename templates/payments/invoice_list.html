@@ -117,11 +117,11 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h4 class="card-title">Invoice Management</h4>
-                                <p class="card-description">Manage all invoices and payments</p>
+                                <h4 class="card-title">Invoice History</h4>
+                                <p class="card-description">Legacy invoices, read-only. New charges go through Bills.</p>
                             </div>
-                            <a href="{% url 'invoice_add' %}" class="btn btn-primary">
-                                <i class="mdi mdi-plus"></i> Create Invoice
+                            <a href="{% url 'bill_create' %}" class="btn btn-primary">
+                                <i class="mdi mdi-plus"></i> Add Bill
                             </a>
                         </div>
 
@@ -183,10 +183,6 @@
                                         </td>
                                         <td>
                                             <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-sm btn-info">View</a>
-                                            {% if invoice.status != 'paid' %}
-                                                <a href="{% url 'payment_add_for_invoice' invoice.pk %}" class="btn btn-sm btn-success">Record Payment</a>
-                                            {% endif %}
-                                            <a href="{% url 'invoice_delete' invoice.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this invoice?')">Delete</a>
                                         </td>
                                     </tr>
                                     {% empty %}

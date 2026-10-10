@@ -242,7 +242,7 @@
               <span class="menu-icon">
                 <i class="mdi mdi-laptop"></i>
               </span>
-              <span class="menu-title">Client Bills</span>
+              <span class="menu-title">Rent &amp; Bills</span>
               <i class="menu-arrow"></i>
             </a>
             <div class="collapse" id="ui-basic3s">
@@ -278,14 +278,13 @@
               <span class="menu-icon">
                 <i class="mdi mdi-cash"></i>
               </span>
-              <span class="menu-title">Invoices</span>
+              <span class="menu-title">Invoice History</span>
               <i class="menu-arrow"></i>
             </a>
             <div class="collapse" id="ui-basic4">
               <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> <a class="nav-link" href="{% url "invoice_list" %}">All Invoices</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{% url "invoice_add" %}">Create Invoice</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{% url "payment_list" %}">All Payments</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "invoice_list" %}">Past Invoices</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url "payment_list" %}">Payments Received</a></li>
               </ul>
             </div>
           </li>

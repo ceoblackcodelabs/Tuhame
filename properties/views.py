@@ -12,9 +12,10 @@ from django.contrib import messages
 from clients.models import Client
 from django.http import JsonResponse
 from payments.models import Payment
+from payments import ledger
 
 
-class PropertyListView(ListView):
+class PropertyListView(LoginRequiredMixin, ListView):
     model = Property
     template_name = 'properties/property_list.html'
     context_object_name = 'properties'
@@ -89,23 +90,13 @@ class PropertyListView(ListView):
         ).distinct()
 
         # Total revenue (from paid payments)
-        total_revenue = own_payments.filter(
-            status='paid'
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        total_revenue = ledger.collected(user)
 
         # Monthly revenue
-        monthly_revenue = own_payments.filter(
-            status='paid',
-            payment_date__year=today.year,
-            payment_date__month=today.month
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        monthly_revenue = ledger.collected(user, payment_date__year=today.year, payment_date__month=today.month)
 
         # Previous month revenue for growth calculation
-        prev_month_revenue = own_payments.filter(
-            status='paid',
-            payment_date__year=last_month.year,
-            payment_date__month=last_month.month
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        prev_month_revenue = ledger.collected(user, payment_date__year=last_month.year, payment_date__month=last_month.month)
 
         # Calculate growth percentages
         if prev_month_revenue > 0:
@@ -140,13 +131,9 @@ class PropertyListView(ListView):
         client_growth = (new_clients_month / total_clients * 100) if total_clients > 0 else 0
 
         # Recent transactions
-        recent_transactions = own_payments.filter(
-            status='paid'
-        ).order_by('-payment_date')[:5]
+        recent_transactions = ledger.recent(user, 5)
 
-        total_transactions = own_payments.filter(
-            status='paid'
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        total_transactions = ledger.collected(user)
 
         # Recent properties
         recent_properties = own_properties.filter(is_active=True).order_by('-created_at')[:5]
@@ -164,10 +151,7 @@ class PropertyListView(ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            daily_total = own_payments.filter(
-                status='paid',
-                payment_date=date
-            ).aggregate(total=Sum('amount'))['total'] or 0
+            daily_total = ledger.collected(user, payment_date=date)
             line_chart_labels.append(date.strftime('%m/%d'))
             line_chart_data.append(float(daily_total))
 
@@ -184,9 +168,7 @@ class PropertyListView(ListView):
             'cash': 'Cash', 'bank_transfer': 'Bank Transfer', 'credit_card': 'Credit Card',
             'debit_card': 'Debit Card', 'check': 'Check', 'online': 'Online', 'mpesa': 'M-Pesa',
         }
-        payment_methods = own_payments.filter(status='paid').values('payment_method').annotate(
-            total=Sum('amount')
-        )
+        payment_methods = ledger.by_method(user)
         doughnut_labels = [method_display.get(m['payment_method'], (m['payment_method'] or 'Other').title()) for m in payment_methods]
         doughnut_data = [float(m['total']) for m in payment_methods]
 

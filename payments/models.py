@@ -57,6 +57,13 @@ class Invoice(models.Model):
     created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Invoices are a legacy, read-only system: Bills (clients app) are the one
+    # way to bill tenants. Set by `migrate_invoices_to_bills`; migrated
+    # invoices' payments live on the bill, so the ledger skips them here.
+    migrated_bill = models.ForeignKey(
+        'clients.Bill', on_delete=models.SET_NULL, null=True, blank=True, related_name='legacy_invoices',
+    )
+
     class Meta:
         ordering = ['-issue_date']
         indexes = [

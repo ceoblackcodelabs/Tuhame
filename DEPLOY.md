@@ -138,3 +138,21 @@ If you outgrow shared hosting, moving to a VPS with nginx in front of a
 few Gunicorn/Passenger workers is the natural next step, and this
 project's settings (SITE_URL, ALLOWED_HOSTS, static/media handling)
 already work in that setup without further changes.
+
+## Billing: Bills are the only system
+
+Landlords bill tenants through **Rent & Bills** (the `clients` app). The old
+invoice screens are read-only history. On the deploy that ships this:
+
+```
+python manage.py migrate
+python manage.py migrate_invoices_to_bills --dry-run   # preview
+python manage.py migrate_invoices_to_bills             # move legacy invoices onto bills
+```
+
+and schedule the daily job (marks late bills overdue, generates recurring
+rent incl. any missed months):
+
+```
+0 6 * * * cd /path/to/Tuhame && python manage.py process_bills
+```

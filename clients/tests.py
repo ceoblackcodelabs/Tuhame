@@ -1,3 +1,394 @@
-from django.test import TestCase
+"""
+End-to-end test of the landlord -> tenant rent collection flow:
 
-# Create your tests here.
+  landlord adds tenant -> rent bill generated -> tenant sees it in their
+  portal (and only their own) -> tenant reports payment -> landlord
+  confirms -> landlord dashboard shows the money.
+"""
+from datetime import timedelta
+from decimal import Decimal
+from io import StringIO
+
+from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.test import TestCase, override_settings
+from django.urls import reverse
+from django.utils import timezone
+
+from clients.models import Bill, Payment
+from properties.models import Property
+from users.models import Profile
+
+User = get_user_model()
+
+# The real storage needs `collectstatic` to have run; tests shouldn't.
+TEST_STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
+
+def make_property(owner, title):
+    return Property.objects.create(
+        title=title, property_type='residential', address='1 Test Rd', city='Nairobi',
+        state='Nairobi', zip_code='00100', description='x', area_sqft=500, price=Decimal('25000'),
+        owner=owner,
+    )
+
+
+def make_user(username, role='hunter', verified_owner=False):
+    user = User.objects.create_user(username, f'{username}@example.com', 'pass12345')
+    profile, _ = Profile.objects.get_or_create(user=user)
+    profile.role = role
+    profile.is_verified_owner = verified_owner
+    profile.save()
+    # users.signals re-saves the *cached* user.profile on every User.save()
+    # (incl. login), so hand back a fresh instance without a stale cache.
+    return User.objects.get(pk=user.pk)
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+class RentCollectionFlowTests(TestCase):
+    def setUp(self):
+        self.landlord = make_user('landlord', 'owner', verified_owner=True)
+        self.other_landlord = make_user('landlord2', 'owner', verified_owner=True)
+        self.tenant1 = make_user('tenant1')
+        self.tenant2 = make_user('tenant2')
+        self.prop = make_property(self.landlord, 'Block A')
+        self.other_prop = make_property(self.other_landlord, 'Block Z')
+
+    def assign(self, tenant, rent='25000'):
+        self.client.force_login(self.landlord)
+        return self.client.post(reverse('tenant_add'), {
+            'property': self.prop.pk,
+            'tenant_email': tenant.email,
+            'monthly_rent': rent,
+            'moved_in_date': timezone.now().date().isoformat(),
+            'generate_first_bill': 'on',
+        })
+
+    def test_full_flow(self):
+        # 1. landlord assigns two tenants to the same building
+        self.assertRedirects(self.assign(self.tenant1), reverse('tenant_list'))
+        self.assign(self.tenant2)
+        bill1 = Bill.objects.get(user=self.tenant1)
+        bill2 = Bill.objects.get(user=self.tenant2)
+        self.assertEqual(bill1.amount, Decimal('25000.00'))
+
+        # 2. landlord roster + bill list render
+        for name in ('tenant_list', 'bill_list', 'dashboard', 'client_list', 'invoice_list',
+                     'payment_list', 'contract_list', 'property_list'):
+            r = self.client.get(reverse(name))
+            self.assertEqual(r.status_code, 200, name)
+        self.assertContains(self.client.get(reverse('tenant_list')), 'tenant1')
+
+        # 3. tenant portal shows the tenant's own bill but not their neighbour's
+        self.client.force_login(self.tenant1)
+        r = self.client.get(reverse('my_profile'))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual([b.pk for b in r.context['bills']], [bill1.pk])
+        self.assertEqual(r.context['total_amount_due'], Decimal('25000.00'))
+
+        # 4. tenants can't pay (or even open) someone else's bill
+        self.assertEqual(self.client.get(reverse('tenant_bill_pay', args=[bill2.pk])).status_code, 403)
+        self.assertEqual(self.client.post(
+            reverse('tenant_bill_pay', args=[bill2.pk]), {'payment_method': 'mpesa'}).status_code, 403)
+        bill2.refresh_from_db()
+        self.assertEqual(bill2.status, 'pending')
+
+        # 5. tenant reports payment -> NOT yet paid; landlord must confirm
+        r = self.client.post(reverse('tenant_bill_pay', args=[bill1.pk]),
+                             {'payment_method': 'mpesa', 'transaction_id': 'QK7X8Y9Z1A'})
+        self.assertRedirects(r, reverse('my_profile'))
+        bill1.refresh_from_db()
+        self.assertEqual(bill1.status, 'processing')
+        payment = Payment.objects.get(bill=bill1)
+        self.assertEqual(payment.payment_status, 'pending')
+
+        # a second submit must not create a duplicate payment
+        self.client.post(reverse('tenant_bill_pay', args=[bill1.pk]),
+                         {'payment_method': 'mpesa', 'transaction_id': 'QK7X8Y9Z1A'})
+        self.assertEqual(Payment.objects.filter(bill=bill1).count(), 1)
+
+        # tenants can't confirm payments themselves
+        self.assertEqual(self.client.post(reverse('bill_mark_paid', args=[bill1.pk])).status_code, 403)
+
+        # 6. a different landlord can't confirm it either
+        self.client.force_login(self.other_landlord)
+        self.assertEqual(self.client.post(reverse('bill_mark_paid', args=[bill1.pk])).status_code, 403)
+
+        # 7. the real landlord confirms -> bill paid, payment completed
+        self.client.force_login(self.landlord)
+        self.client.post(reverse('bill_mark_paid', args=[bill1.pk]))
+        bill1.refresh_from_db()
+        payment.refresh_from_db()
+        self.assertEqual(bill1.status, 'paid')
+        self.assertEqual(payment.payment_status, 'completed')
+
+        # 8. landlord dashboard now counts the rent collected
+        r = self.client.get(reverse('dashboard'))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context['revenue_current_value'], 'KSh 25,000.00')
+
+        # 9. other landlord's dashboard and bill list stay empty
+        self.client.force_login(self.other_landlord)
+        self.assertEqual(self.client.get(reverse('dashboard')).context['revenue_current_value'], 'KSh 0.00')
+        self.assertEqual(self.client.get(reverse('bill_list')).context['total_bills'], 0)
+
+    def test_dashboard_denied_to_tenants(self):
+        self.client.force_login(self.tenant1)
+        self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
+
+    def test_landlord_cannot_assign_tenant_to_other_landlords_property(self):
+        self.client.force_login(self.landlord)
+        r = self.client.post(reverse('tenant_add'), {
+            'property': self.other_prop.pk, 'tenant_email': self.tenant1.email,
+            'monthly_rent': '100', 'moved_in_date': timezone.now().date().isoformat(),
+        })
+        self.assertEqual(r.status_code, 200)  # form re-rendered with an error
+        self.assertFalse(Profile.objects.filter(current_property=self.other_prop).exists())
+
+    def test_remove_tenant(self):
+        self.assign(self.tenant1)
+        profile = Profile.objects.get(user=self.tenant1)
+        self.client.force_login(self.other_landlord)
+        self.assertEqual(self.client.post(reverse('tenant_remove', args=[profile.pk])).status_code, 403)
+        self.client.force_login(self.landlord)
+        self.client.post(reverse('tenant_remove', args=[profile.pk]))
+        profile.refresh_from_db()
+        self.assertIsNone(profile.current_property)
+
+    def test_process_bills_marks_overdue_and_generates_recurring(self):
+        today = timezone.now().date()
+        self.assign(self.tenant1)
+        bill = Bill.objects.get(user=self.tenant1)
+        bill.due_date = today - timedelta(days=40)
+        bill.save()
+
+        call_command('process_bills', stdout=StringIO())
+        bill.refresh_from_db()
+        self.assertEqual(bill.status, 'overdue')
+
+        # recurring monthly: next month's bill exists exactly once, even after a re-run
+        call_command('process_bills', stdout=StringIO())
+        nxt = Bill.objects.filter(user=self.tenant1, bill_type='rent').exclude(pk=bill.pk)
+        self.assertTrue(nxt.exists())
+        self.assertEqual(nxt.filter(due_date__gt=bill.due_date).count(), nxt.count())
+        count = Bill.objects.count()
+        call_command('process_bills', stdout=StringIO())
+        self.assertEqual(Bill.objects.count(), count)
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+class UnifiedLedgerTests(TestCase):
+    """Invoice payments and confirmed tenant bill payments must both count
+    everywhere money-in is reported."""
+
+    def setUp(self):
+        from clients.models import Client
+        from contracts.models import Contract
+        from payments.models import Invoice, Payment as InvoicePayment
+
+        self.landlord = make_user('landlord', 'owner', verified_owner=True)
+        self.other = make_user('other', 'owner', verified_owner=True)
+        self.tenant = make_user('tenant')
+        self.prop = make_property(self.landlord, 'Block A')
+        today = timezone.now().date()
+
+        # System 1: landlord-recorded invoice payment, KES 10,000 cash
+        client = Client.objects.create(name='Walk In', email='w@x.com', phone='254700000001')
+        contract = Contract.objects.create(
+            contract_number='C1', contract_type='rental', property=self.prop, client=client,
+            start_date=today, end_date=today + timedelta(days=365))
+        invoice = Invoice.objects.create(
+            contract=contract, client=client, property=self.prop, amount=Decimal('10000'), due_date=today,
+            period_start=today, period_end=today)
+        InvoicePayment.objects.create(
+            invoice=invoice, client=client, amount=10000, payment_method='cash', payment_date=today)
+
+        # System 2: tenant bill payment confirmed by the landlord, KES 25,000 M-Pesa
+        bill = Bill.objects.create(property=self.prop, user=self.tenant, bill_type='rent',
+                                   description='Rent', amount=25000, due_date=today)
+        pay = Payment.objects.create(user=self.tenant, bill=bill, amount=25000,
+                                     payment_method='mpesa', payment_status='pending')
+        pay.mark_completed('QK1')
+
+    def test_ledger_totals_methods_and_scoping(self):
+        from payments import ledger
+        self.assertEqual(ledger.collected(self.landlord), Decimal('35000'))
+        self.assertEqual(ledger.collected(self.other), Decimal('0'))
+        self.assertEqual({m['payment_method']: m['total'] for m in ledger.by_method(self.landlord)},
+                         {'cash': Decimal('10000'), 'mpesa': Decimal('25000')})
+        today = timezone.now().date()
+        self.assertEqual(ledger.collected(self.landlord, payment_date=today), Decimal('35000'))
+        self.assertEqual(ledger.count(self.landlord, payment_date=today), 2)
+        self.assertEqual(len(ledger.recent(self.landlord, 5)), 2)
+        self.assertEqual(ledger.by_property(self.landlord)[0]['total'], Decimal('35000'))
+
+    def test_pages_show_combined_revenue(self):
+        self.client.force_login(self.landlord)
+        self.assertEqual(self.client.get(reverse('dashboard')).context['revenue_current_value'], 'KSh 35,000.00')
+        self.assertEqual(self.client.get(reverse('property_list')).context['total_revenue'], Decimal('35000'))
+        self.assertEqual(self.client.get(reverse('payment_list')).context['total_amount'], Decimal('35000'))
+        self.assertEqual(self.client.get(reverse('report_list')).status_code, 200)
+
+    def test_reports_include_both(self):
+        from Report.models import Report
+        today = timezone.now().date().isoformat()
+        self.client.force_login(self.landlord)
+
+        self.client.post(reverse('daily_report'), {'report_date': today})
+        daily = Report.objects.get(report_type='daily')
+        self.assertEqual(daily.status, 'completed', daily.report_data)
+        self.assertEqual(daily.total_revenue, Decimal('35000'))
+        self.assertEqual(daily.report_data['summary']['daily_transactions'], 2)
+        self.assertEqual(daily.report_data['top_properties'][0]['revenue'], 35000.0)
+
+        self.client.post(reverse('report_generate'), {
+            'report_type': 'custom', 'title': 'Custom', 'description': '',
+            'start_date': today, 'end_date': today,
+        })
+        custom = Report.objects.get(report_type='custom')
+        self.assertEqual(custom.status, 'completed')
+        self.assertEqual(custom.total_revenue, Decimal('35000'))
+
+        self.client.force_login(self.other)
+        self.client.post(reverse('daily_report'), {'report_date': today})
+        self.assertEqual(Report.objects.get(generated_by=self.other).total_revenue, Decimal('0'))
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+class RecurringBacklogTests(TestCase):
+    def setUp(self):
+        self.landlord = make_user('landlord', 'owner', verified_owner=True)
+        self.tenant = make_user('tenant')
+        self.prop = make_property(self.landlord, 'Block A')
+        Profile.objects.filter(user=self.tenant).update(current_property=self.prop)
+
+    def make_bill(self, days_ago, interval='monthly'):
+        return Bill.objects.create(
+            property=self.prop, user=self.tenant, bill_type='rent', description='Rent', amount=1000,
+            due_date=timezone.now().date() - timedelta(days=days_ago), is_recurring=True,
+            recurrence_interval=interval)
+
+    def run_cmd(self):
+        call_command('process_bills', stdout=StringIO())
+
+    def test_every_missed_month_is_backfilled_once(self):
+        from clients.management.commands.process_bills import add_periods
+        first = self.make_bill(days_ago=100)
+        self.run_cmd()
+        bills = list(Bill.objects.filter(user=self.tenant).order_by('due_date'))
+        expected = [add_periods(first.due_date, 'monthly', k) for k in range(0, 4)]
+        expected = [d for d in expected if d <= timezone.now().date()]
+        self.assertEqual([b.due_date for b in bills], expected)
+        self.assertGreaterEqual(len(bills), 4)  # 100 days is always at least 3 missed months
+        # all past-due ones are overdue, and only the newest keeps recurring
+        self.assertTrue(all(b.status == 'overdue' for b in bills))
+        self.assertEqual([b.is_recurring for b in bills], [False] * (len(bills) - 1) + [True])
+        self.run_cmd()  # idempotent
+        self.assertEqual(Bill.objects.filter(user=self.tenant).count(), len(bills))
+
+    def test_no_drift_on_month_end(self):
+        from datetime import date
+        from clients.management.commands.process_bills import add_periods
+        self.assertEqual(add_periods(date(2026, 1, 31), 'monthly', 1), date(2026, 2, 28))
+        self.assertEqual(add_periods(date(2026, 1, 31), 'monthly', 2), date(2026, 3, 31))
+        self.assertEqual(add_periods(date(2026, 1, 15), 'quarterly', 1), date(2026, 4, 15))
+        self.assertEqual(add_periods(date(2026, 1, 15), 'weekly', 2), date(2026, 1, 29))
+
+    def test_moved_out_tenant_stops_being_billed(self):
+        bill = self.make_bill(days_ago=100)
+        Profile.objects.filter(user=self.tenant).update(current_property=None)
+        self.run_cmd()
+        self.assertEqual(Bill.objects.filter(user=self.tenant).count(), 1)
+        bill.refresh_from_db()
+        self.assertFalse(bill.is_recurring)
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+class InvoiceRetirementTests(TestCase):
+    """Bills are the one billing system: invoices are read-only history, and
+    `migrate_invoices_to_bills` moves them over without double counting."""
+
+    def setUp(self):
+        from clients.models import Client
+        from contracts.models import Contract
+        from payments.models import Invoice, Payment as InvoicePayment
+
+        self.landlord = make_user('landlord', 'owner', verified_owner=True)
+        self.tenant = make_user('tenant')
+        self.prop = make_property(self.landlord, 'Block A')
+        today = timezone.now().date()
+        account_client = Client.objects.create(user=self.tenant, name='Tenant', email='tenant@example.com',
+                                               phone='254700000002')
+        walk_in = Client.objects.create(name='Walk In', email='w@x.com', phone='254700000001')
+
+        def invoice(client, number, total, status, paid):
+            contract = Contract.objects.create(
+                contract_number='C-' + number, contract_type='rental', property=self.prop, client=client,
+                start_date=today, end_date=today + timedelta(days=365))
+            inv = Invoice.objects.create(
+                invoice_number=number, contract=contract, client=client, property=self.prop,
+                amount=Decimal(total), due_date=today, period_start=today, period_end=today, status=status)
+            if paid:
+                InvoicePayment.objects.create(invoice=inv, client=client, amount=Decimal(paid),
+                                              payment_method='cash', payment_date=today)
+            return inv
+
+        self.paid = invoice(account_client, 'INV-PAID', '10000', 'paid', '10000')
+        self.partial = invoice(walk_in, 'INV-PART', '8000', 'partial', '3000')
+        self.open = invoice(account_client, 'INV-OPEN', '5000', 'pending', None)
+
+    def test_legacy_mutations_redirect_to_bills(self):
+        self.client.force_login(self.landlord)
+        for name, args, target in [('invoice_add', [], 'bill_create'), ('invoice_edit', [self.open.pk], 'bill_list'),
+                                   ('invoice_delete', [self.open.pk], 'bill_list'),
+                                   ('payment_add_for_invoice', [self.open.pk], 'bill_list')]:
+            for method in (self.client.get, self.client.post):
+                self.assertRedirects(method(reverse(name, args=args)), reverse(target))
+        self.assertEqual(self.open.__class__.objects.filter(pk=self.open.pk).count(), 1)
+        # history stays readable
+        for name, args in [('invoice_list', []), ('invoice_detail', [self.paid.pk]), ('payment_list', [])]:
+            self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 200)
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse('invoice_add')).status_code, 302)
+        self.assertIn('login', self.client.get(reverse('invoice_add'))['Location'])
+
+    def test_migration_moves_everything_without_double_counting(self):
+        from payments import ledger
+        before = ledger.collected(self.landlord)
+        self.assertEqual(before, Decimal('13000'))
+
+        call_command('migrate_invoices_to_bills', '--dry-run', stdout=StringIO())
+        self.assertEqual(Bill.objects.count(), 0)
+
+        call_command('migrate_invoices_to_bills', stdout=StringIO())
+        self.assertEqual(Bill.objects.count(), 3)
+        self.assertEqual(ledger.collected(self.landlord), before)  # same money, counted once
+
+        paid = Bill.objects.get(reference_number='INV-PAID')
+        self.assertEqual((paid.status, paid.user), ('paid', self.tenant))
+        part = Bill.objects.get(reference_number='INV-PART')
+        self.assertEqual((part.status, part.amount), ('pending', Decimal('5000.00')))
+        self.assertEqual(part.user, self.landlord)             # off-platform client held by the owner,
+        self.assertIn('Walk In', part.description)             # never shown to other residents
+        self.assertEqual(part.payments.get().payment_status, 'completed')
+
+        self.open.refresh_from_db()
+        self.assertEqual(self.open.status, 'cancelled')        # superseded by its bill
+        self.assertEqual(self.open.migrated_bill.amount, Decimal('5000.00'))
+
+        # tenant sees their migrated bills, not the walk-in's
+        self.client.force_login(self.tenant)
+        Profile.objects.filter(user=self.tenant).update(current_property=self.prop)
+        refs = {b.reference_number for b in self.client.get(reverse('my_profile')).context['bills']}
+        self.assertEqual(refs, {'INV-PAID', 'INV-OPEN'})
+
+        # landlord's tenant portal page for the old invoice links to the bill
+        self.client.force_login(self.landlord)
+        self.assertContains(self.client.get(reverse('invoice_detail', args=[self.open.pk])), 'Open Bill')
+
+        call_command('migrate_invoices_to_bills', stdout=StringIO())  # idempotent
+        self.assertEqual(Bill.objects.count(), 3)
+        self.assertEqual(ledger.collected(self.landlord), before)

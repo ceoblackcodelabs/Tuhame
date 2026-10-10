@@ -14,6 +14,7 @@ from properties.models import Property
 from clients.models import Client
 from contracts.models import Contract
 from payments.models import Invoice, Payment
+from payments import ledger
 
 
 class ReportListView(LoginRequiredMixin, ListView):
@@ -78,9 +79,7 @@ class ReportListView(LoginRequiredMixin, ListView):
         line_chart_data = []
         for i in range(6, -1, -1):
             date = today - timezone.timedelta(days=i)
-            daily_total = own_payments.filter(
-                status='paid', payment_date=date
-            ).aggregate(total=Sum('amount'))['total'] or 0
+            daily_total = ledger.collected(self.request.user, payment_date=date)
             line_chart_labels.append(date.strftime('%m/%d'))
             line_chart_data.append(float(daily_total))
 
@@ -258,18 +257,11 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
         ).count()
 
         # Financial statistics
-        payments = owner_payments.filter(
-            status='paid',
-            payment_date__gte=start_date,
-            payment_date__lte=end_date
-        )
+        owner = report.generated_by
+        period = dict(payment_date__gte=start_date, payment_date__lte=end_date)
+        total_revenue = ledger.collected(owner, **period)
 
-        total_revenue = payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')
-
-        payment_by_method = payments.values('payment_method').annotate(
-            count=Count('id'),
-            total=Sum('amount')
-        )
+        payment_by_method = ledger.by_method(owner, **period)
 
         payment_methods_list = []
         for item in payment_by_method:
@@ -302,15 +294,12 @@ class ReportGenerateView(LoginRequiredMixin, FormView):
         if report.report_type == ReportType.DAILY:
             current_date = start_date
             while current_date <= end_date:
-                day_payments = owner_payments.filter(
-                    status='paid',
-                    payment_date=current_date
-                ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+                day_payments = ledger.collected(owner, payment_date=current_date)
 
                 daily_data.append({
                     'date': current_date.strftime('%Y-%m-%d'),
                     'revenue': float(day_payments),
-                    'transactions': owner_payments.filter(payment_date=current_date).count()
+                    'transactions': ledger.count(owner, payment_date=current_date)
                 })
                 current_date += timezone.timedelta(days=1)
 
@@ -420,11 +409,8 @@ class DailyReportView(LoginRequiredMixin, FormView):
         ).count()
 
         # Daily financial statistics
-        daily_payments = owner_payments.filter(
-            status='paid',
-            payment_date=report_date
-        )
-        daily_revenue = daily_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        owner = report.generated_by
+        daily_revenue = ledger.collected(owner, payment_date=report_date)
 
         # Daily transactions
         daily_invoices = owner_invoices.filter(
@@ -432,10 +418,7 @@ class DailyReportView(LoginRequiredMixin, FormView):
         ).count()
 
         # Payment breakdown by method
-        payment_breakdown = daily_payments.values('payment_method').annotate(
-            count=Count('id'),
-            total=Sum('amount')
-        )
+        payment_breakdown = ledger.by_method(owner, payment_date=report_date)
 
         # Convert payment breakdown for JSON serialization
         payment_breakdown_list = []
@@ -447,20 +430,10 @@ class DailyReportView(LoginRequiredMixin, FormView):
             })
 
         # Top properties (by revenue)
-        top_properties = daily_payments.values(
-            'invoice__property__title',
-            'invoice__property__city'
-        ).annotate(
-            total=Sum('amount')
-        ).order_by('-total')[:5]
-
-        top_properties_list = []
-        for item in top_properties:
-            top_properties_list.append({
-                'name': item['invoice__property__title'] or 'Unknown',
-                'city': item['invoice__property__city'] or 'Unknown',
-                'revenue': float(item['total']) if item['total'] else 0
-            })
+        top_properties_list = [
+            {'name': item['title'] or 'Unknown', 'city': item['city'] or 'Unknown', 'revenue': float(item['total'])}
+            for item in ledger.by_property(owner, 5, payment_date=report_date)
+        ]
 
         # Update report statistics
         report.total_properties = owner_properties.filter(is_active=True).count()
@@ -475,7 +448,7 @@ class DailyReportView(LoginRequiredMixin, FormView):
                 'new_properties': new_properties,
                 'new_clients': new_clients,
                 'daily_revenue': float(daily_revenue),
-                'daily_transactions': daily_payments.count(),
+                'daily_transactions': ledger.count(owner, payment_date=report_date),
                 'daily_invoices': daily_invoices,
             },
             'payment_breakdown': payment_breakdown_list,
@@ -487,14 +460,9 @@ class DailyReportView(LoginRequiredMixin, FormView):
 
     def get_hourly_breakdown(self, report_date, generated_by=None, is_super=False):
         """Get hourly payment breakdown for the day"""
-        owner_payments = Payment.objects.all() if is_super else Payment.objects.filter(invoice__property__owner=generated_by)
         hourly_data = []
         for hour in range(24):
-            payments = owner_payments.filter(
-                status='paid',
-                payment_date=report_date,
-                created_at__hour=hour
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            payments = ledger.collected(generated_by, payment_date=report_date, created_at__hour=hour)
 
             hourly_data.append({
                 'hour': hour,

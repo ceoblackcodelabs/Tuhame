@@ -11,10 +11,9 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="card-title">Invoice Details</h4>
                             <div>
-                                {% if can_add_payment %}
-                                    <a href="{% url 'payment_add_for_invoice' invoice.pk %}" class="btn btn-success">Record Payment</a>
+                                {% if invoice.migrated_bill_id %}
+                                    <a href="{% url 'bill_update' invoice.migrated_bill_id %}" class="btn btn-primary">Open Bill</a>
                                 {% endif %}
-                                <a href="{% url 'invoice_edit' invoice.pk %}" class="btn btn-primary">Edit Invoice</a>
                                 <a href="{% url 'invoice_list' %}" class="btn btn-secondary">Back</a>
                             </div>
                         </div>

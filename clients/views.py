@@ -568,10 +568,18 @@ class BillMarkPaidView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user.is_superuser or self.request.user == bill.property.owner
 
     def form_valid(self, form):
-        bill = self.get_object()
-        bill.mark_as_paid()
+        # Don't call super(): it would re-save the stale instance loaded
+        # before we changed its status, silently reverting "paid".
+        bill = self.object
+        pending = bill.payments.filter(payment_status='pending').order_by('-created_at').first()
+        if pending:
+            pending.bill = bill
+            pending.mark_completed()  # also marks the bill paid
+            bill.payments.filter(payment_status='pending').update(payment_status='cancelled')
+        else:
+            bill.mark_as_paid()
         messages.success(self.request, f'Bill "{bill.description}" has been marked as paid!')
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -728,10 +736,11 @@ class TenantBillPayView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         bill = self.get_bill()
         user = self.request.user
+        if bill.user_id is not None:
+            return bill.user_id == user.id
+        # Building-wide bill (no assigned tenant): any current resident may pay it.
         profile = getattr(user, 'profile', None)
-        is_billed_tenant = bill.user_id == user.id
-        is_resident = profile and profile.current_property_id == bill.property_id
-        return is_billed_tenant or is_resident
+        return bool(profile and profile.current_property_id == bill.property_id)
 
     def get(self, request, *args, **kwargs):
         bill = self.get_bill()
@@ -743,23 +752,30 @@ class TenantBillPayView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         bill = self.get_bill()
-        if bill.status == 'paid':
-            messages.info(request, 'This bill is already marked as paid.')
+        if bill.status in ('paid', 'processing'):
+            messages.info(request, 'This bill is already paid or awaiting your landlord\u2019s confirmation.')
             return redirect('my_profile')
 
         form = TenantPaymentForm(request.POST)
         if form.is_valid():
             reference = form.cleaned_data.get('transaction_id', '')
-            payment = Payment.objects.create(
+            Payment.objects.create(
                 user=request.user,
                 bill=bill,
                 amount=bill.amount,
                 payment_method=form.cleaned_data['payment_method'],
                 payment_status='pending',
                 transaction_id=reference,
+                mpesa_code=reference if form.cleaned_data['payment_method'] == 'mpesa' else '',
             )
-            payment.mark_completed(transaction_id=reference)  # also marks the bill paid
-            messages.success(request, f'Payment recorded \u2013 "{bill.description}" is now marked as paid.')
+            # A tenant's own say-so is not proof of payment: the bill stays
+            # "processing" until the landlord confirms receipt (BillMarkPaidView).
+            bill.status = 'processing'
+            bill.save(update_fields=['status', 'updated_at'])
+            messages.success(
+                request,
+                f'Payment submitted \u2013 "{bill.description}" is awaiting your landlord\u2019s confirmation.'
+            )
             return redirect('my_profile')
 
         return render(request, self.template_name, {'bill': bill, 'form': form})

@@ -9,6 +9,7 @@ from properties.models import Property
 from clients.models import Client
 from contracts.models import Contract
 from payments.models import Invoice, Payment
+from payments import ledger
 from properties.models import PropertyType
 
 
@@ -32,6 +33,9 @@ class Dashboard(LoginRequiredMixin, TemplateView):
             own_properties = Property.objects.filter(owner=user)
             own_payments = Payment.objects.filter(invoice__property__owner=user)
 
+        def collected(**lookups):
+            return ledger.collected(user, **lookups)
+
         # ============ STATS CARDS DATA ============
 
         # Potential growth (Total Properties Growth)
@@ -43,33 +47,19 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         potential_growth = (last_month_properties / total_properties * 100) if total_properties > 0 else 0
 
         # Revenue current (Monthly Revenue)
-        monthly_revenue = own_payments.filter(
-            status='paid',
-            payment_date__year=today.year,
-            payment_date__month=today.month
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        monthly_revenue = collected(payment_date__year=today.year, payment_date__month=today.month)
 
         # Previous month revenue for growth calculation
-        prev_month_revenue = own_payments.filter(
-            status='paid',
-            payment_date__year=last_month.year,
-            payment_date__month=last_month.month
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        prev_month_revenue = collected(payment_date__year=last_month.year, payment_date__month=last_month.month)
 
         revenue_growth = ((monthly_revenue - prev_month_revenue) / prev_month_revenue * 100) if prev_month_revenue > 0 else 0
 
         # Daily Income (Today's Revenue)
-        daily_income = own_payments.filter(
-            status='paid',
-            payment_date=today
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        daily_income = collected(payment_date=today)
 
         # Yesterday's income for comparison
         yesterday = today - timedelta(days=1)
-        yesterday_income = own_payments.filter(
-            status='paid',
-            payment_date=yesterday
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        yesterday_income = collected(payment_date=yesterday)
 
         daily_income_growth = ((daily_income - yesterday_income) / yesterday_income * 100) if yesterday_income > 0 else 0
 
@@ -108,10 +98,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
-            daily_total = own_payments.filter(
-                status='paid',
-                payment_date=date
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            daily_total = collected(payment_date=date)
             line_chart_dates.append(date.strftime('%m/%d'))
             line_chart_values.append(float(daily_total))
 
@@ -146,12 +133,10 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         # ============ TRANSACTION HISTORY ============
 
         # Total for doughnut chart
-        total_payments = own_payments.filter(status='paid').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        total_payments = collected()
 
         # Payment methods breakdown for doughnut chart
-        payment_methods = own_payments.filter(status='paid').values('payment_method').annotate(
-            total=Sum('amount')
-        )
+        payment_methods = ledger.by_method(user)
 
         doughnut_labels = []
         doughnut_data = []
@@ -162,7 +147,8 @@ class Dashboard(LoginRequiredMixin, TemplateView):
             'credit_card': 'Credit Card',
             'debit_card': 'Debit Card',
             'check': 'Check',
-            'online': 'Online'
+            'online': 'Online',
+            'mpesa': 'M-Pesa',
         }
 
         for method in payment_methods:
@@ -174,15 +160,14 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         context['total_transactions_value'] = f"KSh {float(total_payments):,.0f}"
 
         # Recent transactions list
-        recent_transactions = own_payments.filter(status='paid').select_related('client').order_by('-payment_date')[:2]
-
-        transaction_list = []
-        for transaction in recent_transactions:
-            transaction_list.append({
-                'description': f"Payment from {transaction.client.name}",
-                'date': transaction.payment_date.strftime('%d %b %Y, %I:%M%p'),
-                'amount': f"KSh {float(transaction.amount):,.0f}"
-            })
+        transaction_list = [
+            {
+                'description': f"Payment from {t['who']}",
+                'date': t['payment_date'].strftime('%d %b %Y'),
+                'amount': f"KSh {float(t['amount']):,.0f}",
+            }
+            for t in ledger.recent(user, 2)
+        ]
 
         context['recent_transactions'] = transaction_list
 
@@ -206,7 +191,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         # ============ BOTTOM STATS CARDS ============
 
         # Revenue (Total Revenue All Time)
-        total_revenue_all = own_payments.filter(status='paid').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        total_revenue_all = collected()
 
         # Sales (Active Properties Value)
         active_properties_value = own_properties.filter(is_active=True, status='available').aggregate(
@@ -223,11 +208,7 @@ class Dashboard(LoginRequiredMixin, TemplateView):
         context['purchase_value'] = f"KSh {float(total_maintenance):,.0f}"
 
         # Calculate percentages for bottom stats
-        last_month_revenue = own_payments.filter(
-            status='paid',
-            payment_date__gte=last_month,
-            payment_date__lte=today
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        last_month_revenue = collected(payment_date__gte=last_month, payment_date__lte=today)
 
         revenue_bottom_growth = ((total_revenue_all - last_month_revenue) / last_month_revenue * 100) if last_month_revenue > 0 else 0
 

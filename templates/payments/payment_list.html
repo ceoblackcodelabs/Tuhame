@@ -271,15 +271,6 @@
                                                         </a>
                                                     </li>
                                                     {% endif %}
-                                                    {% if user.is_staff %}
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li>
-                                                        <a class="dropdown-item text-danger" href="{% url 'payment_delete' payment.pk %}"
-                                                           onclick="return confirm('Delete this payment?')">
-                                                            <i class="mdi mdi-delete"></i> Delete
-                                                        </a>
-                                                    </li>
-                                                    {% endif %}
                                                 </ul>
                                             </div>
                                         </td>
@@ -290,8 +281,8 @@
                                             <div class="text-muted">
                                                 <i class="mdi mdi-credit-card-off display-1"></i>
                                                 <p class="mt-3">No payments found</p>
-                                                <a href="{% url 'invoice_list' %}" class="btn btn-primary btn-sm">
-                                                    Create an Invoice First
+                                                <a href="{% url 'bill_list' %}" class="btn btn-primary btn-sm">
+                                                    Go to Bills
                                                 </a>
                                             </div>
                                         </td>
