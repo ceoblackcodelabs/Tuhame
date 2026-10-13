@@ -3,8 +3,19 @@
 {% load icons %}
 {% load phone_filters %}
 
-{% block title %}{% if selected_category_label %}{{ selected_category_label }}s{% else %}Home Services{% endif %} in Kenya – Tuhame{% endblock title %}
-{% block meta_description %}Find trusted plumbers, electricians, cleaners, painters and other home service providers in Kenya on Tuhame. Call or WhatsApp them directly.{% endblock meta_description %}
+{% block title %}{% if selected_category_label %}{{ selected_category_label }}s in Kenya – Book Trusted Pros{% else %}Home Services in Kenya – Plumbers, Electricians, Cleaners{% endif %} | {{ site_name }}{% endblock title %}
+{% block meta_description %}{% if selected_category_label %}Find and book trusted {{ selected_category_label|lower }}s in Kenya. Compare ratings and reviews, send a request, and agree the price directly on {{ site_name }}.{% else %}Find and book trusted plumbers, electricians, cleaners, painters and other home service providers in Kenya. Compare ratings, send a request or call directly on {{ site_name }}.{% endif %}{% endblock meta_description %}
+{% block robots %}{% if query %}noindex, follow{% else %}index, follow, max-snippet:160, max-image-preview:large{% endif %}{% endblock robots %}
+{% block canonical_url %}{{ site_url }}{% url 'home:services' %}{% if selected_category %}?category={{ selected_category }}{% endif %}{% endblock canonical_url %}
+{% block og_title %}{% if selected_category_label %}{{ selected_category_label }}s in Kenya{% else %}Home services in Kenya{% endif %} | {{ site_name }}{% endblock og_title %}
+{% block breadcrumb_schema %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+ {"@type":"ListItem","position":1,"name":"Home","item":"{{ site_url }}/"},
+ {"@type":"ListItem","position":2,"name":"Services","item":"{{ site_url }}{% url 'home:services' %}"}{% if selected_category_label %},
+ {"@type":"ListItem","position":3,"name":"{{ selected_category_label }}s","item":"{{ site_url }}{% url 'home:services' %}?category={{ selected_category }}"}{% endif %}]}
+</script>
+{% endblock breadcrumb_schema %}
 
 {% block nav_class %}over-hero{% endblock nav_class %}
 

@@ -14,7 +14,7 @@
   <meta property="og:title" content="{% block og_title %}{{ brand_name }}{% endblock og_title %}" />
   <meta property="og:description" content="{% block og_description %}{{ brand_name }} - property listings on 2Hame{% endblock og_description %}" />
   <meta property="og:url" content="{% block og_url %}{% endblock og_url %}" />
-  <meta property="og:image" content="{% block og_image %}{% if profile_picture_url %}https://2hame.com{{ profile_picture_url }}{% endif %}{% endblock og_image %}" />
+  <meta property="og:image" content="{% block og_image %}{% if profile_picture_url %}{{ site_url }}{{ profile_picture_url }}{% endif %}{% endblock og_image %}" />
   <meta name="twitter:card" content="summary_large_image" />
 
   <link rel="icon" type="image/svg+xml" href="{% static 'assets/images/favicon.svg' %}" />

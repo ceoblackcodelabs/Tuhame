@@ -7,8 +7,8 @@
   <!-- ─── PRIMARY SEO ─── -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="{% block meta_description %}2Hame – Kenya's property platform to find, list, manage and move. Search rentals, apartments and houses, list your property, manage tenants and rent, and build your own property profile online.{% endblock meta_description %}" />
-  <meta name="keywords" content="{% block meta_keywords %}real estate Kenya, property listings, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property agents, real estate investors, find movers, housing marketplace, 2Hame, Kenya property{% endblock meta_keywords %}" />
+  <meta name="description" content="{% block meta_description %}{{ site_name }} – Kenya's property platform: find homes and rentals, list properties free, collect rent and manage tenants, and book trusted plumbers, electricians, cleaners and movers.{% endblock meta_description %}" />
+  <meta name="keywords" content="{% block meta_keywords %}houses for rent Kenya, apartments Nairobi, rental property management Kenya, rent collection software, tenant portal, landlord software Kenya, plumbers Nairobi, electricians Kenya, home services Kenya, movers Nairobi, list property free{% endblock meta_keywords %}" />
   <meta name="robots" content="{% block robots %}index, follow, max-snippet:160, max-image-preview:large{% endblock robots %}" />
   <meta name="author" content="2Hame by BlackCodeLabs" />
   <meta name="revisit-after" content="1 day" />
@@ -19,19 +19,19 @@
   <meta name="ICBM" content="-1.286389, 36.817223" />
 
   <!-- ─── CANONICAL ─── -->
-  <link rel="canonical" href="{% block canonical_url %}https://2hame.com{% endblock canonical_url %}" />
+  <link rel="canonical" href="{% block canonical_url %}{{ page_url }}{% endblock canonical_url %}" />
 
   <!-- ─── OPEN GRAPH (Social Media) ─── -->
   <meta property="og:title" content="{% block og_title %}2Hame – Find, List, Manage & Move | Kenya Property Platform{% endblock og_title %}" />
   <meta property="og:description" content="{% block og_description %}2Hame helps you find, list, manage and move. Search verified property listings, list your own property, manage tenants and rent, and build a professional property profile online — all in one platform.{% endblock og_description %}" />
   <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}" />
-  <meta property="og:url" content="{% block og_url %}https://2hame.com{% endblock og_url %}" />
-  <meta property="og:image" content="{% block og_image %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endblock og_image %}" />
+  <meta property="og:url" content="{% block og_url %}{{ page_url }}{% endblock og_url %}" />
+  <meta property="og:image" content="{% block og_image %}{{ site_url }}{% static 'assets/img/og-image.png' %}{% endblock og_image %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:alt" content="{% block og_image_alt %}2Hame - Find, List, Manage & Move{% endblock og_image_alt %}" />
-  <meta property="og:site_name" content="2Hame" />
+  <meta property="og:site_name" content="{{ site_name }}" />
   <meta property="og:locale" content="en_KE" />
   <meta property="og:updated_time" content="{% now 'c' %}" />
 
@@ -41,20 +41,20 @@
   <meta name="twitter:creator" content="@2hamehousing" />
   <meta name="twitter:title" content="{% block twitter_title %}2Hame – Find, List, Manage & Move{% endblock twitter_title %}" />
   <meta name="twitter:description" content="{% block twitter_description %}Search property listings, list your own property, manage tenants and rent, and build your property profile online — with 2Hame.{% endblock twitter_description %}" />
-  <meta name="twitter:image" content="{% block twitter_image %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endblock twitter_image %}" />
+  <meta name="twitter:image" content="{% block twitter_image %}{{ site_url }}{% static 'assets/img/og-image.png' %}{% endblock twitter_image %}" />
   <meta name="twitter:image:alt" content="{% block twitter_image_alt %}2Hame - Find, List, Manage & Move{% endblock twitter_image_alt %}" />
 
   <!-- ─── STRUCTURED DATA (JSON-LD) ─── -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "RealEstateAgent",
-      "@id": "https://2hame.com/#organization",
+      "@type": ["RealEstateAgent", "Organization"],
+      "@id": "{{ site_url }}/#organization",
       "name": "2Hame",
-      "url": "https://2hame.com",
-      "logo": "https://2hame.com/static/assets/img/all.png",
-      "image": "https://2hame.com/static/assets/img/all.png",
-      "description": "2Hame is Kenya's property platform to find, list, manage and move. Search rentals and property listings, list your own property, manage tenants and rent, and get your own free branded property website hosted on 2Hame.",
+      "url": "{{ site_url }}",
+      "logo": "{{ site_url }}/static/assets/img/all.png",
+      "image": "{{ site_url }}/static/assets/img/all.png",
+      "description": "{{ site_name }} is Kenya's property platform: find homes and rentals, list properties free, collect rent and manage tenants, and hire trusted local service providers. Landlords also get a free branded property website hosted on 2Hame.",
       "founder": {
         "@type": "Person",
         "name": "2Hame Team"
@@ -91,16 +91,16 @@
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "@id": "https://2hame.com/#website",
-      "url": "https://2hame.com",
+      "@id": "{{ site_url }}/#website",
+      "url": "{{ site_url }}",
       "name": "2Hame – Find, List, Manage & Move",
       "description": "2Hame helps you find your next home, list and market your property, manage tenants and rent, and get your own free branded property website — no coding needed.",
       "publisher": {
-        "@id": "https://2hame.com/#organization"
+        "@id": "{{ site_url }}/#organization"
       },
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://2hame.com{% url 'home:properties' %}?search={search_term_string}",
+        "target": "{{ site_url }}{% url 'home:properties' %}?search={search_term_string}",
         "query-input": "required name=search_term_string"
       },
       "inLanguage": "en-KE"

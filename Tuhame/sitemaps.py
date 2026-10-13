@@ -1,10 +1,29 @@
-from django.contrib.sitemaps import Sitemap
+from types import SimpleNamespace
+from urllib.parse import urlparse
+
+from django.conf import settings
+from django.contrib.sitemaps import Sitemap as DjangoSitemap
 from django.urls import reverse
 from django.db.models import Count, Q
 
 from blog.models import BlogPost
 from properties.models import Property, PropertyStatus
 from users.models import Profile
+
+
+class Sitemap(DjangoSitemap):
+    """Always emit URLs on the canonical SITE_URL (https + the real domain),
+    not whatever host/scheme the request happened to arrive on - behind
+    Passenger/a proxy that is often plain http or a bare IP, which would put
+    wrong URLs into the sitemap."""
+
+    def get_urls(self, page=1, site=None, protocol=None):
+        parsed = urlparse(settings.SITE_URL)
+        return super().get_urls(
+            page=page,
+            site=SimpleNamespace(domain=parsed.netloc, name=settings.SITE_NAME),
+            protocol=parsed.scheme or 'https',
+        )
 
 
 class PropertySitemap(Sitemap):
@@ -51,6 +70,39 @@ class OwnerPortfolioSitemap(Sitemap):
         return reverse('home:owner_portfolio', kwargs={'username': obj.user.username})
 
 
+class ServiceProviderSitemap(Sitemap):
+    """Public provider pages (each has its own rating/reviews schema)."""
+    changefreq = 'weekly'
+    priority = 0.6
+
+    def items(self):
+        return Profile.objects.filter(
+            role='provider', is_active=True, user__is_active=True,
+        ).exclude(service_category='').select_related('user').order_by('user__username')
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+    def location(self, obj):
+        return reverse('home:provider_detail', kwargs={'username': obj.user.username})
+
+
+class ServiceCategorySitemap(Sitemap):
+    """One landing page per trade that actually has providers
+    (/services/?category=plumber) - empty categories aren't worth indexing."""
+    changefreq = 'weekly'
+    priority = 0.7
+
+    def items(self):
+        return list(
+            Profile.objects.filter(role='provider', is_active=True, user__is_active=True)
+            .exclude(service_category='').values_list('service_category', flat=True).distinct().order_by('service_category')
+        )
+
+    def location(self, item):
+        return f"{reverse('home:services')}?category={item}"
+
+
 class BlogPostSitemap(Sitemap):
     changefreq = 'weekly'
     priority = 0.6
@@ -74,6 +126,8 @@ class StaticViewSitemap(Sitemap):
             'home:home',
             'home:properties',
             'home:property_map',
+            'home:services',
+            'home:services_map',
             'home:contact',
             'home:terms_of_service',
             'home:privacy_policy',

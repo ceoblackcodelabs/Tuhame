@@ -9,7 +9,10 @@ from django.conf.urls.static import static
 from django.views.static import serve as serve_static
 from django.views.generic import RedirectView, TemplateView
 
-from .sitemaps import PropertySitemap, OwnerPortfolioSitemap, BlogPostSitemap, StaticViewSitemap
+from .sitemaps import (
+    PropertySitemap, OwnerPortfolioSitemap, BlogPostSitemap, StaticViewSitemap,
+    ServiceProviderSitemap, ServiceCategorySitemap,
+)
 
 def favicon_redirect(request):
     # Resolved per request, not at import time: with a manifest storage a
@@ -22,6 +25,8 @@ def favicon_redirect(request):
 sitemaps = {
     'properties': PropertySitemap,
     'owners': OwnerPortfolioSitemap,
+    'services': ServiceCategorySitemap,
+    'providers': ServiceProviderSitemap,
     'blog': BlogPostSitemap,
     'static': StaticViewSitemap,
 }

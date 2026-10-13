@@ -9,7 +9,7 @@
 
 {% block meta_keywords %}{{ post.seo_keywords|default:post.tags }}{% endblock meta_keywords %}
 
-{% block canonical_url %}https://2hame.com{{ post.get_absolute_url }}{% endblock canonical_url %}
+{% block canonical_url %}{{ site_url }}{{ post.get_absolute_url }}{% endblock canonical_url %}
 
 {% block og_title %}{{ post.display_title }} – 2Hame Blog{% endblock og_title %}
 
@@ -17,15 +17,15 @@
 
 {% block og_type %}article{% endblock og_type %}
 
-{% block og_url %}https://2hame.com{{ post.get_absolute_url }}{% endblock og_url %}
+{% block og_url %}{{ site_url }}{{ post.get_absolute_url }}{% endblock og_url %}
 
-{% block og_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endif %}{% endblock og_image %}
+{% block og_image %}{% if post.cover_image %}{{ site_url }}{{ post.cover_image.url }}{% else %}{{ site_url }}{% static 'assets/img/og-image.png' %}{% endif %}{% endblock og_image %}
 
 {% block twitter_title %}{{ post.display_title }} – 2Hame Blog{% endblock twitter_title %}
 
 {% block twitter_description %}{{ post.meta_description|default:post.excerpt|default:post.content|striptags|truncatewords:30 }}{% endblock twitter_description %}
 
-{% block twitter_image %}{% if post.cover_image %}https://2hame.com{{ post.cover_image.url }}{% else %}https://2hame.com{% static 'assets/img/og-image.png' %}{% endif %}{% endblock twitter_image %}
+{% block twitter_image %}{% if post.cover_image %}{{ site_url }}{{ post.cover_image.url }}{% else %}{{ site_url }}{% static 'assets/img/og-image.png' %}{% endif %}{% endblock twitter_image %}
 
 <!-- ─── ARTICLE SCHEMA ─── -->
 {% block property_schema %}
@@ -33,13 +33,13 @@
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "@id": "https://2hame.com{{ post.get_absolute_url }}#article",
+  "@id": "{{ site_url }}{{ post.get_absolute_url }}#article",
   "headline": "{{ post.display_title|escapejs }}",
   "description": "{{ post.meta_description|default:post.excerpt|default:post.content|striptags|truncatewords:30|escapejs }}",
   "datePublished": "{{ post.published_at|date:'c' }}",
   "dateModified": "{{ post.updated_at|date:'c' }}",
   "wordCount": {{ post.content|striptags|wordcount }},
-  {% if post.cover_image %}"image": "https://2hame.com{{ post.cover_image.url }}",{% endif %}
+  {% if post.cover_image %}"image": "{{ site_url }}{{ post.cover_image.url }}",{% endif %}
   "author": {
     "@type": "Person",
     "name": "{{ post.author.get_full_name|default:post.author.username|default:"2Hame Team"|escapejs }}"
@@ -49,10 +49,10 @@
     "name": "2Hame",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://2hame.com/static/assets/img/all.png"
+      "url": "{{ site_url }}/static/assets/img/all.png"
     }
   },
-  "mainEntityOfPage": "https://2hame.com{{ post.get_absolute_url }}",
+  "mainEntityOfPage": "{{ site_url }}{{ post.get_absolute_url }}",
   "keywords": "{{ post.tags|escapejs }}",
   "articleSection": "{{ post.get_category_display|escapejs }}"
 }
@@ -68,25 +68,25 @@
       "@type": "ListItem",
       "position": 1,
       "name": "Home",
-      "item": "https://2hame.com"
+      "item": "{{ site_url }}"
     },
     {
       "@type": "ListItem",
       "position": 2,
       "name": "Blog",
-      "item": "https://2hame.com/blog/"
+      "item": "{{ site_url }}/blog/"
     },
     {
       "@type": "ListItem",
       "position": 3,
       "name": "{{ post.get_category_display }}",
-      "item": "https://2hame.com/blog/?category={{ post.category }}"
+      "item": "{{ site_url }}/blog/?category={{ post.category }}"
     },
     {
       "@type": "ListItem",
       "position": 4,
       "name": "{{ post.display_title|truncatechars:60 }}",
-      "item": "https://2hame.com{{ post.get_absolute_url }}"
+      "item": "{{ site_url }}{{ post.get_absolute_url }}"
     }
   ]
 }
@@ -97,7 +97,7 @@
 {
   "@context": "https://schema.org",
   "@type": "Person",
-  "@id": "https://2hame.com{% if post.author %}{% url 'public_profile' username=post.author.username %}{% else %}/author/team{% endif %}#person",
+  "@id": "{{ site_url }}{% if post.author %}{% url 'public_profile' username=post.author.username %}{% else %}/author/team{% endif %}#person",
   "name": "{{ post.author.get_full_name|default:post.author.username|default:'2Hame Team' }}",
   {% if post.author.get_full_name %}
   "givenName": "{{ post.author.first_name }}",

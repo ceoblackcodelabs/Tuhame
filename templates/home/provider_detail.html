@@ -3,8 +3,38 @@
 {% load icons %}
 {% load phone_filters %}
 
-{% block title %}{{ provider.get_full_name }} – {{ provider.get_service_category_display }} | Tuhame{% endblock title %}
+{% block title %}{{ provider.get_full_name }} – {{ provider.get_service_category_display }}{% if provider.city %} in {{ provider.city }}{% endif %} | {{ site_name }}{% endblock title %}
 {% block meta_description %}{{ provider.get_full_name }}, {{ provider.get_service_category_display }}{% if provider.city %} in {{ provider.city }}{% endif %}. {{ provider.provider_bio|truncatechars:140 }}{% endblock meta_description %}
+{% block canonical_url %}{{ site_url }}{% url 'home:provider_detail' provider.user.username %}{% endblock canonical_url %}
+{% block og_type %}profile{% endblock og_type %}
+{% block og_title %}{{ provider.get_full_name }} – {{ provider.get_service_category_display }}{% if provider.avg_rating %} ({{ provider.avg_rating|floatformat:1 }}★){% endif %}{% endblock og_title %}
+{% block og_description %}{{ provider.provider_bio|default:"Book this provider on "|truncatechars:150 }}{% endblock og_description %}
+{% block og_image %}{% if provider.profile_picture %}{{ site_url }}{{ provider.profile_picture.url }}{% else %}{{ site_url }}{% static 'assets/img/og-image.png' %}{% endif %}{% endblock og_image %}
+{% block breadcrumb_schema %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+ {"@type":"ListItem","position":1,"name":"Home","item":"{{ site_url }}/"},
+ {"@type":"ListItem","position":2,"name":"Services","item":"{{ site_url }}{% url 'home:services' %}"},
+ {"@type":"ListItem","position":3,"name":"{{ provider.get_full_name|escapejs }}","item":"{{ site_url }}{% url 'home:provider_detail' provider.user.username %}"}]}
+</script>
+{% endblock breadcrumb_schema %}
+{% block property_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "{{ provider.get_full_name|escapejs }}",
+  "description": "{{ provider.get_service_category_display|escapejs }}{% if provider.provider_bio %} – {{ provider.provider_bio|truncatechars:200|escapejs }}{% endif %}",
+  "url": "{{ site_url }}{% url 'home:provider_detail' provider.user.username %}",
+  {% if provider.profile_picture %}"image": "{{ site_url }}{{ provider.profile_picture.url }}",{% endif %}
+  {% if provider.provider_lat and provider.provider_lng %}"geo": {"@type": "GeoCoordinates", "latitude": {{ provider.provider_lat|stringformat:"s" }}, "longitude": {{ provider.provider_lng|stringformat:"s" }}},{% endif %}
+  "areaServed": [{% for a in areas %}"{{ a|escapejs }}"{% if not forloop.last %},{% endif %}{% empty %}"{{ provider.city|default:"Kenya"|escapejs }}"{% endfor %}],
+  "address": {"@type": "PostalAddress", "addressLocality": "{{ provider.city|default:"Nairobi"|escapejs }}", "addressCountry": "KE"}{% if provider.avg_rating %},
+  "aggregateRating": {"@type": "AggregateRating", "ratingValue": "{{ provider.avg_rating|floatformat:1 }}", "reviewCount": "{{ provider.review_count }}", "bestRating": "5", "worstRating": "1"}{% endif %}{% if reviews %},
+  "review": [{% for r in reviews %}{"@type": "Review", "author": {"@type": "Person", "name": "{{ r.reviewer.get_full_name|default:r.reviewer.username|escapejs }}"}, "reviewRating": {"@type": "Rating", "ratingValue": "{{ r.rating }}", "bestRating": "5"}, "datePublished": "{{ r.created_at|date:"Y-m-d" }}"{% if r.comment %}, "reviewBody": "{{ r.comment|escapejs }}"{% endif %}}{% if not forloop.last %},{% endif %}{% endfor %}]{% endif %}
+}
+</script>
+{% endblock property_schema %}
 {% block inject_css %}<link rel="stylesheet" href="{% static 'assets/vendor/leaflet/leaflet.css' %}" />{% endblock inject_css %}
 
 {% block content %}

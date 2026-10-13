@@ -5,12 +5,12 @@
 
 {% block meta_description %}{{ user.get_full_name|default:user.username }} on 2Hame{% if profile.city %}, {{ profile.city }}{% endif %}. {{ profile.bio|default:"View their public profile."|truncatechars:130 }}{% endblock meta_description %}
 
-{% block canonical_url %}https://2hame.com{% url 'public_profile' username=user.username %}{% endblock canonical_url %}
-{% block og_url %}https://2hame.com{% url 'public_profile' username=user.username %}{% endblock og_url %}
+{% block canonical_url %}{{ site_url }}{% url 'public_profile' username=user.username %}{% endblock canonical_url %}
+{% block og_url %}{{ site_url }}{% url 'public_profile' username=user.username %}{% endblock og_url %}
 {% block og_title %}{{ user.get_full_name|default:user.username }} on 2Hame{% endblock og_title %}
 {% block og_description %}{{ profile.bio|default:"View their public profile on 2Hame."|truncatechars:150 }}{% endblock og_description %}
-{% block og_image %}{% if profile.profile_picture %}https://2hame.com{{ profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock og_image %}
-{% block twitter_image %}{% if profile.profile_picture %}https://2hame.com{{ profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock twitter_image %}
+{% block og_image %}{% if profile.profile_picture %}{{ site_url }}{{ profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock og_image %}
+{% block twitter_image %}{% if profile.profile_picture %}{{ site_url }}{{ profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock twitter_image %}
 
 {% block content %}
 

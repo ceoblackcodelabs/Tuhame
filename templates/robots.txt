@@ -16,5 +16,13 @@ Disallow: /users/owner-qr-card/
 Disallow: /users/mover-qr-card/
 Disallow: /settings/
 Disallow: /movers/map/
+Disallow: /services/requests/
+Disallow: /services/provider/*/request/
+Disallow: /api/
+Disallow: /users/login/
+Disallow: /users/register/
+Disallow: /users/password-reset/
+Disallow: /*?search=
+Disallow: /*&q=
 
-Sitemap: https://2hame.com/sitemap.xml
+Sitemap: {{ site_url }}/sitemap.xml

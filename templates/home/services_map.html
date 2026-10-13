@@ -2,7 +2,10 @@
 {% load static %}
 {% load icons %}
 
-{% block title %}Service providers near you – Tuhame{% endblock title %}
+{% block title %}Service Providers on the Map – Find Pros Near You | {{ site_name }}{% endblock title %}
+{% block meta_description %}See plumbers, electricians, cleaners and other verified home service providers on a map and book the ones closest to you.{% endblock meta_description %}
+{% block canonical_url %}{{ site_url }}{% url 'home:services_map' %}{% endblock canonical_url %}
+{% block robots %}{% if selected_category %}noindex, follow{% else %}index, follow{% endif %}{% endblock robots %}
 {% block inject_css %}<link rel="stylesheet" href="{% static 'assets/vendor/leaflet/leaflet.css' %}" />{% endblock inject_css %}
 
 {% block content %}

@@ -4,11 +4,11 @@
 
 {% block title %}{{ property.title }} - {{ brand_name }}{% endblock title %}
 {% block meta_description %}{{ property.bedrooms }} bed, {{ property.bathrooms }} bath {{ property.get_property_type_display }} in {{ property.city }}. Listed by {{ brand_name }} on 2Hame.{% endblock meta_description %}
-{% block canonical_url %}https://2hame.com{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endblock canonical_url %}
-{% block og_url %}https://2hame.com{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endblock og_url %}
+{% block canonical_url %}{{ site_url }}{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endblock canonical_url %}
+{% block og_url %}{{ site_url }}{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endblock og_url %}
 {% block og_title %}{{ property.title }} - {{ brand_name }}{% endblock og_title %}
 {% block og_description %}{{ property.bedrooms }} bed, {{ property.bathrooms }} bath {{ property.get_property_type_display }} in {{ property.city }}. KES {{ property.price|intcomma }}.{% endblock og_description %}
-{% block og_image %}{% if property.main_image %}https://2hame.com{{ property.main_image.url }}{% endif %}{% endblock og_image %}
+{% block og_image %}{% if property.main_image %}{{ site_url }}{{ property.main_image.url }}{% endif %}{% endblock og_image %}
 
 {% block nav_links %}
 <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}">Back to Listings</a>

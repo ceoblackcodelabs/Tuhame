@@ -15,9 +15,9 @@
 
 {% block twitter_description %}Questions about listings or need help with your account? Reach out to 2Hame's friendly support team.{% endblock twitter_description %}
 
-{% block canonical_url %}https://2hame.com/contact/{% endblock canonical_url %}
+{% block canonical_url %}{{ site_url }}/contact/{% endblock canonical_url %}
 
-{% block og_url %}https://2hame.com/contact/{% endblock og_url %}
+{% block og_url %}{{ site_url }}/contact/{% endblock og_url %}
 
 {% block title %}Contact 2Hame – Get Help with Properties, Listings &amp; Support in Kenya{% endblock title %}
 
@@ -27,10 +27,10 @@
 {
   "@context": "https://schema.org",
   "@type": "ContactPage",
-  "@id": "https://2hame.com/contact/#webpage",
+  "@id": "{{ site_url }}/contact/#webpage",
   "name": "Contact 2Hame – Real Estate Support in Kenya",
   "description": "Contact 2Hame for help with property listings, account support, or to list your property. We're here to help you find, move, and settle.",
-  "url": "https://2hame.com/contact/",
+  "url": "{{ site_url }}/contact/",
   "about": {
     "@type": "Thing",
     "name": "Customer Support"
@@ -62,7 +62,7 @@
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
   "name": "2Hame",
-  "url": "https://2hame.com",
+  "url": "{{ site_url }}",
   "telephone": "+254799804185",
   "email": "info@2hame.com",
   "address": {
@@ -90,13 +90,13 @@
       "@type": "ListItem",
       "position": 1,
       "name": "Home",
-      "item": "https://2hame.com"
+      "item": "{{ site_url }}"
     },
     {
       "@type": "ListItem",
       "position": 2,
       "name": "Contact",
-      "item": "https://2hame.com/contact/"
+      "item": "{{ site_url }}/contact/"
     }
   ]
 }

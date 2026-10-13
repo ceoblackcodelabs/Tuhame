@@ -13,9 +13,9 @@
 
 {% block twitter_description %}Find your dream home with verified listings, Move Scores, and neighborhood insights. Filter by price, location, and property type.{% endblock twitter_description %}
 
-{% block canonical_url %}https://2hame.com{% url 'home:properties' %}{% endblock canonical_url %}
+{% block canonical_url %}{{ site_url }}{% url 'home:properties' %}{% endblock canonical_url %}
 
-{% block og_url %}https://2hame.com{% url 'home:properties' %}{% endblock og_url %}
+{% block og_url %}{{ site_url }}{% url 'home:properties' %}{% endblock og_url %}
 
 {% block title %}Properties for Rent & Sale in Kenya – 2Hame Real Estate{% endblock title %}
 
@@ -31,7 +31,7 @@
   "@type": "CollectionPage",
   "name": "Properties for Rent & Sale in Kenya",
   "description": "Browse thousands of verified property listings across Kenya including apartments, villas, rentals, and BNBs.",
-  "url": "https://2hame.com{% url 'home:properties' %}",
+  "url": "{{ site_url }}{% url 'home:properties' %}",
   "mainEntity": {
     "@type": "ItemList",
     "itemListElement": [
@@ -43,8 +43,8 @@
           "@type": "RealEstateListing",
           "name": "{{ property.title|escapejs }}",
           "description": "{{ property.description|truncatewords:20|escapejs }}",
-          "url": "https://2hame.com{% url 'home:about_property' slug=property.slug %}",
-          {% if property.main_image %}"image": "https://2hame.com{{ property.main_image.url }}",{% else %}"image": "https://2hame.com{% static 'assets/img/og-image.png' %}",{% endif %}
+          "url": "{{ site_url }}{% url 'home:about_property' slug=property.slug %}",
+          {% if property.main_image %}"image": "{{ site_url }}{{ property.main_image.url }}",{% else %}"image": "{{ site_url }}{% static 'assets/img/og-image.png' %}",{% endif %}
           "numberOfRooms": {{ property.bedrooms|default:0 }},
           "offers": {
             "@type": "Offer",

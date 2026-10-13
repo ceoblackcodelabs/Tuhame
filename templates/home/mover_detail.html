@@ -6,12 +6,12 @@
 
 {% block meta_description %}{{ mover_profile.get_full_name }}, verified mover on 2Hame{% if mover_profile.city %} based in {{ mover_profile.city }}{% endif %}. {{ mover_profile.bio|default:"View their profile, services, and reviews."|truncatechars:120 }}{% endblock meta_description %}
 
-{% block canonical_url %}https://2hame.com{% url 'home:mover_detail' username=mover_profile.user.username %}{% endblock canonical_url %}
-{% block og_url %}https://2hame.com{% url 'home:mover_detail' username=mover_profile.user.username %}{% endblock og_url %}
+{% block canonical_url %}{{ site_url }}{% url 'home:mover_detail' username=mover_profile.user.username %}{% endblock canonical_url %}
+{% block og_url %}{{ site_url }}{% url 'home:mover_detail' username=mover_profile.user.username %}{% endblock og_url %}
 {% block og_title %}{{ mover_profile.get_full_name }} - Verified Mover on 2Hame{% endblock og_title %}
 {% block og_description %}{{ mover_profile.bio|default:"View services, coverage area, and reviews."|truncatechars:150 }}{% endblock og_description %}
-{% block og_image %}{% if mover_profile.profile_picture %}https://2hame.com{{ mover_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock og_image %}
-{% block twitter_image %}{% if mover_profile.profile_picture %}https://2hame.com{{ mover_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock twitter_image %}
+{% block og_image %}{% if mover_profile.profile_picture %}{{ site_url }}{{ mover_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock og_image %}
+{% block twitter_image %}{% if mover_profile.profile_picture %}{{ site_url }}{{ mover_profile.profile_picture.url }}{% else %}{{ block.super }}{% endif %}{% endblock twitter_image %}
 
 {% block content %}
 <section class="section" style="padding-top:7rem;background:linear-gradient(180deg,#EFF6FF 0%,#fff 100%);">

@@ -3,21 +3,21 @@
 {% load static %}
 
 <!-- ─── SEO BLOCKS ─── -->
-{% block meta_description %}2Hame is Kenya's find-list-manage-move property platform: search apartments, houses and rentals, list your property free, run a full rental management system with rent payment tracking and tenant billing, and get your own branded property website — all on 2Hame.{% endblock meta_description %}
+{% block meta_description %}Find verified homes and rentals in Kenya, list your property free, and run rent collection with a tenant portal. Book trusted plumbers, electricians, cleaners and movers – all on {{ site_name }}.{% endblock meta_description %}
 
-{% block meta_keywords %}2Hame, real estate Kenya, property listings Kenya, rent houses Nairobi, sell property Kenya, apartments for rent, villas for sale, BnB Kenya, property management Kenya, rental management system Kenya, rent payment tracking, rent collection app Kenya, landlord tenant management, landlord tools, tenant portal, pay rent online Kenya, property agents, real estate investors, find movers, housing marketplace, free property website Kenya, real estate agent website Kenya, landlord website, Kenya property{% endblock meta_keywords %}
+{% block meta_keywords %}{{ site_name }}, houses for rent Kenya, apartments for rent Nairobi, rental property management Kenya, rent collection, tenant portal, landlord software, plumbers Nairobi, electricians Kenya, cleaners, movers Nairobi, list property free{% endblock meta_keywords %}
 
-{% block og_title %}2Hame – Find, List, Manage & Move | Kenya Property & Rent Management Platform{% endblock og_title %}
+{% block og_title %}{{ site_name }} – Find Homes, Collect Rent & Hire Trusted Service Pros{% endblock og_title %}
 
-{% block og_description %}Search property listings, list your own property, run rent payment tracking and tenant management, and get your own branded property website — free, hosted on 2Hame, no coding needed.{% endblock og_description %}
+{% block og_description %}Search verified rentals, list your property free, collect rent and track tenants, and book plumbers, electricians, cleaners and movers across Kenya.{% endblock og_description %}
 
-{% block twitter_title %}2Hame – Find, List, Manage & Move{% endblock twitter_title %}
+{% block twitter_title %}{{ site_name }} – Homes, Rent Management & Home Services in Kenya{% endblock twitter_title %}
 
-{% block twitter_description %}Search listings, list your property, track rent payments and manage tenants, and get your own free branded property website on 2Hame.{% endblock twitter_description %}
+{% block twitter_description %}Find a home, run your rentals without the chase, and book trusted local pros – all in one place.{% endblock twitter_description %}
 
-{% block canonical_url %}https://2hame.com{% endblock canonical_url %}
+{% block canonical_url %}{{ site_url }}{% endblock canonical_url %}
 
-{% block title %}2Hame – Find, List, Manage & Move | Kenya Property & Rental Management Platform{% endblock title %}
+{% block title %}{{ site_name }} – Find Homes, Collect Rent & Hire Trusted Service Pros in Kenya{% endblock title %}
 
 <!-- ─── HOMEPAGE JSON-LD ─── -->
 {% block property_schema %}
@@ -25,10 +25,10 @@
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  "@id": "https://2hame.com/#webpage",
-  "name": "2Hame - Kenya's Real Estate & Housing Platform",
-  "description": "Find or list properties on 2Hame. Search apartments, villas, rentals, and BNBs. Connect with tenants, buyers, and verified movers across Kenya.",
-  "url": "https://2hame.com",
+  "@id": "{{ site_url }}/#webpage",
+  "name": "{{ site_name }} – Homes, Rent Management & Home Services in Kenya",
+  "description": "Find or list properties, collect rent from tenants through a built-in management system, and book local plumbers, electricians, cleaners and movers across Kenya.",
+  "url": "{{ site_url }}",
   "about": {
     "@type": "Thing",
     "name": "Kenya Real Estate"
@@ -40,31 +40,37 @@
         "@type": "ListItem",
         "position": 1,
         "name": "Rent Residential Properties",
-        "url": "https://2hame.com/properties/listing/?property_type=residential"
+        "url": "{{ site_url }}/properties/listing/?property_type=residential"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "Commercial Properties",
-        "url": "https://2hame.com/properties/listing/?property_type=commercial"
+        "url": "{{ site_url }}/properties/listing/?property_type=commercial"
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": "List Your Property",
-        "url": "https://2hame.com/properties/add/"
+        "url": "{{ site_url }}/properties/add/"
       },
       {
         "@type": "ListItem",
         "position": 4,
         "name": "Get Your Free Property Website",
-        "url": "https://2hame.com/users/my-profile/edit/"
+        "url": "{{ site_url }}/users/my-profile/edit/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 6,
+        "name": "Home Services (plumbers, electricians, cleaners)",
+        "url": "{{ site_url }}{% url 'home:services' %}"
       },
       {
         "@type": "ListItem",
         "position": 5,
         "name": "Find Movers",
-        "url": "https://2hame.com/movers/map/"
+        "url": "{{ site_url }}/movers/map/"
       }
     ]
   },
@@ -103,8 +109,22 @@
       "@type": "ListItem",
       "position": 1,
       "name": "Home",
-      "item": "https://2hame.com"
+      "item": "{{ site_url }}"
     }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Is it free for landlords?", "acceptedAnswer": {"@type": "Answer", "text": "Listing your property is free. Rent management tools are available from your landlord dashboard."}},
+    {"@type": "Question", "name": "How do tenants pay rent?", "acceptedAnswer": {"@type": "Answer", "text": "Tenants pay the landlord directly, then report the payment in their portal. The bill shows as awaiting confirmation until the landlord confirms it."}},
+    {"@type": "Question", "name": "Can a tenant see other tenants' bills?", "acceptedAnswer": {"@type": "Answer", "text": "No. Each tenant only sees their own bills and payments."}},
+    {"@type": "Question", "name": "How does a tenant get access?", "acceptedAnswer": {"@type": "Answer", "text": "They create an account. The landlord then adds them to a property using their email, and their bills appear in their profile."}},
+    {"@type": "Question", "name": "Are listings verified?", "acceptedAnswer": {"@type": "Answer", "text": "Owners go through a verification step before they get landlord tools."}}
   ]
 }
 </script>
@@ -120,7 +140,7 @@
     <div class="hero2-copy">
       <span class="hero2-eyebrow">Homes &middot; Services &middot; Rent management</span>
       <h1 class="hero2-title">Find the right home. <em>Run your rentals</em> without the chase.</h1>
-      <p class="hero2-sub">Tuhame helps renters find verified homes, landlords list for free, and collect rent from one dashboard &mdash; while tenants keep track of every bill in their own portal.</p>
+      <p class="hero2-sub">{{ site_name }} helps renters find verified homes, landlords list for free, and collect rent from one dashboard &mdash; while tenants keep track of every bill in their own portal.</p>
 
       <form method="get" action="{% url 'home:properties' %}" class="hero2-search" role="search" aria-label="Search properties">
         <span class="hero2-search-icon" aria-hidden="true">{% icon "search" %}</span>
@@ -208,7 +228,7 @@
 <section class="section" id="how-it-works" style="background:var(--light-bg);" aria-labelledby="how-heading">
   <div class="container">
     <div class="section-header">
-      <h2 id="how-heading" class="section-title">How Tuhame works</h2>
+      <h2 id="how-heading" class="section-title">How {{ site_name }} works</h2>
       <p class="section-subtitle">Three roles, one platform.</p>
     </div>
     <div class="steps2">
@@ -589,14 +609,14 @@
     <div class="properties-grid mobile-carousel-grid">
       {% for property in properties %}
         <article class="property-card fade-up" itemscope itemtype="https://schema.org/RealEstateListing">
-          <meta itemprop="url" content="https://2hame.com{% url 'home:about_property' property.slug %}" />
+          <meta itemprop="url" content="{{ site_url }}{% url 'home:about_property' property.slug %}" />
           <meta itemprop="description" content="{{ property.description|default:property.title|truncatechars:200 }}" />
           <div class="property-img-wrap">
             {% if property.main_image %}
-              <meta itemprop="image" content="https://2hame.com{{ property.main_image.url }}" />
+              <meta itemprop="image" content="{{ site_url }}{{ property.main_image.url }}" />
               <div style="width:100%;height:100%;background-image:url('{{ property.main_image.url }}');background-size:cover;background-position:center;" role="img" aria-label="{{ property.title }}"></div>
             {% else %}
-              <meta itemprop="image" content="https://2hame.com{% static 'assets/img/og-image.png' %}" />
+              <meta itemprop="image" content="{{ site_url }}{% static 'assets/img/og-image.png' %}" />
               <div style="width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80');background-size:cover;background-position:center;" role="img" aria-label="{{ property.title }}"></div>
             {% endif %}
             <div class="property-badge featured">{{ property.get_property_type_display }}</div>

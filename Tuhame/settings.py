@@ -96,6 +96,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'Tuhame.context_processors.carto_api_key',
+                'Tuhame.context_processors.seo',
             ],
             **({} if DEBUG else {
                 # Cached loader: each template is compiled once per worker

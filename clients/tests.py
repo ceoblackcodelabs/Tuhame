@@ -544,3 +544,73 @@ class ServiceBookingFlowTests(TestCase):
         html = self.client.get(reverse('home:home')).content.decode()
         self.assertIn('class="navbar transparent over-hero"', html)
         self.assertNotIn('over-hero', self.client.get(reverse('home:properties')).content.decode().split('<nav class="navbar')[1][:60])
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False,
+                   SITE_URL='https://example.test', SITE_NAME='BrandX')
+class SeoTests(TestCase):
+    def setUp(self):
+        self.provider = make_user('fundi', 'provider')
+        Profile.objects.filter(user=self.provider).update(
+            service_category='plumber', full_name='Juma Fundi', city='Nairobi', provider_bio='Fixing leaks',
+            provider_lat=Decimal('-1.292100'), provider_lng=Decimal('36.821900'))
+        self.customer = make_user('mama')
+
+    def html(self, url):
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 200, url)
+        return r.content.decode()
+
+    def test_canonical_is_the_pages_own_url_not_the_homepage(self):
+        # a page that overrides nothing must self-canonicalise (was: always the homepage)
+        self.assertIn('rel="canonical" href="https://example.test/contact/"', self.html('/contact/'))
+        self.assertIn('og:url" content="https://example.test/contact/"', self.html('/contact/'))
+        self.assertIn('og:site_name" content="BrandX"', self.html('/'))
+
+    def test_homepage_matches_the_product(self):
+        h = self.html('/')
+        self.assertIn('<title>BrandX – Find Homes, Collect Rent', h)
+        self.assertIn('plumbers', h.split('name="description"')[1][:400])
+        self.assertIn('"@type": "FAQPage"', h)
+        self.assertEqual(h.count('<h1'), 1)
+        self.assertNotIn('https://2hame.com', h)  # no hardcoded domain left
+
+    def test_service_pages(self):
+        h = self.html('/services/?category=plumber')
+        self.assertIn('Plumbers in Kenya', h.split('<title>')[1].split('</title>')[0])
+        self.assertIn('href="https://example.test/services/?category=plumber"', h)
+        self.assertIn('BreadcrumbList', h)
+        self.assertIn('noindex', self.html('/services/?q=leak'))     # internal search results aren't indexed
+        self.assertNotIn('noindex', self.html('/services/?category=plumber').split('name="robots"')[1][:80])
+
+    def test_provider_page_schema_uses_only_real_ratings(self):
+        import json, re
+        url = reverse('home:provider_detail', args=['fundi'])
+        def schema(h):
+            blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', h, re.S)
+            return [json.loads(b) for b in blocks if '"ProfessionalService"' in b][0]
+
+        before = schema(self.html(url))
+        self.assertEqual(before['name'], 'Juma Fundi')
+        self.assertEqual(before['geo']['latitude'], -1.2921)
+        self.assertNotIn('aggregateRating', before)                   # no fake rating before any review
+
+        job = ServiceRequest.objects.create(provider=self.provider, requester=self.customer, description='Fix sink now',
+                                            address='x', phone='0700000000', status='completed')
+        ServiceReview.objects.create(request=job, provider=self.provider, reviewer=self.customer, rating=5, comment='Great')
+        after = schema(self.html(url))
+        self.assertEqual(after['aggregateRating']['ratingValue'], '5.0')
+        self.assertEqual(after['aggregateRating']['reviewCount'], '1')
+        self.assertEqual(after['review'][0]['reviewBody'], 'Great')
+        self.assertIn('rel="canonical" href="https://example.test/services/provider/fundi/"', self.html(url))
+
+    def test_sitemap_and_robots(self):
+        sm = self.client.get('/sitemap.xml').content.decode()
+        self.assertIn('https://example.test/services/provider/fundi/', sm)
+        self.assertIn('category=plumber', sm)
+        self.assertIn('/services/map/', sm)
+        self.assertNotIn('category=electrician', sm)                  # no empty category pages
+        robots = self.client.get('/robots.txt').content.decode()
+        self.assertIn('Sitemap: https://example.test/sitemap.xml', robots)
+        self.assertIn('Disallow: /services/requests/', robots)
+        self.assertIn('noindex', self.html('/users/login/'))
