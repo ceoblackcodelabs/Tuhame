@@ -16,6 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from clients.models import Bill, Payment
+from home.models import ServiceRequest, ServiceReview
 from properties.models import Property
 from users.models import Profile
 
@@ -392,3 +393,154 @@ class InvoiceRetirementTests(TestCase):
         call_command('migrate_invoices_to_bills', stdout=StringIO())  # idempotent
         self.assertEqual(Bill.objects.count(), 3)
         self.assertEqual(ledger.collected(self.landlord), before)
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+class ServicesDirectoryTests(TestCase):
+    def register(self, **extra):
+        data = {
+            'username': 'fundi1', 'email': 'fundi1@example.com', 'first_name': 'Juma', 'last_name': 'Otieno',
+            'password': 'Str0ng!pass99', 'confirm_password': 'Str0ng!pass99', 'phone_number': '0712345678',
+            'city': 'Nairobi', 'role': 'provider', 'service_category': 'plumber', 'agree_terms': 'on',
+        }
+        data.update(extra)
+        return self.client.post(reverse('register'), data)
+
+    def test_provider_signup_and_public_directory(self):
+        self.assertEqual(self.client.get(reverse('register')).status_code, 200)
+        # a provider must say what they do
+        r = self.register(service_category='')
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(User.objects.filter(username='fundi1').exists())
+
+        self.register()
+        profile = Profile.objects.get(user__username='fundi1')
+        self.assertEqual((profile.role, profile.service_category), ('provider', 'plumber'))
+        profile.provider_bio = 'Fixing leaks since 2015'
+        profile.is_active = True
+        profile.save()
+        self.client.logout()
+
+        # public - no login needed
+        r = self.client.get(reverse('home:services'))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Juma')
+        self.assertContains(self.client.get(reverse('home:services') + '?category=plumber'), 'Juma')
+        self.assertNotContains(self.client.get(reverse('home:services') + '?category=electrician'), 'Fixing leaks')
+        self.assertContains(self.client.get(reverse('home:services') + '?q=leaks'), 'Juma')
+        self.assertEqual(self.client.get(reverse('home:services') + '?category=bogus').status_code, 200)
+
+        # non-providers and category-less accounts never appear
+        other = make_user('hunter1')
+        self.assertNotContains(self.client.get(reverse('home:services')), 'hunter1')
+
+        # landing page links to it
+        self.assertContains(self.client.get(reverse('home:home')), reverse('home:services'))
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+class ServiceBookingFlowTests(TestCase):
+    def setUp(self):
+        self.provider = make_user('fundi', 'provider')
+        Profile.objects.filter(user=self.provider).update(
+            service_category='plumber', full_name='Juma Fundi', phone_number='0712345678',
+            provider_lat=Decimal('-1.292100'), provider_lng=Decimal('36.821900'),
+            provider_location_label='Kilimani',
+        )
+        self.customer = make_user('mama')
+        self.stranger = make_user('stranger')
+        self.valid = {'description': 'Kitchen sink is leaking badly', 'address': 'Kilimani, Apt 4B',
+                      'phone': '0722000111', 'preferred_time': 'morning'}
+
+    def book(self, user=None, **over):
+        self.client.force_login(user or self.customer)
+        return self.client.post(reverse('home:service_request_create', args=['fundi']), {**self.valid, **over})
+
+    def test_map_data_and_pages(self):
+        r = self.client.get(reverse('home:services_map_data'))
+        data = r.json()['providers']
+        self.assertEqual([(p['username'], p['lat'], p['rating']) for p in data], [('fundi', -1.2921, None)])
+        self.assertEqual(self.client.get(reverse('home:services_map_data') + '?category=cleaner').json()['providers'], [])
+        for name in ('home:services_map', 'home:services'):
+            self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+        r = self.client.get(reverse('home:provider_detail', args=['fundi']))
+        self.assertContains(r, 'Juma Fundi')
+        self.assertContains(r, 'Log in to send a request')
+        self.assertEqual(self.client.get(reverse('home:provider_detail', args=['mama'])).status_code, 404)
+
+    def test_booking_validation_and_access(self):
+        self.client.logout()
+        r = self.client.post(reverse('home:service_request_create', args=['fundi']), self.valid)
+        self.assertEqual(r.status_code, 302)
+        self.assertIn('login', r['Location'])
+
+        self.book(description='short')
+        self.assertEqual(ServiceRequest.objects.count(), 0)
+        self.book(user=self.provider)  # can't book yourself
+        self.assertEqual(ServiceRequest.objects.count(), 0)
+        self.book()
+        self.book()  # duplicate pending is ignored
+        self.assertEqual(ServiceRequest.objects.count(), 1)
+
+    def test_full_lifecycle_with_review(self):
+        self.book()
+        job = ServiceRequest.objects.get()
+        act = lambda user, name: (self.client.force_login(user), self.client.post(
+            reverse('home:service_request_action', args=[job.pk, name]), {'note': 'KES 1,500, 10am'}))[1]
+
+        # only the provider can accept; a stranger and the customer cannot
+        self.assertEqual(act(self.stranger, 'accept').status_code, 403)
+        self.assertEqual(act(self.customer, 'accept').status_code, 403)
+        self.assertEqual(act(self.provider, 'complete').status_code, 403)  # not accepted yet
+        act(self.provider, 'accept')
+        job.refresh_from_db()
+        self.assertEqual((job.status, job.provider_note), ('accepted', 'KES 1,500, 10am'))
+
+        # no review before the job is done, nor by anyone but the customer
+        review_url = reverse('home:service_review', args=[job.pk])
+        self.client.force_login(self.customer)
+        self.client.post(review_url, {'rating': 5})
+        self.assertEqual(ServiceReview.objects.count(), 0)
+
+        act(self.provider, 'complete')
+        self.client.force_login(self.stranger)
+        self.assertEqual(self.client.post(review_url, {'rating': 5}).status_code, 404)
+        self.client.force_login(self.customer)
+        self.client.post(review_url, {'rating': 9})            # invalid
+        self.assertEqual(ServiceReview.objects.count(), 0)
+        self.client.post(review_url, {'rating': 4, 'comment': 'Fixed it fast'})
+        self.client.post(review_url, {'rating': 1})             # second review ignored
+        self.assertEqual(ServiceReview.objects.get().rating, 4)
+
+        # rating now shows on the map feed, directory and provider page
+        p = self.client.get(reverse('home:services_map_data')).json()['providers'][0]
+        self.assertEqual((p['rating'], p['reviews']), (4.0, 1))
+        self.assertContains(self.client.get(reverse('home:provider_detail', args=['fundi'])), 'Fixed it fast')
+        self.assertContains(self.client.get(reverse('home:services')), '4.0')
+
+        # both sides see it on their requests page; a customer can cancel only their own pending job
+        self.assertEqual(self.client.get(reverse('home:my_service_requests')).status_code, 200)
+        self.client.force_login(self.provider)
+        self.assertContains(self.client.get(reverse('home:my_service_requests')), 'Kitchen sink')
+
+    def test_cancel_and_decline(self):
+        self.book()
+        job = ServiceRequest.objects.get()
+        self.client.force_login(self.stranger)
+        self.assertEqual(self.client.post(reverse('home:service_request_action', args=[job.pk, 'cancel'])).status_code, 403)
+        self.client.force_login(self.customer)
+        self.client.post(reverse('home:service_request_action', args=[job.pk, 'cancel']))
+        job.refresh_from_db()
+        self.assertEqual(job.status, 'cancelled')
+        self.assertEqual(self.client.post(reverse('home:service_request_action', args=[job.pk, 'bogus'])).status_code, 404)
+
+    def test_provider_can_set_location_in_profile_form(self):
+        from users.forms import ProfileForm
+        form = ProfileForm(instance=self.provider.profile)
+        for f in ('provider_lat', 'provider_lng', 'provider_location_label', 'service_category'):
+            self.assertIn(f, form.fields)
+
+    def test_header_is_transparent_over_hero_on_landing(self):
+        html = self.client.get(reverse('home:home')).content.decode()
+        self.assertIn('class="navbar transparent over-hero"', html)
+        self.assertNotIn('over-hero', self.client.get(reverse('home:properties')).content.decode().split('<nav class="navbar')[1][:60])

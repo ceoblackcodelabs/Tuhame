@@ -1,0 +1,61 @@
+{% extends "home/base.html" %}
+{% load icons %}
+{% load phone_filters %}
+
+{% block title %}My service requests – Tuhame{% endblock title %}
+{% block robots %}noindex, nofollow{% endblock robots %}
+
+{% block content %}
+<section class="section" style="background:var(--light-bg);padding-top:6.5rem;">
+  <div class="container" style="max-width:900px;">
+    <h1 style="margin:0 0 1.5rem;font-size:1.8rem;">My service requests</h1>
+
+    {% if is_provider or received %}
+    <h2 class="req-h">Jobs requested from you</h2>
+    {% for job in received %}
+      <article class="svc-card req">
+        <div class="req-top"><b>{{ job.requester.get_full_name|default:job.requester.username }}</b>
+          <span class="req-status req-{{ job.status }}">{{ job.get_status_display }}</span></div>
+        <p class="svc-bio">{{ job.description }}</p>
+        <ul class="svc-meta"><li>{{ job.address }}</li>
+          <li>{% if job.preferred_date %}{{ job.preferred_date|date:"D, M d" }}{% else %}Any date{% endif %} &middot; {{ job.get_preferred_time_display }}</li>
+          {% if job.status == 'accepted' or job.status == 'pending' %}<li>Customer phone: <a href="{{ job.phone|tel_href }}">{{ job.phone }}</a></li>{% endif %}</ul>
+        {% if job.status == 'pending' %}
+          <form method="post" class="req-actions">{% csrf_token %}
+            <input type="text" name="note" maxlength="300" placeholder="Optional message to the customer (price, time...)">
+            <button formaction="{% url 'home:service_request_action' job.pk 'accept' %}" class="svc-btn svc-btn-solid">Accept</button>
+            <button formaction="{% url 'home:service_request_action' job.pk 'decline' %}" class="svc-btn svc-btn-ghost" style="border-color:#ef4444;color:#ef4444;">Decline</button>
+          </form>
+        {% elif job.status == 'accepted' %}
+          <form method="post" action="{% url 'home:service_request_action' job.pk 'complete' %}" class="req-actions">{% csrf_token %}
+            <button class="svc-btn svc-btn-solid">Mark completed</button></form>
+        {% endif %}
+      </article>
+    {% empty %}<p class="svc-bio">No requests yet. Share <a href="{% url 'home:services' %}">your public page</a> to get booked.</p>{% endfor %}
+    {% endif %}
+
+    <h2 class="req-h">Jobs I requested</h2>
+    {% for job in sent %}
+      <article class="svc-card req">
+        <div class="req-top"><b><a href="{% url 'home:provider_detail' job.provider.username %}" style="color:inherit;">{{ job.provider.get_full_name|default:job.provider.username }}</a></b>
+          <span class="req-status req-{{ job.status }}">{{ job.get_status_display }}</span></div>
+        <p class="svc-bio">{{ job.description }}</p>
+        {% if job.provider_note %}<p class="svc-bio"><b>Provider:</b> {{ job.provider_note }}</p>{% endif %}
+        {% if job.status == 'pending' or job.status == 'accepted' %}
+          <form method="post" action="{% url 'home:service_request_action' job.pk 'cancel' %}" class="req-actions">{% csrf_token %}
+            <button class="svc-btn svc-btn-ghost" style="border-color:var(--gray-300);color:inherit;background:none;">Cancel request</button></form>
+        {% endif %}
+        {% if job.can_review %}
+          <form method="post" action="{% url 'home:service_review' job.pk %}" class="req-actions">{% csrf_token %}
+            <select name="rating" required><option value="">Rate…</option>
+              <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733; Excellent</option><option value="4">&#9733;&#9733;&#9733;&#9733; Good</option>
+              <option value="3">&#9733;&#9733;&#9733; OK</option><option value="2">&#9733;&#9733; Poor</option><option value="1">&#9733; Bad</option></select>
+            <input type="text" name="comment" maxlength="1000" placeholder="How did it go? (optional)">
+            <button class="svc-btn svc-btn-solid">Submit review</button>
+          </form>
+        {% endif %}
+      </article>
+    {% empty %}<p class="svc-bio">You haven't booked anyone yet. <a href="{% url 'home:services' %}">Browse services</a>.</p>{% endfor %}
+  </div>
+</section>
+{% endblock content %}

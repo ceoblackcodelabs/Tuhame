@@ -1,0 +1,77 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% load icons %}
+{% load phone_filters %}
+
+{% block title %}{% if selected_category_label %}{{ selected_category_label }}s{% else %}Home Services{% endif %} in Kenya – Tuhame{% endblock title %}
+{% block meta_description %}Find trusted plumbers, electricians, cleaners, painters and other home service providers in Kenya on Tuhame. Call or WhatsApp them directly.{% endblock meta_description %}
+
+{% block nav_class %}over-hero{% endblock nav_class %}
+
+{% block content %}
+<section class="services-hero">
+  <div class="container">
+    <span class="hero2-eyebrow">Services</span>
+    <h1>{% if selected_category_label %}{{ selected_category_label }}s{% else %}Trusted help for your home{% endif %}</h1>
+    <p>Plumbers, electricians, cleaners and more &mdash; book them or call directly.</p>
+    <p style="margin-top:-0.5rem;"><a href="{% url 'home:services_map' %}" class="hero2-btn hero2-btn-ghost" style="display:inline-flex;">{% icon "map" %} See providers on the map</a></p>
+    <form method="get" class="services-search" role="search">
+      {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+      <input type="text" name="q" value="{{ query }}" placeholder="Search by name, area or skill" aria-label="Search services">
+      <button type="submit">Search</button>
+    </form>
+  </div>
+</section>
+
+<section class="section" style="background:var(--light-bg);">
+  <div class="container">
+    <div class="svc-chips">
+      <a href="{% url 'home:services' %}{% if query %}?q={{ query|urlencode }}{% endif %}" class="svc-chip{% if not selected_category %} active{% endif %}">All</a>
+      {% for value, label in categories %}
+        <a href="?category={{ value }}{% if query %}&q={{ query|urlencode }}{% endif %}" class="svc-chip{% if selected_category == value %} active{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="svc-grid">
+      {% for p in providers %}
+        <article class="svc-card">
+          <div class="svc-top">
+            {% if p.profile_picture %}
+              <img src="{{ p.profile_picture.url }}" alt="{{ p.get_full_name }}" class="svc-avatar" width="56" height="56" loading="lazy">
+            {% else %}
+              <span class="svc-avatar svc-avatar-fallback">{{ p.get_full_name|slice:":1"|upper }}</span>
+            {% endif %}
+            <div>
+              <h3><a href="{% url 'home:provider_detail' p.user.username %}" style="color:inherit;text-decoration:none;">{{ p.get_full_name }}</a></h3>
+              <span class="svc-trade">{{ p.get_service_category_display }}</span>
+              {% if p.is_verified_provider %}<span class="svc-verified">{% icon "shield" %} Verified</span>{% endif %}
+              <div class="svc-rating">{% if p.avg_rating %}&#9733; {{ p.avg_rating|floatformat:1 }} <small>({{ p.review_count }})</small>{% else %}<small>No reviews yet</small>{% endif %}</div>
+            </div>
+          </div>
+          {% if p.provider_bio %}<p class="svc-bio">{{ p.provider_bio|truncatechars:160 }}</p>{% endif %}
+          <ul class="svc-meta">
+            {% if p.provider_years_experience %}<li>{{ p.provider_years_experience }} yr{{ p.provider_years_experience|pluralize }} experience</li>{% endif %}
+            {% if p.provider_service_areas %}<li>Serves {{ p.provider_service_areas }}</li>{% elif p.city %}<li>{{ p.city }}</li>{% endif %}
+          </ul>
+          <div class="svc-actions">
+            <a href="{% url 'home:provider_detail' p.user.username %}#book" class="svc-btn svc-btn-solid">Book</a>
+            {% if p.phone_number %}<a href="{{ p.phone_number|tel_href }}" class="svc-btn svc-btn-ghost">Call</a>{% else %}<a href="{% url 'home:provider_detail' p.user.username %}" class="svc-btn svc-btn-ghost">View</a>{% endif %}
+          </div>
+        </article>
+      {% empty %}
+        <div class="svc-empty">
+          <h3>No providers listed here yet</h3>
+          <p>Be the first &mdash; are you a {% if selected_category_label %}{{ selected_category_label|lower }}{% else %}tradesperson{% endif %}?</p>
+          <a href="{% if user.is_authenticated %}{% url 'edit_profile' %}{% else %}{% url 'register' %}{% endif %}" class="btn btn-primary">List your service</a>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if providers %}
+    <p style="text-align:center;margin-top:2rem;color:var(--gray-500);">
+      Offer a service? <a href="{% if user.is_authenticated %}{% url 'edit_profile' %}{% else %}{% url 'register' %}{% endif %}">Get listed free</a>.
+    </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock content %}

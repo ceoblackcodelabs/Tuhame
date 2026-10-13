@@ -225,12 +225,12 @@
         <!-- Role Selector -->
         <div class="form-group">
           <label class="form-label">I am a...</label>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
             {% for radio in form.role %}
               <label style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:0.3rem;padding:0.75rem 0.5rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);cursor:pointer;font-size:0.78rem;font-weight:600;transition:var(--transition-fast);" class="role-radio-label">
                 {{ radio.tag }}
-                <span style="font-size:1.3rem;">{% if radio.data.value == 'hunter' %}{% icon "search-detail" %}{% elif radio.data.value == 'owner' %}{% icon "home" %}{% else %}{% icon "truck" %}{% endif %}</span>
-                <span>{% if radio.data.value == 'hunter' %}House Hunter{% elif radio.data.value == 'owner' %}Property Owner{% else %}Mover{% endif %}</span>
+                <span style="font-size:1.3rem;">{% if radio.data.value == 'hunter' %}{% icon "search-detail" %}{% elif radio.data.value == 'owner' %}{% icon "home" %}{% elif radio.data.value == 'provider' %}{% icon "edit" %}{% else %}{% icon "truck" %}{% endif %}</span>
+                <span>{% if radio.data.value == 'hunter' %}House Hunter{% elif radio.data.value == 'owner' %}Property Owner{% elif radio.data.value == 'provider' %}Service Provider{% else %}Mover{% endif %}</span>
               </label>
             {% endfor %}
           </div>
@@ -238,6 +238,13 @@
           {% if form.role.errors %}
             <div class="text-danger">{{ form.role.errors.0 }}</div>
           {% endif %}
+        </div>
+
+        <!-- Trade (only for service providers) -->
+        <div class="form-group" id="service-category-group" style="display:none;">
+          <label class="form-label" for="{{ form.service_category.id_for_label }}">{{ form.service_category.label }}</label>
+          {{ form.service_category }}
+          {% if form.service_category.errors %}<div class="text-danger">{{ form.service_category.errors.0 }}</div>{% endif %}
         </div>
 
         <!-- First Name & Last Name -->
@@ -487,12 +494,15 @@
     const hints = {
       hunter: "Looking for a place to live? You're a House Hunter.",
       owner: "Listing properties? You'll need a quick verification from our team before you can manage listings.",
-      mover: "Help people move? You'll get a public mover profile to build your portfolio and trust score."
+      mover: "Help people move? You'll get a public mover profile to build your portfolio and trust score.",
+      provider: "Plumber, electrician, cleaner or other trade? Get listed in the Tuhame services directory so tenants and landlords can call you."
     };
+    const catGroup = document.getElementById('service-category-group');
     function updateRoleUI() {
       roleRadios.forEach(r => {
         r.closest('.role-radio-label').classList.toggle('active', r.checked);
         if (r.checked && hint) hint.textContent = hints[r.value] || '';
+        if (r.checked && catGroup) catGroup.style.display = r.value === 'provider' ? 'block' : 'none';
       });
     }
     roleRadios.forEach(r => r.addEventListener('change', updateRoleUI));

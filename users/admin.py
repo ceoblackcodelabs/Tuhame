@@ -63,6 +63,8 @@ class ProfileAdmin(admin.ModelAdmin):
                 'role',
                 'verification_status',
                 'is_verified_owner',
+                'service_category',
+                'is_verified_provider',
                 'verification_requested_at',
                 'verification_reviewed_at',
                 'verification_reviewed_by',

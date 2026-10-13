@@ -14,6 +14,21 @@ class UserRole(models.TextChoices):
     HUNTER = 'hunter', 'House Hunter'
     OWNER = 'owner', 'Property Owner'
     MOVER = 'mover', 'Mover'
+    PROVIDER = 'provider', 'Service Provider'
+
+
+class ServiceCategory(models.TextChoices):
+    PLUMBER = 'plumber', 'Plumber'
+    ELECTRICIAN = 'electrician', 'Electrician'
+    CLEANER = 'cleaner', 'Cleaner'
+    PAINTER = 'painter', 'Painter'
+    CARPENTER = 'carpenter', 'Carpenter'
+    HANDYMAN = 'handyman', 'Handyman'
+    GARDENER = 'gardener', 'Gardener'
+    PEST_CONTROL = 'pest_control', 'Pest Control'
+    SECURITY = 'security', 'Security'
+    APPLIANCE_REPAIR = 'appliance_repair', 'Appliance Repair'
+    OTHER = 'other', 'Other'
 
 
 class VerificationStatus(models.TextChoices):
@@ -161,6 +176,19 @@ class Profile(models.Model):
     mover_base_lng = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     mover_base_label = models.CharField(max_length=255, blank=True, help_text="Human-readable base location")
 
+    # Service provider profile (plumber, electrician, cleaner...) - listed in
+    # the public services directory. Verification is a manual admin toggle.
+    service_category = models.CharField(max_length=20, choices=ServiceCategory.choices, blank=True)
+    provider_bio = models.TextField(blank=True, help_text="What you do and why people should hire you")
+    provider_service_areas = models.CharField(
+        max_length=255, blank=True, help_text="Comma-separated areas you serve, e.g. Kilimani, Westlands"
+    )
+    provider_years_experience = models.PositiveIntegerField(default=0)
+    is_verified_provider = models.BooleanField(default=False)
+    provider_lat = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    provider_lng = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    provider_location_label = models.CharField(max_length=255, blank=True, help_text="Human-readable base location")
+
     # Owner public profile - the branded standalone landing page a verified
     # owner can share instead of their own website (see /owners/<username>/).
     owner_brand_name = models.CharField(
@@ -225,6 +253,12 @@ class Profile(models.Model):
 
     def is_mover(self):
         return self.role == UserRole.MOVER
+
+    def is_provider(self):
+        return self.role == UserRole.PROVIDER
+
+    def get_provider_service_areas_list(self):
+        return [a.strip() for a in self.provider_service_areas.split(',') if a.strip()]
 
     def completed_moves_count(self):
         return self.user.move_offers.filter(status='accepted', move_request__status='completed').count()

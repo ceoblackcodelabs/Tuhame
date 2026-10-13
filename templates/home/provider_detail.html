@@ -1,0 +1,108 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% load icons %}
+{% load phone_filters %}
+
+{% block title %}{{ provider.get_full_name }} – {{ provider.get_service_category_display }} | Tuhame{% endblock title %}
+{% block meta_description %}{{ provider.get_full_name }}, {{ provider.get_service_category_display }}{% if provider.city %} in {{ provider.city }}{% endif %}. {{ provider.provider_bio|truncatechars:140 }}{% endblock meta_description %}
+{% block inject_css %}<link rel="stylesheet" href="{% static 'assets/vendor/leaflet/leaflet.css' %}" />{% endblock inject_css %}
+
+{% block content %}
+<section class="section" style="background:var(--light-bg);padding-top:6.5rem;">
+  <div class="container prov-wrap">
+    <div class="prov-main">
+      <div class="svc-card">
+        <div class="svc-top">
+          {% if provider.profile_picture %}
+            <img src="{{ provider.profile_picture.url }}" alt="{{ provider.get_full_name }}" class="svc-avatar" style="width:84px;height:84px;" width="84" height="84">
+          {% else %}
+            <span class="svc-avatar svc-avatar-fallback" style="width:84px;height:84px;font-size:2rem;">{{ provider.get_full_name|slice:":1"|upper }}</span>
+          {% endif %}
+          <div>
+            <h1 style="margin:0 0 0.25rem;font-size:1.6rem;">{{ provider.get_full_name }}</h1>
+            <span class="svc-trade">{{ provider.get_service_category_display }}</span>
+            {% if provider.is_verified_provider %}<span class="svc-verified">{% icon "shield" %} Verified</span>{% endif %}
+            <div class="svc-rating" style="margin-top:0.35rem;">
+              {% if provider.avg_rating %}&#9733; {{ provider.avg_rating|floatformat:1 }} <small>({{ provider.review_count }} review{{ provider.review_count|pluralize }})</small>{% else %}<small>No reviews yet</small>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% if provider.provider_bio %}<p class="svc-bio" style="font-size:1rem;">{{ provider.provider_bio|linebreaksbr }}</p>{% endif %}
+        <ul class="svc-meta">
+          {% if provider.provider_years_experience %}<li>{{ provider.provider_years_experience }} year{{ provider.provider_years_experience|pluralize }} experience</li>{% endif %}
+          {% if areas %}<li>Serves: {{ areas|join:", " }}</li>{% endif %}
+          {% if provider.provider_location_label %}<li>Based in {{ provider.provider_location_label }}</li>{% endif %}
+        </ul>
+        {% if provider.phone_number %}
+        <div class="svc-actions">
+          <a href="{{ provider.phone_number|tel_href }}" class="svc-btn svc-btn-solid">Call</a>
+          <a href="https://wa.me/{{ provider.phone_number|whatsapp_number }}" target="_blank" rel="noopener" class="svc-btn svc-btn-ghost">WhatsApp</a>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if provider.provider_lat and provider.provider_lng %}
+      <div class="svc-card" style="padding:0;overflow:hidden;">
+        <div id="prov-map" style="height:240px;"></div>
+      </div>
+      {% endif %}
+
+      <div class="svc-card">
+        <h2 style="margin:0;font-size:1.2rem;">Reviews</h2>
+        {% for r in reviews %}
+          <div class="rev">
+            <div class="rev-head"><b>{{ r.reviewer.get_full_name|default:r.reviewer.username }}</b>
+              <span class="svc-rating">{% for i in "12345" %}{% if forloop.counter <= r.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+              <small>{{ r.created_at|date:"M d, Y" }}</small></div>
+            {% if r.comment %}<p class="svc-bio">{{ r.comment }}</p>{% endif %}
+          </div>
+        {% empty %}
+          <p class="svc-bio">No reviews yet. Reviews come from customers after a completed job.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside class="prov-side" id="book">
+      <div class="svc-card" style="position:sticky;top:6rem;">
+        <h2 style="margin:0;font-size:1.2rem;">Book {{ provider.get_full_name|truncatechars:24 }}</h2>
+        {% if is_self %}
+          <p class="svc-bio">This is your public page. Customers book you from here; manage jobs in <a href="{% url 'home:my_service_requests' %}">My requests</a>.</p>
+        {% elif not user.is_authenticated %}
+          <p class="svc-bio">Log in to send a request.</p>
+          <a class="svc-btn svc-btn-solid" href="{% url 'login' %}?next={{ request.path }}">Log in</a>
+          <a class="svc-btn svc-btn-ghost" style="border-color:var(--gray-300);color:inherit;" href="{% url 'register' %}">Create account</a>
+        {% else %}
+        <form method="post" action="{% url 'home:service_request_create' provider.user.username %}" class="book-form">
+          {% csrf_token %}
+          <label>What needs doing?<textarea name="description" rows="3" required minlength="10" placeholder="e.g. Kitchen sink is leaking under the cabinet"></textarea></label>
+          <label>Address<input type="text" name="address" required maxlength="255" placeholder="Estate, building, house no."></label>
+          <label>Your phone<input type="tel" name="phone" required value="{{ prefill_phone }}" placeholder="07XX XXX XXX"></label>
+          <div class="book-row">
+            <label>Date<input type="date" name="preferred_date" min="{% now 'Y-m-d' %}"></label>
+            <label>Time<select name="preferred_time">{% for v, l in time_choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
+          </div>
+          <button type="submit" class="svc-btn svc-btn-solid" style="border:0;cursor:pointer;">Send request</button>
+          <small class="svc-bio">The provider will accept or decline. Agree the price with them directly.</small>
+        </form>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock content %}
+
+{% block inject_js %}
+{% if provider.provider_lat and provider.provider_lng %}
+<script src="{% static 'assets/vendor/leaflet/leaflet.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var pos = [{{ provider.provider_lat|stringformat:"s" }}, {{ provider.provider_lng|stringformat:"s" }}];
+  var map = L.map('prov-map', { center: pos, zoom: 14, scrollWheelZoom: false });
+  var key = '{{ carto_api_key|escapejs }}';
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' + (key ? '?key=' + key : ''),
+    { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+  L.marker(pos).addTo(map);
+});
+</script>
+{% endif %}
+{% endblock inject_js %}

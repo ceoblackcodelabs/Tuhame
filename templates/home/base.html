@@ -153,19 +153,22 @@
   <a href="#main-content" class="skip-link" style="position:absolute;top:-999px;left:0;background:#2563EB;color:#fff;padding:0.75rem 1.5rem;z-index:9999;">Skip to main content</a>
 
   <!-- ─── NAVBAR ─── -->
-  <nav class="navbar transparent" role="navigation" aria-label="Main navigation">
+  <nav class="navbar transparent {% block nav_class %}{% endblock nav_class %}" role="navigation" aria-label="Main navigation">
     <div class="nav-container">
       <a href="{% url 'home:home' %}" class="nav-logo" aria-label="2Hame Home - Kenya's Real Estate Platform">
         <img src="{% static 'assets/img/logo.png' %}" alt="2Hame - Kenya's Real Estate Platform" class="nav-logo-img theme-logo-light" width="120" height="40" />
         <img src="{% static 'assets/img/logo-dark-mode.png' %}" alt="2Hame - Kenya's Real Estate Platform" class="nav-logo-img theme-logo-dark" width="120" height="40" />
       </a>
       <ul class="nav-menu" role="menubar">
-        <li role="none"><a href="{% url 'home:home' %}" class="nav-link active" role="menuitem">Home</a></li>
-        <li role="none"><a href="{% url 'home:properties' %}" class="nav-link" role="menuitem">Properties</a></li>
-        <li role="none"><a href="{% url 'home:property_map' %}" class="nav-link" role="menuitem">Map Search</a></li>
-        <li role="none"><a href="{% url 'home:contact' %}" class="nav-link" role="menuitem">Contact</a></li>
+        <li role="none"><a href="{% url 'home:properties' %}" class="nav-link" role="menuitem">Homes</a></li>
+        <li role="none"><a href="{% url 'home:property_map' %}" class="nav-link" role="menuitem">Map</a></li>
+        <li role="none"><a href="{% url 'home:services' %}" class="nav-link" role="menuitem">Services</a></li>
+        <li role="none"><a href="{% url 'home:mover_map' %}" class="nav-link" role="menuitem">Movers</a></li>
+        <li role="none"><a href="{% url 'home:home' %}#how-it-works" class="nav-link" role="menuitem">How it works</a></li>
+        <li role="none"><a href="{% url 'home:home' %}#pms" class="nav-link" role="menuitem">Landlords</a></li>
         <li role="none"><a href="{% url 'blog:blog_list' %}" class="nav-link" role="menuitem">Blog</a></li>
-        <li role="none"><a href="{% url 'home:mover_map' %}" class="nav-link" role="menuitem">{% icon "truck" %} Movers</a></li>
+        <li role="none"><a href="{% url 'home:home' %}#faq" class="nav-link" role="menuitem">FAQ</a></li>
+        <li role="none"><a href="{% url 'home:contact' %}" class="nav-link" role="menuitem">Support</a></li>
       </ul>
       <div class="nav-actions">
         <button class="dark-toggle" aria-label="Toggle dark mode">{% icon "moon" %}</button>
@@ -192,6 +195,7 @@
               </div>
               <a href="{% url 'my_profile' %}" class="profile-dropdown-item" role="menuitem">{% icon "user" %} Profile</a>
               <a href="{% url 'edit_profile' %}" class="profile-dropdown-item" role="menuitem">{% icon "pencil" %} Edit Profile</a>
+              <a href="{% url 'home:my_service_requests' %}" class="profile-dropdown-item" role="menuitem">{% icon "file" %} My service requests</a>
               <div class="profile-dropdown-divider"></div>
               <a href="{% url 'logout' %}" class="profile-dropdown-item profile-dropdown-danger" role="menuitem">{% icon "door" %} Logout</a>
             {% else %}
@@ -217,8 +221,12 @@
     <a href="{% url 'home:home' %}">{% icon "home" %} Home</a>
     <a href="{% url 'home:properties' %}">{% icon "neighborhood" %} Properties</a>
     <a href="{% url 'home:property_map' %}">{% icon "map" %} Map Search</a>
-    <a href="{% url 'home:contact' %}">{% icon "mail" %} Contact</a>
+    <a href="{% url 'home:home' %}#how-it-works">{% icon "map" %} How it works</a>
+    <a href="{% url 'home:home' %}#pms">{% icon "edit" %} Landlords</a>
+    <a href="{% url 'home:home' %}#faq">{% icon "mail" %} FAQ</a>
+    <a href="{% url 'home:contact' %}">{% icon "mail" %} Support</a>
     <a href="{% url 'blog:blog_list' %}">{% icon "newspaper" %} Blog</a>
+    <a href="{% url 'home:services' %}">{% icon "edit" %} Services</a>
     <a href="{% url 'home:mover_map' %}">{% icon "truck" %} Movers Marketplace</a>
     <a href="{% url 'my_profile' %}">{% icon "user" %} Profile</a>
     <button type="button" class="dark-toggle" aria-label="Toggle dark mode">

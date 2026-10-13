@@ -1,0 +1,59 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block title %}Service providers near you – Tuhame{% endblock title %}
+{% block inject_css %}<link rel="stylesheet" href="{% static 'assets/vendor/leaflet/leaflet.css' %}" />{% endblock inject_css %}
+
+{% block content %}
+<section style="padding-top:var(--nav-height,72px);">
+  <div class="smap-bar">
+    <div class="svc-chips smap-chips">
+      <a href="{% url 'home:services_map' %}" class="svc-chip{% if not selected_category %} active{% endif %}">All</a>
+      {% for value, label in categories %}
+        <a href="?category={{ value }}" class="svc-chip{% if selected_category == value %} active{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+      <button type="button" id="locate-me" class="svc-btn svc-btn-ghost" style="border-color:var(--gray-300);color:inherit;background:none;cursor:pointer;">Near me</button>
+      <a href="{% url 'home:services' %}{% if selected_category %}?category={{ selected_category }}{% endif %}" class="svc-btn svc-btn-solid">List view</a>
+    </div>
+  </div>
+  <div id="services-map" style="height:calc(100vh - var(--nav-height,72px) - 64px);min-height:420px;"></div>
+  <div id="smap-empty" style="display:none;" class="smap-empty">No providers with a map location yet for this selection.</div>
+</section>
+{% endblock content %}
+
+{% block inject_js %}
+<script src="{% static 'assets/vendor/leaflet/leaflet.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var map = L.map('services-map', { center: [-1.2921, 36.8219], zoom: 11 });
+  var key = '{{ carto_api_key|escapejs }}';
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' + (key ? '?key=' + key : ''),
+    { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+
+  function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+  var url = "{% url 'home:services_map_data' %}{% if selected_category %}?category={{ selected_category|urlencode }}{% endif %}";
+  fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+    var pts = [];
+    data.providers.forEach(function (p) {
+      var rating = p.rating ? '&#9733; ' + p.rating + ' (' + p.reviews + ')' : 'No reviews yet';
+      var html = '<b>' + esc(p.name) + '</b>' + (p.verified ? ' &#10003;' : '') + '<br>' + esc(p.category) +
+                 '<br>' + rating + '<br><a href="' + p.url + '">View &amp; book</a>';
+      L.marker([p.lat, p.lng]).addTo(map).bindPopup(html);
+      pts.push([p.lat, p.lng]);
+    });
+    if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 14 });
+    else document.getElementById('smap-empty').style.display = 'block';
+  });
+
+  document.getElementById('locate-me').addEventListener('click', function () {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+    });
+  });
+});
+</script>
+{% endblock inject_js %}

@@ -494,6 +494,31 @@
         </div>
         {% endif %}
 
+        <!-- Service provider profile (shown only for the Service Provider role) -->
+        <div class="edit-section-card" id="provider-section" style="{% if user.profile.role != 'provider' %}display:none;{% endif %}">
+          <div class="edit-section-title">
+            <span class="edit-section-icon">{% icon "edit" %}</span> Service Provider Profile
+          </div>
+          <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:1rem;">
+            This is what tenants and landlords see in the <a href="{% url 'home:services' %}">services directory</a>. Add your phone number above so they can call you.
+          </p>
+          <div class="edit-grid">
+            <div class="edit-field">{{ form.service_category.label_tag }}{{ form.service_category }}</div>
+            <div class="edit-field">{{ form.provider_years_experience.label_tag }}{{ form.provider_years_experience }}</div>
+            <div class="edit-field full-width">{{ form.provider_bio.label_tag }}{{ form.provider_bio }}</div>
+            <div class="edit-field full-width">{{ form.provider_service_areas.label_tag }}{{ form.provider_service_areas }}</div>
+            <div class="edit-field full-width">
+              {{ form.provider_location_label.label_tag }}{{ form.provider_location_label }}
+              <div style="display:flex;gap:0.5rem;margin:0.5rem 0;flex-wrap:wrap;">
+                <button type="button" id="provider-locate" class="btn btn-sm btn-outline">Use my current location</button>
+                <small style="color:var(--gray-500);align-self:center;">…or click the map to drop your pin. Shown on the public services map.</small>
+              </div>
+              <div id="provider-map" style="height:240px;width:100%;border:1px solid var(--gray-200);border-radius:var(--radius);"></div>
+              {{ form.provider_lat }}{{ form.provider_lng }}
+            </div>
+          </div>
+        </div>
+
         <!-- Mover Portfolio (shown only for the Mover role) -->
         <div class="edit-section-card" id="mover-portfolio-section" style="{% if user.profile.role != 'mover' %}display:none;{% endif %}">
           <div class="edit-section-title">
@@ -827,9 +852,45 @@
     });
   }
 
+  // ── Provider location picker ──
+  let providerMap = null, providerMarker = null;
+  function setProviderPin(lat, lng, pan) {
+    document.getElementById('id_provider_lat').value = lat.toFixed(6);
+    document.getElementById('id_provider_lng').value = lng.toFixed(6);
+    if (providerMarker) providerMarker.setLatLng([lat, lng]); else providerMarker = L.marker([lat, lng]).addTo(providerMap);
+    if (pan) providerMap.setView([lat, lng], 15);
+  }
+  function initProviderMap() {
+    if (providerMap) { setTimeout(() => providerMap.invalidateSize(), 150); return; }
+    const el = document.getElementById('provider-map');
+    if (!el || typeof L === 'undefined') return;
+    const lat = parseFloat(document.getElementById('id_provider_lat').value);
+    const lng = parseFloat(document.getElementById('id_provider_lng').value);
+    const has = !isNaN(lat) && !isNaN(lng);
+    providerMap = L.map(el).setView(has ? [lat, lng] : [-1.2921, 36.8219], has ? 15 : 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(providerMap);
+    if (has) setProviderPin(lat, lng, false);
+    providerMap.on('click', e => setProviderPin(e.latlng.lat, e.latlng.lng, false));
+    document.getElementById('provider-locate').addEventListener('click', () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(pos => setProviderPin(pos.coords.latitude, pos.coords.longitude, true));
+    });
+    setTimeout(() => providerMap.invalidateSize(), 150);
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     const roleField = document.getElementById('id_role');
     const portfolioSection = document.getElementById('mover-portfolio-section');
+    const providerSection = document.getElementById('provider-section');
+    if (roleField && providerSection) {
+      const toggleProvider = () => {
+        const on = roleField.value === 'provider';
+        providerSection.style.display = on ? 'block' : 'none';
+        if (on) initProviderMap();
+      };
+      roleField.addEventListener('change', toggleProvider);
+      if (roleField.value === 'provider') initProviderMap();
+    }
     if (!roleField || !portfolioSection) return;
 
     function toggleMoverSection() {

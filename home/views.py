@@ -8,7 +8,7 @@ from .forms import ViewingScheduleForm, ReviewForm, ContactForm, OwnerContactFor
 from .models import Partner, Testimonial, HeroSlide
 from django.contrib import messages
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Avg, Count
 from django.utils import timezone
@@ -1344,3 +1344,238 @@ class AcceptMoveOfferView(LoginRequiredMixin, View):
         offer.accept()
         messages.success(request, f"You've matched with {offer.mover.get_full_name() or offer.mover.username} for your move!")
         return JsonResponse({'success': True})
+
+
+from django.db.models import Avg, Count
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+from .models import ServiceRequest, ServiceReview, ServiceRequestStatus
+
+
+def _providers():
+    """Active, listed service providers with their rating."""
+    return Profile.objects.filter(
+        role='provider', is_active=True, user__is_active=True,
+    ).exclude(service_category='').select_related('user').annotate(
+        avg_rating=Avg('user__service_reviews_received__rating'),
+        review_count=Count('user__service_reviews_received', distinct=True),
+    )
+
+
+class ServicesDirectoryView(TemplateView):
+    """Public directory of service providers (plumbers, electricians, ...).
+    No login needed to browse; contact details are the provider's own
+    public phone number."""
+    template_name = 'home/services.html'
+
+    def get_context_data(self, **kwargs):
+        from users.models import ServiceCategory
+        context = super().get_context_data(**kwargs)
+        category = self.request.GET.get('category', '').strip()
+        query = self.request.GET.get('q', '').strip()
+        valid = dict(ServiceCategory.choices)
+
+        providers = _providers()
+        if category in valid:
+            providers = providers.filter(service_category=category)
+        else:
+            category = ''
+        if query:
+            providers = providers.filter(
+                Q(full_name__icontains=query) | Q(user__username__icontains=query) |
+                Q(provider_bio__icontains=query) | Q(provider_service_areas__icontains=query) |
+                Q(city__icontains=query)
+            )
+        context.update({
+            'providers': providers.order_by(
+                '-is_verified_provider', models.F('avg_rating').desc(nulls_last=True),
+                '-provider_years_experience', 'full_name'),
+            'categories': ServiceCategory.choices,
+            'selected_category': category,
+            'selected_category_label': valid.get(category, ''),
+            'query': query,
+        })
+        return context
+
+
+class ServicesMapView(TemplateView):
+    """Public map of service providers who have set a base location."""
+    template_name = 'home/services_map.html'
+
+    def get_context_data(self, **kwargs):
+        from users.models import ServiceCategory
+        context = super().get_context_data(**kwargs)
+        context['categories'] = ServiceCategory.choices
+        context['selected_category'] = self.request.GET.get('category', '')
+        from django.conf import settings
+        context['carto_api_key'] = getattr(settings, 'CARTO_API_KEY', '')
+        return context
+
+
+class ServicesMapDataView(View):
+    """JSON feed for the services map: providers with a saved location."""
+
+    def get(self, request):
+        providers = _providers().filter(provider_lat__isnull=False, provider_lng__isnull=False)
+        category = request.GET.get('category', '').strip()
+        if category:
+            providers = providers.filter(service_category=category)
+        data = [{
+            'username': p.user.username,
+            'name': p.get_full_name(),
+            'category': p.get_service_category_display(),
+            'category_key': p.service_category,
+            'lat': float(p.provider_lat),
+            'lng': float(p.provider_lng),
+            'label': p.provider_location_label,
+            'rating': round(p.avg_rating, 1) if p.avg_rating else None,
+            'reviews': p.review_count,
+            'verified': p.is_verified_provider,
+            'url': reverse('home:provider_detail', kwargs={'username': p.user.username}),
+        } for p in providers]
+        return JsonResponse({'providers': data})
+
+
+class ProviderDetailView(DetailView):
+    """Public page for one provider: bio, rating, reviews, location, booking form."""
+    template_name = 'home/provider_detail.html'
+    context_object_name = 'provider'
+    slug_field = 'user__username'
+    slug_url_kwarg = 'username'
+
+    def get_queryset(self):
+        return _providers()
+
+    def get_context_data(self, **kwargs):
+        from django.conf import settings
+        context = super().get_context_data(**kwargs)
+        provider = self.object
+        context['reviews'] = ServiceReview.objects.filter(provider=provider.user).select_related('reviewer')[:20]
+        context['areas'] = provider.get_provider_service_areas_list()
+        context['is_self'] = self.request.user.is_authenticated and self.request.user == provider.user
+        context['time_choices'] = ServiceRequest.TIME_CHOICES
+        context['carto_api_key'] = getattr(settings, 'CARTO_API_KEY', '')
+        user = self.request.user
+        if user.is_authenticated:
+            profile = getattr(user, 'profile', None)
+            context['prefill_phone'] = profile.phone_number if profile else ''
+        return context
+
+
+class ServiceRequestCreateView(LoginRequiredMixin, View):
+    """Customer books / requests a job from a provider."""
+
+    def post(self, request, username):
+        provider = get_object_or_404(_providers(), user__username=username)
+        if provider.user == request.user:
+            messages.error(request, "You can't book yourself.")
+            return redirect('home:provider_detail', username=username)
+
+        description = request.POST.get('description', '').strip()
+        address = request.POST.get('address', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        time_pref = request.POST.get('preferred_time', 'anytime')
+        date_raw = request.POST.get('preferred_date', '').strip()
+
+        errors = []
+        if len(description) < 10:
+            errors.append('Describe the job in a few words (at least 10 characters).')
+        if not address:
+            errors.append('Add the address of the job.')
+        if len(''.join(c for c in phone if c.isdigit())) < 9:
+            errors.append('Add a phone number the provider can reach you on.')
+        preferred_date = None
+        if date_raw:
+            try:
+                preferred_date = timezone.datetime.strptime(date_raw, '%Y-%m-%d').date()
+                if preferred_date < timezone.now().date():
+                    errors.append('Pick today or a future date.')
+            except ValueError:
+                errors.append('That date is not valid.')
+        if time_pref not in dict(ServiceRequest.TIME_CHOICES):
+            time_pref = 'anytime'
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return redirect('home:provider_detail', username=username)
+
+        if ServiceRequest.objects.filter(
+            provider=provider.user, requester=request.user, status=ServiceRequestStatus.PENDING,
+            description=description,
+        ).exists():
+            messages.info(request, 'You already sent this request - the provider has not replied yet.')
+            return redirect('home:my_service_requests')
+
+        ServiceRequest.objects.create(
+            provider=provider.user, requester=request.user, description=description[:2000],
+            address=address[:255], phone=phone[:20], preferred_date=preferred_date, preferred_time=time_pref,
+        )
+        messages.success(request, f'Request sent to {provider.get_full_name()}. They will respond from their requests page.')
+        return redirect('home:my_service_requests')
+
+
+class MyServiceRequestsView(LoginRequiredMixin, TemplateView):
+    """Requests I sent, and (for providers) requests I received."""
+    template_name = 'home/service_requests.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['sent'] = ServiceRequest.objects.filter(requester=user).select_related('provider__profile')
+        context['received'] = ServiceRequest.objects.filter(provider=user).select_related('requester')
+        profile = getattr(user, 'profile', None)
+        context['is_provider'] = bool(profile and profile.role == 'provider')
+        return context
+
+
+class ServiceRequestActionView(LoginRequiredMixin, View):
+    """Provider: accept / decline / complete. Customer: cancel."""
+    PROVIDER_ACTIONS = {
+        'accept': (ServiceRequestStatus.PENDING, ServiceRequestStatus.ACCEPTED),
+        'decline': (ServiceRequestStatus.PENDING, ServiceRequestStatus.DECLINED),
+        'complete': (ServiceRequestStatus.ACCEPTED, ServiceRequestStatus.COMPLETED),
+    }
+
+    def post(self, request, pk, action):
+        job = get_object_or_404(ServiceRequest, pk=pk)
+        if action == 'cancel':
+            allowed = job.requester_id == request.user.id and job.status in (
+                ServiceRequestStatus.PENDING, ServiceRequestStatus.ACCEPTED)
+            new_status = ServiceRequestStatus.CANCELLED
+        elif action in self.PROVIDER_ACTIONS:
+            required, new_status = self.PROVIDER_ACTIONS[action]
+            allowed = job.provider_id == request.user.id and job.status == required
+        else:
+            raise Http404
+        if not allowed:
+            return HttpResponseForbidden('Not allowed.')
+        job.status = new_status
+        note = request.POST.get('note', '').strip()[:300]
+        if note and job.provider_id == request.user.id:
+            job.provider_note = note
+        job.save()
+        messages.success(request, f'Request {job.get_status_display().lower()}.')
+        return redirect('home:my_service_requests')
+
+
+class ServiceReviewCreateView(LoginRequiredMixin, View):
+    """Customer rates a completed job - once per job, only by who booked it."""
+
+    def post(self, request, pk):
+        job = get_object_or_404(ServiceRequest, pk=pk, requester=request.user)
+        if not job.can_review:
+            messages.error(request, 'You can review a job once, after it is completed.')
+            return redirect('home:my_service_requests')
+        try:
+            rating = int(request.POST.get('rating', ''))
+        except ValueError:
+            rating = 0
+        if not 1 <= rating <= 5:
+            messages.error(request, 'Pick a rating from 1 to 5 stars.')
+            return redirect('home:my_service_requests')
+        ServiceReview.objects.create(
+            request=job, provider=job.provider, reviewer=request.user, rating=rating,
+            comment=request.POST.get('comment', '').strip()[:1000],
+        )
+        messages.success(request, 'Thanks - your review is live on their page.')
+        return redirect('home:provider_detail', username=job.provider.username)

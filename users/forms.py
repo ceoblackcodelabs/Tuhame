@@ -1,7 +1,7 @@
 # apps/profiles/forms.py
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Profile
+from .models import Profile, ServiceCategory
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
@@ -80,6 +80,13 @@ class ProfileForm(forms.ModelForm):
             'preferred_language',
             'email_notifications',
             'sms_notifications',
+            'service_category',
+            'provider_bio',
+            'provider_service_areas',
+            'provider_years_experience',
+            'provider_lat',
+            'provider_lng',
+            'provider_location_label',
             'mover_bio',
             'mover_vehicle_type',
             'mover_years_experience',
@@ -100,6 +107,18 @@ class ProfileForm(forms.ModelForm):
         widgets = {
             'profile_picture': PlainClearableFileInput(attrs={
                 'accept': 'image/*'
+            }),
+            'provider_lat': forms.HiddenInput(),
+            'provider_lng': forms.HiddenInput(),
+            'provider_location_label': forms.TextInput(attrs={
+                'placeholder': 'e.g. Kilimani, Nairobi', 'maxlength': 255,
+            }),
+            'provider_bio': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Describe the work you do, your experience, and what customers can expect…'
+            }),
+            'provider_service_areas': forms.TextInput(attrs={
+                'placeholder': 'e.g. Kilimani, Westlands, Karen'
             }),
             'mover_bio': forms.Textarea(attrs={
                 'rows': 3,
@@ -274,11 +293,19 @@ class UserRegistrationForm(forms.ModelForm):
             ('hunter', '🔎 House Hunter - I\'m looking for a place'),
             ('owner', '🏠 Property Owner - I list properties'),
             ('mover', '🚚 Mover - I help people move'),
+            ('provider', '🛠️ Service Provider - plumber, electrician, cleaner…'),
         ],
         initial='hunter',
         required=True,
         widget=forms.RadioSelect,
         label='I am a...'
+    )
+
+    service_category = forms.ChoiceField(
+        choices=[('', 'Select your trade…')] + ServiceCategory.choices,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-input', 'style': 'padding-left:1rem;'}),
+        label='What service do you offer?',
     )
 
     agree_terms = forms.BooleanField(
@@ -372,6 +399,9 @@ class UserRegistrationForm(forms.ModelForm):
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError('Passwords do not match.')
 
+        if cleaned_data.get('role') == 'provider' and not cleaned_data.get('service_category'):
+            self.add_error('service_category', 'Pick the service you offer.')
+
         return cleaned_data
 
     def save(self, commit=True):
@@ -394,6 +424,8 @@ class UserRegistrationForm(forms.ModelForm):
                 profile.phone_number = self.cleaned_data.get('phone_number', '')
                 profile.city = self.cleaned_data.get('city', '')
                 profile.role = role
+                if role == 'provider':
+                    profile.service_category = self.cleaned_data.get('service_category', '')
                 profile.save()
                 if role == 'owner':
                     profile.request_owner_verification()
@@ -407,6 +439,7 @@ class UserRegistrationForm(forms.ModelForm):
                     phone_number=self.cleaned_data.get('phone_number', ''),
                     city=self.cleaned_data.get('city', ''),
                     role=role,
+                    service_category=self.cleaned_data.get('service_category', '') if role == 'provider' else '',
                 )
                 if role == 'owner':
                     profile.request_owner_verification()

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from properties.models import Property
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -459,3 +460,61 @@ class Testimonial(models.Model):
 
     def __str__(self):
         return f"{self.reviewer_name} - {self.get_reviewer_type_display()}"
+
+
+
+# ─── Services marketplace: booking requests and reviews ───
+
+class ServiceRequestStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    ACCEPTED = 'accepted', 'Accepted'
+    DECLINED = 'declined', 'Declined'
+    COMPLETED = 'completed', 'Completed'
+    CANCELLED = 'cancelled', 'Cancelled'
+
+
+class ServiceRequest(models.Model):
+    """A customer asking a service provider (plumber, cleaner...) for a job."""
+
+    TIME_CHOICES = [
+        ('anytime', 'Anytime'), ('morning', 'Morning'), ('afternoon', 'Afternoon'), ('evening', 'Evening'),
+    ]
+
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_requests_received')
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_requests_sent')
+    description = models.TextField(help_text="What needs doing?")
+    address = models.CharField(max_length=255, help_text="Where is the job?")
+    phone = models.CharField(max_length=20, help_text="Number the provider can reach you on")
+    preferred_date = models.DateField(null=True, blank=True)
+    preferred_time = models.CharField(max_length=10, choices=TIME_CHOICES, default='anytime')
+    status = models.CharField(max_length=10, choices=ServiceRequestStatus.choices, default=ServiceRequestStatus.PENDING)
+    provider_note = models.CharField(max_length=300, blank=True, help_text="Reply from the provider")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.requester} -> {self.provider} ({self.status})"
+
+    @property
+    def can_review(self):
+        return self.status == ServiceRequestStatus.COMPLETED and not hasattr(self, 'review')
+
+
+class ServiceReview(models.Model):
+    """One rating per completed job, left by the customer who booked it."""
+
+    request = models.OneToOneField(ServiceRequest, on_delete=models.CASCADE, related_name='review')
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_reviews_received')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_reviews_written')
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True, max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.rating}/5 for {self.provider}"
