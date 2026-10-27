@@ -1,4 +1,5 @@
 {% load static %}
+{% load formguard %}
 {% load icons %}
 
 <!DOCTYPE html>
@@ -157,6 +158,7 @@
 
       <form id="login-form" method="post" action="{% url 'login' %}" style="margin-top:1.5rem;">
         {% csrf_token %}
+{% form_guard %}
 
         <!-- Username Field -->
         <div class="form-group">

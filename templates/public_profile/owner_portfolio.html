@@ -1,809 +1,657 @@
-{% extends "public_profile/public_profile_base.html" %}
-{% load static %}
-{% load humanize %}
-{% load icons %}
+{% load static %}{% load formguard %}{% load humanize %}{% load icons %}{% load phone_filters %}<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ brand_name }}{% if owner_profile.city %} – Properties in {{ owner_profile.city }}{% else %} – Property Listings{% endif %} | {{ site_name }}</title>
+  <meta name="description" content="{{ brand_name }}'s official property profile on {{ site_name }}{% if owner_profile.city %}, based in {{ owner_profile.city }}{% endif %}. Browse {{ total_properties }} active listing{{ total_properties|pluralize }} and get in touch directly." />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <script>document.documentElement.classList.add("js")</script>
+  <link rel="canonical" href="{{ site_url }}{% url 'home:owner_portfolio' username=owner_profile.user.username %}" />
 
-{% block title %}{{ brand_name }}{% if owner_profile.city %} - Properties in {{ owner_profile.city }}{% else %} - Property Listings{% endif %} | 2Hame{% endblock title %}
-{% block meta_description %}{{ brand_name }}'s official property profile on 2Hame{% if owner_profile.city %}, based in {{ owner_profile.city }}{% endif %}. Browse {{ total_properties }} available propert{{ total_properties|pluralize:"y,ies" }}{% if owner_profile.owner_whatsapp_number %} and contact them directly on WhatsApp{% endif %}.{% endblock meta_description %}
-{% block canonical_url %}{{ site_url }}{% url 'home:owner_portfolio' username=owner_profile.user.username %}{% endblock canonical_url %}
-{% block og_url %}{{ site_url }}{% url 'home:owner_portfolio' username=owner_profile.user.username %}{% endblock og_url %}
-{% block og_title %}{{ brand_name }} - Property Profile on 2Hame{% endblock og_title %}
-{% block og_description %}{{ owner_profile.bio|default:"Browse active property listings from this verified owner and get in touch directly."|truncatechars:150 }}{% endblock og_description %}
+  <meta property="og:type" content="profile" />
+  <meta property="og:site_name" content="{{ site_name }}" />
+  <meta property="og:title" content="{{ brand_name }} – Property Profile on {{ site_name }}" />
+  <meta property="og:description" content="{{ owner_profile.bio|default:'Browse active property listings from this verified owner and get in touch directly.'|truncatechars:150 }}" />
+  <meta property="og:url" content="{{ site_url }}{% url 'home:owner_portfolio' username=owner_profile.user.username %}" />
+  {% if profile_picture_url %}<meta property="og:image" content="{{ site_url }}{{ profile_picture_url }}" />{% elif hero_images %}<meta property="og:image" content="{% if hero_images.0|slice:':4' == 'http' %}{{ hero_images.0 }}{% else %}{{ site_url }}{{ hero_images.0 }}{% endif %}" />{% endif %}
+  <meta name="twitter:card" content="summary_large_image" />
 
-{% block nav_links %}
-<a href="#about">About</a>
-<a href="#categories">Categories</a>
-<a href="#featured">Featured</a>
-<a href="#listings">Listings</a>
-{% if reviews or True %}<a href="#reviews">Reviews</a>{% endif %}
-{% endblock nav_links %}
+  <link rel="icon" type="image/svg+xml" href="{% static 'assets/images/favicon.svg' %}" />
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/images/favicon-32.png' %}" />
 
-{% block content %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "{{ brand_name|escapejs }}",
+    "url": "{{ site_url }}{% url 'home:owner_portfolio' username=owner_profile.user.username %}",
+    "description": "{{ owner_profile.bio|default:'Verified property owner on '|truncatechars:200|escapejs }}",
+    {% if profile_picture_url %}"image": "{{ site_url }}{{ profile_picture_url }}",{% endif %}
+    {% if owner_profile.phone_number %}"telephone": "{{ owner_profile.phone_number|escapejs }}",{% endif %}
+    "address": {"@type": "PostalAddress", "addressLocality": "{{ owner_profile.city|default:'Nairobi'|escapejs }}", "addressCountry": "KE"}{% if review_count %},
+    "aggregateRating": {"@type": "AggregateRating", "ratingValue": "{{ review_avg|floatformat:1 }}", "reviewCount": "{{ review_count }}", "bestRating": "5", "worstRating": "1"}{% endif %}
+  }
+  </script>
 
-<!-- ─── HERO ─── -->
-<section class="pp-hero">
-  {% for img in hero_images %}
-    <div class="pp-hero-slide{% if forloop.first %} pp-hero-slide-active{% endif %}" data-pp-slide>
-      <img src="{{ img }}" alt="" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" />
-    </div>
-  {% empty %}
-    <div class="pp-hero-slide pp-hero-slide-active" style="background:linear-gradient(135deg,#16161A,#0B0B0C);"></div>
-  {% endfor %}
-  <div class="pp-hero-overlay"></div>
-  <div class="pp-hero-content">
-    {% if owner_profile.profile_picture %}
-      <img src="{{ owner_profile.profile_picture.url }}" alt="{{ brand_name }}" class="pp-hero-logo" />
-    {% else %}
-      <img src="{% static 'assets/img/logo.png' %}" alt="2Hame" class="pp-hero-logo pp-hero-logo-fallback" />
-    {% endif %}
-    <p class="pp-hero-eyebrow">{% icon "home" %} Verified Property Owner{% if owner_cities %} · {{ owner_cities|first }}{% endif %}</p>
-    <h1 class="pp-hero-name">{{ brand_name }}</h1>
-    <hr class="pp-hero-hr" />
-    {% if hero_taglines %}
-      <p class="pp-hero-rotating-tagline" id="pp-hero-rotating-tagline">{{ hero_taglines.0 }}</p>
-      {{ hero_taglines|json_script:"pp-hero-taglines-data" }}
-    {% endif %}
-    <p class="pp-hero-tagline">{{ owner_profile.bio|truncatewords:36|default:"Verified listings, honest advice, and support from first message to move-in day - every property personally reviewed before it goes live." }}</p>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#FFF7ED', 100: '#FFEDD5', 400: '#FB923C', 500: '#F97316', 600: '#EA580C', 700: '#C2410C' },
+            ink: { 900: '#0F172A', 800: '#1E293B' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #FAFAFA; color: #0F172A; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .hero-slide { opacity: 0; transition: opacity 1.4s ease; }
+    .hero-slide.is-active { opacity: 1; }
+    /* only hide-then-reveal when JS is running, so nothing is ever stuck invisible */
+    .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+    .js .reveal.is-in { opacity: 1; transform: none; }
+    .faq-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+    .faq-item.is-open .faq-body { grid-template-rows: 1fr; }
+    .faq-item.is-open .faq-icon { transform: rotate(45deg); background: #F97316; color: #fff; }
+    .watermark { font-weight: 800; letter-spacing: -0.04em; line-height: .8; user-select: none; pointer-events: none; }
+    .field { width: 100%; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); color: #fff; border-radius: 999px; padding: .85rem 1.2rem; font-size: .95rem; outline: none; }
+    textarea.field { border-radius: 1.25rem; resize: vertical; }
+    .field::placeholder { color: rgba(255,255,255,.55); }
+    .field:focus { border-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,.25); }
+    .filter { border: 1px solid #E2E8F0; background: #fff; border-radius: 999px; padding: .6rem 1rem; font-size: .85rem; outline: none; min-width: 0; }
+    .filter:focus { border-color: #F97316; }
+  </style>
+</head>
+<body class="antialiased">
 
-    <div class="pp-hero-ctas">
-      <a href="#listings" class="pp-hero-cta">View Properties</a>
-      <a href="#connect" class="pp-hero-cta pp-hero-cta-secondary">Contact Us</a>
-    </div>
-
-    <div class="pp-hero-counters">
-      <div>
-        <div class="pp-hero-counter-value" data-pp-count="{{ total_properties }}">0</div>
-        <div class="pp-hero-counter-label">Listings</div>
-      </div>
-      {% if review_count %}
-      <div>
-        <div class="pp-hero-counter-value" data-pp-count="{{ review_count }}">0</div>
-        <div class="pp-hero-counter-label">Client Reviews</div>
-      </div>
-      {% endif %}
-      <div>
-        <div class="pp-hero-counter-value" data-pp-count="{{ years_active }}" data-pp-count-suffix="+">0</div>
-        <div class="pp-hero-counter-label">Years Active</div>
-      </div>
-    </div>
-  </div>
-
-  <a href="#about" class="pp-hero-scroll-cue" aria-label="Scroll down">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-  </a>
-</section>
-
-<!-- ─── FEATURE STRIP ─── -->
-<section class="pp-feature-strip">
-  <div class="pp-container">
-    <div class="pp-feature-grid">
-      <div class="pp-feature">
-        <div class="pp-feature-icon">{% icon "building" size=28 %}</div>
-        <p class="pp-feature-label">Full-Service Management</p>
-      </div>
-      <div class="pp-feature">
-        <div class="pp-feature-icon">{% icon "bar-chart" size=28 %}</div>
-        <p class="pp-feature-label">Maximize Returns</p>
-      </div>
-      <div class="pp-feature">
-        <div class="pp-feature-icon">{% icon "shield" size=28 %}</div>
-        <p class="pp-feature-label">Protect Your Investment</p>
-      </div>
-      <div class="pp-feature">
-        <div class="pp-feature-icon">{% icon "message" size=28 %}</div>
-        <p class="pp-feature-label">Direct Communication</p>
-      </div>
-      <div class="pp-feature">
-        <div class="pp-feature-icon">{% icon "award" size=28 %}</div>
-        <p class="pp-feature-label">Premium Standard of Service</p>
-      </div>
-      <div class="pp-feature">
-        <div class="pp-feature-icon">{% icon "clock" size=28 %}</div>
-        <p class="pp-feature-label">24/7 Support</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── ANNOUNCEMENT MARQUEE ─── -->
-{% if owner_profile.owner_marquee_text %}
-<div class="pp-marquee">
-  <div class="pp-marquee-track">
-    <span>{{ owner_profile.owner_marquee_text }}</span>
-    <span>{{ owner_profile.owner_marquee_text }}</span>
-    <span>{{ owner_profile.owner_marquee_text }}</span>
-  </div>
-</div>
-{% endif %}
-
-<!-- ─── ABOUT ─── -->
-<section class="pp-about pp-bg-default" id="about">
-  <div class="pp-container">
-    <div class="pp-about-grid pp-reveal">
+<!-- ═════════ NAVIGATION ═════════ -->
+<header id="nav" class="fixed inset-x-0 top-0 z-50 transition-all duration-300">
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
+    <a href="{% url 'home:owner_portfolio' username=owner_profile.user.username %}" class="flex items-center gap-3 text-white" aria-label="{{ brand_name }}">
       {% if profile_picture_url %}
-        <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-about-image" loading="lazy" />
+        <img src="{{ profile_picture_url }}" alt="" class="h-10 w-10 rounded-full object-cover ring-2 ring-white/30" />
       {% else %}
-        <div class="pp-about-image-fallback">{{ brand_name|first|upper }}</div>
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-lg font-extrabold">{{ brand_name|first|upper }}</span>
       {% endif %}
-      <div>
-        <p class="pp-eyebrow">About</p>
-        <h2 class="pp-about-heading">{{ owner_profile.owner_about_heading|default:"Trusted local expertise, personal service" }}</h2>
-        <hr class="pp-about-hr" />
-        <p class="pp-about-desc">{{ owner_profile.bio|default:"This owner hasn't added a description yet." }}</p>
+      <span class="text-lg font-extrabold tracking-tight">{{ brand_name|truncatechars:26 }}</span>
+    </a>
 
-        <ul class="pp-about-features">
-          <li class="pp-about-feature">
-            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
-            Reliable
-          </li>
-          <li class="pp-about-feature">
-            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
-            Client Support
-          </li>
-          <li class="pp-about-feature">
-            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
-            Expert Advice
-          </li>
-          <li class="pp-about-feature">
-            <span class="pp-about-feature-icon">{% icon "check" size=16 %}</span>
-            Trustworthy
-          </li>
-        </ul>
-      </div>
+    <nav class="hidden items-center gap-8 text-sm font-semibold text-white/90 lg:flex" aria-label="Main">
+      <a href="#about" class="transition hover:text-brand-400">About</a>
+      <a href="#featured" class="transition hover:text-brand-400">Featured</a>
+      <a href="#listings" class="transition hover:text-brand-400">All Properties</a>
+      <a href="#reviews" class="transition hover:text-brand-400">Reviews</a>
+      <a href="#faq" class="transition hover:text-brand-400">FAQ</a>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      {% if is_own_profile %}
+        <a href="{% url 'dashboard' %}" class="hidden rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 md:inline-block">Dashboard</a>
+      {% endif %}
+      <a href="#connect" class="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-500/30 transition hover:bg-brand-600">Contact</a>
+      <button id="menu-btn" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white lg:hidden" aria-label="Open menu" aria-expanded="false">
+        <i class="fa-solid fa-bars"></i>
+      </button>
     </div>
   </div>
+
+  <div id="mobile-menu" class="hidden border-t border-white/10 bg-ink-900/95 px-5 py-4 backdrop-blur lg:hidden">
+    <nav class="flex flex-col gap-1 text-white" aria-label="Mobile">
+      <a href="#about" class="rounded-xl px-3 py-3 font-semibold hover:bg-white/10">About</a>
+      <a href="#featured" class="rounded-xl px-3 py-3 font-semibold hover:bg-white/10">Featured</a>
+      <a href="#listings" class="rounded-xl px-3 py-3 font-semibold hover:bg-white/10">All Properties</a>
+      <a href="#reviews" class="rounded-xl px-3 py-3 font-semibold hover:bg-white/10">Reviews</a>
+      <a href="#faq" class="rounded-xl px-3 py-3 font-semibold hover:bg-white/10">FAQ</a>
+      {% if is_own_profile %}
+        <a href="{% url 'dashboard' %}" class="rounded-xl px-3 py-3 font-semibold hover:bg-white/10">Dashboard</a>
+        <a href="{% url 'analytics:profile_analytics' username=owner_profile.user.username %}" class="rounded-xl px-3 py-3 font-semibold hover:bg-white/10">Analytics</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ═════════ HERO ═════════ -->
+<section class="relative isolate flex min-h-[100svh] items-center overflow-hidden bg-ink-900 text-white">
+  {% for img in hero_images %}
+    <img src="{{ img }}" alt="" class="hero-slide absolute inset-0 -z-20 h-full w-full object-cover{% if forloop.first %} is-active{% endif %}" data-hero-slide loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" />
+  {% empty %}
+    <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=2000&q=80" alt="" class="hero-slide is-active absolute inset-0 -z-20 h-full w-full object-cover" data-hero-slide />
+  {% endfor %}
+  <div class="absolute inset-0 -z-10 bg-gradient-to-b from-ink-900/80 via-ink-900/55 to-ink-900/90"></div>
+  <div class="watermark absolute inset-x-0 bottom-[-0.06em] -z-10 select-none overflow-hidden whitespace-nowrap text-center text-[9.5vw] text-white/[0.06]" aria-hidden="true">{{ brand_name|truncatechars:13 }}</div>
+
+  <div class="mx-auto w-full max-w-7xl px-5 pb-24 pt-32 lg:px-8">
+    <p class="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest backdrop-blur">
+      <i class="fa-solid fa-circle-check text-brand-400"></i> Verified property owner{% if owner_cities %} · {{ owner_cities|first }}{% endif %}
+    </p>
+    <h1 class="max-w-4xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+      {% if owner_profile.owner_tagline %}{{ owner_profile.owner_tagline }}{% else %}Find your perfect home at the best price{% endif %}
+    </h1>
+    <p class="mt-6 max-w-2xl text-lg text-white/80">
+      {{ owner_profile.bio|truncatewords:30|default:"Verified listings, honest advice and direct support from first message to move-in day." }}
+    </p>
+
+    <form method="get" action="#listings" class="mt-10 flex max-w-2xl items-center gap-2 rounded-full border border-white/25 bg-white/10 p-2 pl-6 shadow-2xl backdrop-blur-md" role="search">
+      <i class="fa-solid fa-magnifying-glass text-white/70"></i>
+      <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search properties, area or city" aria-label="Search properties"
+             class="min-w-0 flex-1 bg-transparent px-2 py-3 text-white placeholder-white/60 outline-none" />
+      <button type="submit" class="rounded-full bg-brand-500 px-7 py-3 font-bold text-white transition hover:bg-brand-600">Search</button>
+    </form>
+
+    <dl class="mt-12 flex flex-wrap gap-x-12 gap-y-6">
+      <div><dt class="text-xs uppercase tracking-widest text-white/60">Listings</dt><dd class="text-3xl font-extrabold">{{ total_properties }}</dd></div>
+      {% if review_count %}<div><dt class="text-xs uppercase tracking-widest text-white/60">Rating</dt><dd class="text-3xl font-extrabold">{{ review_avg|floatformat:1 }}<i class="fa-solid fa-star ml-1 text-xl text-brand-400"></i></dd></div>{% endif %}
+      <div><dt class="text-xs uppercase tracking-widest text-white/60">Years active</dt><dd class="text-3xl font-extrabold">{{ years_active }}+</dd></div>
+    </dl>
+  </div>
+
+  {% if owner_profile.owner_marquee_text %}
+  <div class="absolute inset-x-0 bottom-0 overflow-hidden border-t border-white/10 bg-ink-900/60 py-3 text-sm font-semibold text-white/85 backdrop-blur">
+    <div class="mx-auto max-w-7xl truncate px-5 lg:px-8"><i class="fa-solid fa-bullhorn mr-2 text-brand-400"></i>{{ owner_profile.owner_marquee_text }}</div>
+  </div>
+  {% endif %}
 </section>
 
-<!-- ─── REGION MARQUEE (auto-scrolling, per-location listing counts) ─── -->
-{% if region_breakdown %}
-<div class="pp-region-marquee">
-  <div class="pp-region-track">
-    {% for row in region_breakdown %}
-      <a href="?city={{ row.city }}#listings" class="pp-region-card">
-        <div class="pp-region-card-image" style="background-image:url('{{ row.image_url }}');"></div>
-        <div class="pp-region-card-body">
-          <p class="pp-region-card-name">{{ row.city }}</p>
-          <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
+<!-- ═════════ OUR STORY ═════════ -->
+<section id="about" class="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
+  <div class="grid gap-12 lg:grid-cols-12 lg:gap-16">
+    <div class="reveal lg:col-span-4">
+      <p class="mb-5 text-sm font-bold uppercase tracking-widest text-brand-600">Our Story</p>
+      <div class="inline-flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="flex -space-x-3">
+          {% if profile_picture_url %}<img src="{{ profile_picture_url }}" alt="" class="h-11 w-11 rounded-full border-2 border-white object-cover" />{% endif %}
+          <span class="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white bg-brand-500 font-bold text-white">{{ brand_name|first|upper }}</span>
         </div>
-      </a>
-    {% endfor %}
-    {% for row in region_breakdown %}
-      <a href="?city={{ row.city }}#listings" class="pp-region-card" aria-hidden="true" tabindex="-1">
-        <div class="pp-region-card-image" style="background-image:url('{{ row.image_url }}');"></div>
-        <div class="pp-region-card-body">
-          <p class="pp-region-card-name">{{ row.city }}</p>
-          <p class="pp-region-card-count">{{ row.count }} propert{{ row.count|pluralize:"y,ies" }}</p>
-        </div>
-      </a>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-
-<!-- ─── CATEGORIES ─── -->
-{% if category_breakdown %}
-<section class="pp-section pp-bg-light" id="categories">
-  <div class="pp-container">
-    <div class="pp-section-header pp-reveal">
-      <p class="pp-eyebrow">Browse by Category</p>
-      <h2 class="pp-about-heading">What We List</h2>
-    </div>
-    <div class="pp-category-grid pp-reveal">
-      {% for row in category_breakdown %}
-        <a href="?property_type={{ row.value }}#listings" class="pp-category-card">
-          <div class="pp-category-card-icon">{% icon row.icon size=24 %}</div>
-          <p class="pp-category-card-label">{{ row.label }}</p>
-          <p class="pp-category-card-count">{{ row.count }} listing{{ row.count|pluralize }}</p>
-          <span class="pp-category-card-link">View listings →</span>
-        </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- ─── FEATURED PROPERTIES ─── -->
-{% if featured_properties %}
-<section class="pp-section pp-bg-default" id="featured">
-  <div class="pp-container">
-    <div class="pp-section-header pp-reveal">
-      <p class="pp-eyebrow">Featured Properties</p>
-      <h2 class="pp-about-heading">Handpicked for Exceptional Living</h2>
-    </div>
-    <div class="pp-featured-grid pp-reveal">
-      {% for property in featured_properties %}
-      <div class="pp-featured-card">
-        <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="pp-featured-media">
-          {% if property.main_image %}
-            <img src="{{ property.main_image.url }}" alt="{{ property.title }}" loading="lazy" />
+        <div class="text-sm leading-snug">
+          {% if review_count %}
+            <p class="font-bold">{{ review_avg|floatformat:1 }} <i class="fa-solid fa-star text-brand-500"></i> from {{ review_count }} review{{ review_count|pluralize }}</p>
+            <p class="text-slate-500">Rated by real clients</p>
           {% else %}
-            <div class="pp-card-image-fallback">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
-            </div>
+            <p class="font-bold">{{ total_properties }} active listing{{ total_properties|pluralize }}</p>
+            <p class="text-slate-500">Verified owner on {{ site_name }}</p>
           {% endif %}
-          <span class="pp-featured-badge">{% icon "featured" size=12 %} Featured</span>
-        </a>
-        <div class="pp-featured-body">
-          <div class="pp-featured-top">
-            <h3 class="pp-featured-title">{{ property.title }}</h3>
-            {% if property.avg_rating %}
-              <span class="pp-featured-rating">{% icon "star" size=13 filled=True %} {{ property.avg_rating|floatformat:1 }}</span>
-            {% endif %}
-          </div>
-          <p class="pp-featured-location">{% icon "map-pin" size=13 %} {{ property.city }}{% if property.state %}, {{ property.state }}{% endif %}</p>
-          <p class="pp-featured-desc">{{ property.description|default:""|truncatewords:16 }}</p>
-          <div class="pp-featured-meta">
-            <span>{{ property.bedrooms }} bed</span>
-            <span>{{ property.bathrooms }} bath</span>
-          </div>
-          <div class="pp-featured-footer">
-            <p class="pp-featured-price">KES {{ property.price|intcomma }}</p>
-            <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="pp-featured-link">View Property →</a>
-          </div>
         </div>
       </div>
+    </div>
+
+    <div class="reveal lg:col-span-8">
+      <h2 class="text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+        {{ owner_profile.owner_about_heading|default:"Trusted local expertise, personal service, and homes chosen with care." }}
+      </h2>
+      <p class="mt-6 max-w-3xl text-lg leading-relaxed text-slate-500">
+        {{ owner_profile.bio|default:"This owner hasn't added a description yet." }}
+      </p>
+      <ul class="mt-8 flex flex-wrap gap-3 text-sm font-semibold">
+        <li class="rounded-full bg-brand-50 px-4 py-2 text-brand-700"><i class="fa-solid fa-shield-halved mr-2"></i>Verified owner</li>
+        <li class="rounded-full bg-brand-50 px-4 py-2 text-brand-700"><i class="fa-solid fa-comments mr-2"></i>Direct communication</li>
+        <li class="rounded-full bg-brand-50 px-4 py-2 text-brand-700"><i class="fa-solid fa-house-circle-check mr-2"></i>Properties personally listed</li>
+      </ul>
+      <a href="#connect" class="group mt-10 inline-flex items-center gap-3 rounded-full border border-slate-300 bg-white py-2 pl-6 pr-2 font-bold transition hover:border-brand-500">
+        Learn more
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white transition group-hover:translate-x-1"><i class="fa-solid fa-arrow-right"></i></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ FEATURED (carousel) ═════════ -->
+{% if featured_properties %}
+<section id="featured" class="bg-white py-16 sm:py-20">
+  <div class="mx-auto max-w-7xl px-5 lg:px-8">
+    <div class="reveal mb-10 flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <p class="mb-3 text-sm font-bold uppercase tracking-widest text-brand-600">Featured</p>
+        <h2 class="text-3xl font-extrabold tracking-tight sm:text-5xl">Our most amazing properties</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#listings" class="rounded-full bg-ink-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-600">Explore now</a>
+        <button type="button" data-slide="-1" class="flex h-12 w-12 items-center justify-center rounded-full border border-slate-300 transition hover:border-brand-500 hover:text-brand-600" aria-label="Previous"><i class="fa-solid fa-arrow-left"></i></button>
+        <button type="button" data-slide="1" class="flex h-12 w-12 items-center justify-center rounded-full bg-brand-500 text-white transition hover:bg-brand-600" aria-label="Next"><i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div id="featured-track" class="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-5 pb-4 lg:mx-0 lg:px-0">
+      {% for property in featured_properties %}
+      <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}"
+         class="group relative h-[28rem] w-[18.5rem] flex-none snap-start overflow-hidden rounded-[2rem] bg-ink-800 sm:w-[22rem]">
+        {% if property.main_image %}
+          <img src="{{ property.main_image.url }}" alt="{{ property.title }}" loading="lazy" class="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+        {% else %}
+          <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=75" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-t from-ink-900/90 via-ink-900/10 to-transparent"></div>
+        <div class="absolute left-5 top-5 flex gap-2">
+          <span class="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-ink-900 backdrop-blur">{{ property.get_property_type_display }}</span>
+          {% if property.avg_rating %}<span class="rounded-full bg-ink-900/70 px-3 py-1 text-xs font-bold text-white backdrop-blur"><i class="fa-solid fa-star mr-1 text-brand-400"></i>{{ property.avg_rating|floatformat:1 }}</span>{% endif %}
+        </div>
+        <div class="absolute inset-x-0 bottom-0 p-6 text-white">
+          <h3 class="text-xl font-extrabold leading-snug">{{ property.title }}</h3>
+          <p class="mt-1 text-sm text-white/75"><i class="fa-solid fa-location-dot mr-1.5 text-brand-400"></i>{{ property.city }}{% if property.state %}, {{ property.state }}{% endif %}</p>
+          <div class="mt-4 flex items-center justify-between">
+            <p class="rounded-full bg-brand-500 px-4 py-1.5 text-sm font-extrabold">KES {{ property.price|floatformat:0|intcomma }}</p>
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur transition group-hover:bg-brand-500"><i class="fa-solid fa-arrow-up-right-from-square text-sm"></i></span>
+          </div>
+        </div>
+      </a>
       {% endfor %}
     </div>
   </div>
 </section>
 {% endif %}
 
-<!-- ─── LISTINGS ─── -->
-<section class="pp-section pp-bg-default" id="listings">
-  <div class="pp-container">
-    <div class="pp-section-header pp-reveal">
-      <p class="pp-eyebrow">Listings</p>
-      <h2 class="pp-about-heading">{{ page_obj.paginator.count }} Propert{{ page_obj.paginator.count|pluralize:"y,ies" }}{% if request.GET.property_type or request.GET.city or request.GET.status or request.GET.bedrooms or request.GET.bathrooms or request.GET.price_min or request.GET.price_max %} Found{% else %} Available{% endif %}</h2>
-    </div>
+<!-- ═════════ ALL PROPERTIES ═════════ -->
+<section id="listings" class="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
+  <div class="reveal mb-10 text-center">
+    <p class="mb-3 text-sm font-bold uppercase tracking-widest text-brand-600">Browse</p>
+    <h2 class="text-3xl font-extrabold tracking-tight sm:text-5xl">Discover your ideal property</h2>
+  </div>
 
-    <button type="button" class="pp-filters-mobile-btn" id="pp-filters-toggle">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-      Filter Properties
-    </button>
-    <div class="pp-filters-backdrop" id="pp-filters-backdrop"></div>
+  {% if category_breakdown %}
+  <div class="no-scrollbar mb-6 flex gap-2 overflow-x-auto pb-2 sm:justify-center">
+    <a href="?#listings" class="shrink-0 rounded-full px-5 py-2 text-sm font-bold {% if not request.GET.property_type %}bg-ink-900 text-white{% else %}border border-slate-200 bg-white hover:border-brand-500{% endif %}">All</a>
+    {% for row in category_breakdown %}
+      <a href="?property_type={{ row.value }}#listings" class="shrink-0 rounded-full px-5 py-2 text-sm font-bold {% if request.GET.property_type == row.value %}bg-ink-900 text-white{% else %}border border-slate-200 bg-white hover:border-brand-500{% endif %}">{{ row.label }} <span class="ml-1 text-xs opacity-60">{{ row.count }}</span></a>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    <div class="pp-listings-layout">
-      <aside class="pp-filters" id="pp-filters">
-        <h4>Filters</h4>
-        <form method="get" id="pp-filter-form">
-          <div class="pp-filter-group">
-            <label for="pp-f-type">Property Type</label>
-            <select name="property_type" id="pp-f-type">
-              <option value="">Any type</option>
-              {% for value, label in property_types %}
-                <option value="{{ value }}" {% if request.GET.property_type == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="pp-filter-group">
-            <label for="pp-f-status">Status</label>
-            <select name="status" id="pp-f-status">
-              <option value="">Any status</option>
-              {% for value, label in property_statuses %}
-                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="pp-filter-group">
-            <label for="pp-f-city">Location</label>
-            <select name="city" id="pp-f-city">
-              <option value="">Any location</option>
-              {% for c in owner_cities %}
-                <option value="{{ c }}" {% if request.GET.city == c %}selected{% endif %}>{{ c }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="pp-filter-group">
-            <label for="pp-f-bed">Min Bedrooms</label>
-            <input type="number" min="0" name="bedrooms" id="pp-f-bed" value="{{ request.GET.bedrooms }}" placeholder="Any" />
-          </div>
-          <div class="pp-filter-group">
-            <label for="pp-f-bath">Min Bathrooms</label>
-            <input type="number" min="0" name="bathrooms" id="pp-f-bath" value="{{ request.GET.bathrooms }}" placeholder="Any" />
-          </div>
-          <div class="pp-filter-group">
-            <label for="pp-f-pricemin">Min Price (KES)</label>
-            <input type="number" min="0" name="price_min" id="pp-f-pricemin" value="{{ request.GET.price_min }}" placeholder="No minimum" />
-          </div>
-          <div class="pp-filter-group">
-            <label for="pp-f-pricemax">Max Price (KES)</label>
-            <input type="number" min="0" name="price_max" id="pp-f-pricemax" value="{{ request.GET.price_max }}" placeholder="No maximum" />
-          </div>
-          <button type="submit" class="pp-btn pp-btn-gold" style="width:100%;justify-content:center;">Apply Filters</button>
-          {% if request.GET %}
-            <a href="?" class="pp-btn pp-btn-outline" style="width:100%;justify-content:center;margin-top:0.6rem;">Clear</a>
-          {% endif %}
-        </form>
-      </aside>
+  <form method="get" action="#listings" class="mb-10 flex flex-wrap items-center justify-center gap-3">
+    {% if request.GET.property_type %}<input type="hidden" name="property_type" value="{{ request.GET.property_type }}" />{% endif %}
+    <input class="filter w-44" type="text" name="search" value="{{ request.GET.search }}" placeholder="Search…" aria-label="Search" />
+    <select class="filter" name="city" aria-label="City">
+      <option value="">All cities</option>
+      {% for c in owner_cities %}<option value="{{ c }}" {% if request.GET.city == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+    <select class="filter" name="status" aria-label="Status">
+      <option value="">Any status</option>
+      {% for value, label in property_statuses %}<option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <input class="filter w-24" type="number" min="0" name="bedrooms" value="{{ request.GET.bedrooms }}" placeholder="Beds" aria-label="Minimum bedrooms" />
+    <input class="filter w-32" type="number" min="0" name="price_min" value="{{ request.GET.price_min }}" placeholder="Min KES" aria-label="Minimum price" />
+    <input class="filter w-32" type="number" min="0" name="price_max" value="{{ request.GET.price_max }}" placeholder="Max KES" aria-label="Maximum price" />
+    <button type="submit" class="rounded-full bg-brand-500 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600">Apply</button>
+    {% if querystring %}<a href="?#listings" class="text-sm font-semibold text-slate-500 underline hover:text-brand-600">Clear</a>{% endif %}
+  </form>
 
-      <div>
-        <div id="pp-listings-results">
-        <div class="pp-property-grid">
-          {% for property in properties %}
-          <div class="pp-card pp-reveal">
-            {% if property.main_image %}
-              <img src="{{ property.main_image.url }}" alt="{{ property.title }}" class="pp-card-image" loading="lazy" />
-            {% else %}
-              <div class="pp-card-image-fallback">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
-              </div>
-            {% endif %}
-            <div class="pp-card-body">
-              <p class="pp-card-price">KES {{ property.price|intcomma }}</p>
-              <h3 class="pp-card-title">{{ property.title }}</h3>
-              <p class="pp-card-location">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                {{ property.city }}{% if property.state %}, {{ property.state }}{% endif %}
-              </p>
-              <div class="pp-card-meta">
-                <span>{{ property.bedrooms }} bed</span>
-                <span>{{ property.bathrooms }} bath</span>
-              </div>
-              <div class="pp-card-actions">
-                <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="pp-btn pp-btn-outline">Details</a>
-                {% if owner_profile.owner_whatsapp_number %}
-                  <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information? {{ site_url }}{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}{% endfilter %}"
-                     target="_blank" rel="noopener noreferrer" class="pp-btn pp-btn-whatsapp">
-                    {% brand_icon "whatsapp" size=14 class_name="pp-whatsapp-icon" %}
-                    WhatsApp
-                  </a>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-          {% empty %}
-          <div class="pp-empty" style="grid-column:1/-1;">No properties match these filters right now.</div>
-          {% endfor %}
+  <div class="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+    {% for property in properties %}
+    <article class="reveal group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+      <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="relative block aspect-[4/3] overflow-hidden bg-slate-100">
+        {% if property.main_image %}
+          <img src="{{ property.main_image.url }}" alt="{{ property.title }}" loading="lazy" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+        {% else %}
+          <div class="flex h-full w-full items-center justify-center text-slate-300"><i class="fa-solid fa-house text-5xl"></i></div>
+        {% endif %}
+        <span class="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold">{{ property.get_status_display }}</span>
+        <span class="absolute bottom-4 right-4 rounded-full bg-brand-500 px-4 py-1.5 text-sm font-extrabold text-white shadow-lg">KES {{ property.price|floatformat:0|intcomma }}</span>
+      </a>
+      <div class="p-6">
+        <h3 class="text-lg font-extrabold leading-snug"><a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="hover:text-brand-600">{{ property.title }}</a></h3>
+        <p class="mt-1 text-sm text-slate-500"><i class="fa-solid fa-location-dot mr-1.5 text-brand-500"></i>{{ property.city }}{% if property.state %}, {{ property.state }}{% endif %}</p>
+        <div class="mt-4 flex items-center gap-5 border-t border-slate-100 pt-4 text-sm font-semibold text-slate-600">
+          <span><i class="fa-solid fa-bed mr-1.5 text-slate-400"></i>{{ property.bedrooms }} bed</span>
+          <span><i class="fa-solid fa-bath mr-1.5 text-slate-400"></i>{{ property.bathrooms }} bath</span>
+          <a href="{% url 'home:public_profile_property_detail' username=owner_profile.user.username slug=property.slug %}" class="ml-auto font-bold text-brand-600 hover:underline">Details <i class="fa-solid fa-arrow-right text-xs"></i></a>
         </div>
+        {% if owner_profile.owner_whatsapp_number %}
+        <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi! I'm interested in the property: {{ property.title }} located in {{ property.city }}. Could you please share more information?{% endfilter %}"
+           target="_blank" rel="noopener noreferrer" class="mt-4 flex items-center justify-center gap-2 rounded-full border border-emerald-500/40 py-2.5 text-sm font-bold text-emerald-600 transition hover:bg-emerald-500 hover:text-white">
+          <i class="fa-brands fa-whatsapp text-lg"></i> WhatsApp
+        </a>
+        {% endif %}
+      </div>
+    </article>
+    {% empty %}
+    <div class="col-span-full rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center text-slate-500">
+      <i class="fa-regular fa-face-frown mb-4 text-4xl"></i>
+      <p class="font-semibold">No properties match these filters right now.</p>
+      <a href="?#listings" class="mt-3 inline-block font-bold text-brand-600 hover:underline">Clear filters</a>
+    </div>
+    {% endfor %}
+  </div>
 
-        {% if page_obj.paginator.num_pages > 1 %}
-        <div class="pp-pagination">
-          {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">‹</a>
-          {% endif %}
-          {% for num in page_obj.paginator.page_range %}
-            {% if num == page_obj.number %}
-              <span class="pp-page-active">{{ num }}</span>
-            {% else %}
-              <a href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a>
-            {% endif %}
-          {% endfor %}
-          {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">›</a>
-          {% endif %}
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-12 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}#listings" class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white hover:border-brand-500" aria-label="Previous page"><i class="fa-solid fa-chevron-left text-xs"></i></a>{% endif %}
+    {% for num in page_obj.paginator.page_range %}
+      {% if num == page_obj.number %}
+        <span class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-500 font-bold text-white">{{ num }}</span>
+      {% else %}
+        <a href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}#listings" class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white font-semibold hover:border-brand-500">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}#listings" class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white hover:border-brand-500" aria-label="Next page"><i class="fa-solid fa-chevron-right text-xs"></i></a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+
+<!-- ═════════ WHERE WE ARE + CONTACT (dark, glass) ═════════ -->
+<section id="connect" class="relative isolate overflow-hidden bg-ink-900 py-16 text-white sm:py-20">
+  <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=70" alt="" loading="lazy" class="absolute inset-0 -z-20 h-full w-full object-cover opacity-30" />
+  <div class="absolute inset-0 -z-10 bg-gradient-to-br from-ink-900 via-ink-900/90 to-brand-700/30"></div>
+
+  <div class="mx-auto max-w-7xl px-5 lg:px-8">
+    {% if messages %}
+      <div class="mb-8 space-y-3">
+        {% for message in messages %}
+          <p class="rounded-2xl px-5 py-3 text-sm font-semibold {% if message.tags == 'success' %}bg-emerald-500/20 text-emerald-200{% else %}bg-red-500/20 text-red-200{% endif %}">{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="grid items-center gap-12 lg:grid-cols-2">
+      <div class="reveal">
+        <p class="mb-4 text-sm font-bold uppercase tracking-widest text-brand-400">Trusted & direct</p>
+        <h2 class="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">Trusted listings, seamless viewing. Let&rsquo;s talk.</h2>
+
+        {% if region_breakdown %}
+        <div class="mt-8 flex flex-wrap gap-2">
+          {% for row in region_breakdown|slice:":6" %}{% if row.count %}
+            <a href="?city={{ row.city|urlencode }}#listings" class="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold backdrop-blur transition hover:border-brand-400 hover:bg-brand-500/20">{{ row.city }} · {{ row.count }}</a>
+          {% endif %}{% endfor %}
         </div>
         {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ─── REVIEWS ─── -->
-<section class="pp-section pp-bg-light" id="reviews">
-  <div class="pp-container">
-    <div class="pp-section-header pp-reveal">
-      <p class="pp-eyebrow">Testimonials</p>
-      <h2 class="pp-about-heading">What Our Partners Say</h2>
-      {% if review_count %}<p style="color:var(--pp-text-muted);">{{ review_avg|floatformat:1 }} average from {{ review_count }} review{{ review_count|pluralize }}</p>{% endif %}
-    </div>
-    <div class="pp-review-carousel pp-reveal" id="pp-review-carousel">
-      <div class="pp-review-track" id="pp-review-track">
-        {% for group in review_groups %}
-        <div class="pp-review-panel{% if forloop.first %} pp-review-panel-active{% endif %}" data-pp-review-slide>
-          <div class="pp-review-grid">
-            {% for item in group %}
-            <div class="pp-review-card">
-              {% if reviews %}
-                <div class="pp-review-stars">{% for i in "12345" %}{% if forloop.counter <= item.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
-                <p class="pp-review-quote">&ldquo;{{ item.comment|truncatewords:26 }}&rdquo;</p>
-                <div class="pp-review-person">
-                  <div class="pp-review-avatar">{{ item.user.get_full_name|default:item.user.username|first|upper }}</div>
-                  <div>
-                    <p class="pp-review-author">{{ item.user.get_full_name|default:item.user.username }}</p>
-                    <p class="pp-review-property">{{ item.property.title }}</p>
-                  </div>
-                </div>
-              {% else %}
-                <span class="pp-testimonial-fallback-tag">Example</span>
-                <div class="pp-review-stars">★★★★★</div>
-                <p class="pp-review-quote">&ldquo;{{ item.text }}&rdquo;</p>
-                <div class="pp-review-person">
-                  <div class="pp-review-avatar">{{ item.role|first|upper }}</div>
-                  <div>
-                    <p class="pp-review-author">{{ item.role }}</p>
-                  </div>
-                </div>
-              {% endif %}
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endfor %}
+        <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-white/15 pt-8">
+          <div><dt class="text-xs uppercase tracking-widest text-white/50">Listings</dt><dd class="text-3xl font-extrabold">{{ total_properties }}</dd></div>
+          <div><dt class="text-xs uppercase tracking-widest text-white/50">Cities</dt><dd class="text-3xl font-extrabold">{{ owner_cities|length }}</dd></div>
+          <div><dt class="text-xs uppercase tracking-widest text-white/50">Categories</dt><dd class="text-3xl font-extrabold">{{ category_breakdown|length }}</dd></div>
+        </dl>
       </div>
-      {% if review_groups|length > 1 %}
-      <div class="pp-review-dots">
-        {% for group in review_groups %}
-          <button type="button" class="pp-review-dot{% if forloop.first %} pp-review-dot-active{% endif %}" data-pp-review-dot="{{ forloop.counter0 }}" aria-label="Show review group {{ forloop.counter }}"></button>
-        {% endfor %}
-      </div>
-      {% endif %}
-    </div>
-  </div>
-</section>
 
-<!-- ─── CONTACT / SOCIAL ─── -->
-<section class="pp-section pp-bg-default" id="connect">
-  <div class="pp-container">
-    {% if messages %}
-    <div class="pp-form-messages pp-reveal">
-      {% for message in messages %}
-      <p class="pp-form-message{% if message.tags %} pp-form-message-{{ message.tags }}{% endif %}">{{ message }}</p>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="pp-connect-grid pp-reveal">
-      <div class="pp-connect-form-card">
-        <p class="pp-eyebrow">Contact</p>
-        <h3 style="font-family:var(--pp-font-display);font-size:1.35rem;margin:0 0 1.25rem;">Send {{ brand_name }} a Message</h3>
-        <form method="post" action="{% url 'home:owner_portfolio_contact' username=owner_profile.user.username %}" class="pp-contact-form">
+      <div class="reveal rounded-[2rem] border border-white/15 bg-white/[0.07] p-7 shadow-2xl backdrop-blur-xl sm:p-9">
+        <h3 class="text-2xl font-extrabold">Send {{ brand_name|truncatechars:24 }} a message</h3>
+        <p class="mt-2 text-sm text-white/70">Ask about a property, book a viewing, or request more details. You&rsquo;ll get a direct reply.</p>
+        <form method="post" action="{% url 'home:owner_portfolio_contact' username=owner_profile.user.username %}" class="mt-6 space-y-3">
           {% csrf_token %}
-          <div class="pp-form-row">
+{% form_guard %}
+          <div class="grid gap-3 sm:grid-cols-2">
             {{ contact_form.name }}
             {{ contact_form.email }}
           </div>
           {{ contact_form.phone }}
           {{ contact_form.message }}
-          <button type="submit" class="pp-btn pp-btn-gold" style="width:100%;justify-content:center;">Send Message</button>
+          <button type="submit" class="flex w-full items-center justify-center gap-3 rounded-full bg-brand-500 py-3.5 font-bold text-white transition hover:bg-brand-600">
+            Send message <i class="fa-solid fa-arrow-right"></i>
+          </button>
         </form>
+        {% if owner_profile.owner_whatsapp_number %}
+        <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi {{ brand_name }}, I found your profile on {{ site_name }} and would love to know more about your listings.{% endfilter %}" target="_blank" rel="noopener noreferrer"
+           class="mt-4 flex items-center justify-center gap-2 rounded-full border border-white/25 py-3 text-sm font-bold transition hover:bg-white/10">
+          <i class="fa-brands fa-whatsapp text-lg text-emerald-400"></i> Or chat on WhatsApp
+        </a>
+        {% endif %}
       </div>
-
-      {% if owner_profile.owner_whatsapp_number or owner_profile.owner_instagram_url or owner_profile.owner_facebook_url or owner_profile.owner_youtube_url %}
-      <div class="pp-social-card">
-        <p class="pp-eyebrow">Connect</p>
-        <h3 style="font-family:var(--pp-font-display);font-size:1.35rem;margin:0;">Follow &amp; Get in Touch</h3>
-        <div class="pp-social-links">
-          {% if owner_profile.owner_whatsapp_number %}
-          <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi {{ brand_name }}, I found your profile on 2Hame and would love to know more about your listings.{% endfilter %}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-            {% brand_icon "whatsapp" size=18 class_name="pp-whatsapp-icon" %}
-          </a>
-          {% endif %}
-          {% if owner_profile.owner_instagram_url %}
-          <a href="{{ owner_profile.owner_instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
-          </a>
-          {% endif %}
-          {% if owner_profile.owner_facebook_url %}
-          <a href="{{ owner_profile.owner_facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.87v-6.98H7.9V12h2.5V9.8c0-2.5 1.49-3.88 3.77-3.88 1.09 0 2.23.2 2.23.2v2.45h-1.25c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.98A10 10 0 0 0 22 12Z"/></svg>
-          </a>
-          {% endif %}
-          {% if owner_profile.owner_youtube_url %}
-          <a href="{{ owner_profile.owner_youtube_url }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23 12s0-3.6-.46-5.3a3 3 0 0 0-2.1-2.1C18.7 4.1 12 4.1 12 4.1s-6.7 0-8.44.5a3 3 0 0 0-2.1 2.1C1 8.4 1 12 1 12s0 3.6.46 5.3a3 3 0 0 0 2.1 2.1c1.74.5 8.44.5 8.44.5s6.7 0 8.44-.5a3 3 0 0 0 2.1-2.1C23 15.6 23 12 23 12ZM9.75 15.5v-7l6 3.5-6 3.5Z"/></svg>
-          </a>
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
     </div>
   </div>
 </section>
 
-<!-- ─── FOOTER ─── -->
-<footer class="pp-footer">
-  <div class="pp-container pp-footer-cta">
-    <p class="pp-footer-cta-text">Get Your Own Property Profile</p>
-    <a href="{% url 'register' %}" class="pp-btn pp-btn-gold">Register on 2Hame</a>
+<!-- ═════════ TESTIMONIALS ═════════ -->
+<section id="reviews" class="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
+  <div class="reveal mb-12 grid gap-6 lg:grid-cols-12 lg:items-end">
+    <div class="lg:col-span-5">
+      <p class="mb-3 text-sm font-bold uppercase tracking-widest text-brand-600">Testimonials</p>
+      <h2 class="text-3xl font-extrabold tracking-tight sm:text-5xl">Here&rsquo;s what people have to say</h2>
+    </div>
+    <p class="text-slate-500 lg:col-span-5 lg:col-start-8">
+      {% if review_count %}{{ review_avg|floatformat:1 }} average from {{ review_count }} client review{{ review_count|pluralize }} across {{ brand_name }}&rsquo;s properties.{% else %}No client reviews yet &mdash; the examples below show the kind of feedback that will appear here.{% endif %}
+    </p>
   </div>
 
-  <div class="pp-container pp-footer-grid">
-    <div class="pp-footer-brand">
-      {% if profile_picture_url %}
-        <img src="{{ profile_picture_url }}" alt="{{ brand_name }}" class="pp-footer-logo" />
-      {% else %}
-        <div class="pp-footer-logo pp-header-avatar-fallback">{{ brand_name|first|upper }}</div>
-      {% endif %}
-      <p class="pp-footer-brand-name">{{ brand_name }}</p>
-      <p class="pp-footer-desc">{{ owner_profile.bio|truncatewords:22|default:"Verified property listings and direct, honest communication from first message to move-in day." }}</p>
-    </div>
-
-    <div class="pp-footer-col">
-      <p class="pp-footer-heading">Quick Links</p>
-      <a href="#about">About</a>
-      <a href="#categories">Categories</a>
-      <a href="#featured">Featured</a>
-      <a href="#listings">Listings</a>
-    </div>
-
-    <div class="pp-footer-col">
-      <p class="pp-footer-heading">Explore</p>
-      <a href="#reviews">Reviews</a>
-      <a href="#connect">Contact</a>
-      {% if is_own_profile %}
-        <a href="{% url 'analytics:profile_analytics' username=owner_profile.user.username %}">Analytics</a>
-        <a href="{% url 'dashboard' %}">Dashboard</a>
-      {% else %}
-        <a href="{% url 'register' %}">List Your Property</a>
-      {% endif %}
-    </div>
-
-    <div class="pp-footer-col">
-      <p class="pp-footer-heading">Contact</p>
-      {% if owner_profile.phone_number %}<a href="tel:{{ owner_profile.phone_number }}">{{ owner_profile.phone_number }}</a>{% endif %}
-      {% if owner_profile.user.email %}<a href="mailto:{{ owner_profile.user.email }}">{{ owner_profile.user.email }}</a>{% endif %}
-      {% if owner_cities %}<span class="pp-footer-location">{{ owner_cities|first }}, Kenya</span>{% endif %}
-    </div>
-
-    {% if owner_profile.owner_whatsapp_number or owner_profile.owner_instagram_url or owner_profile.owner_facebook_url or owner_profile.owner_youtube_url or owner_profile.owner_tiktok_url %}
-    <div class="pp-footer-col">
-      <p class="pp-footer-heading">Follow Us</p>
-      <div class="pp-footer-social">
-        {% if owner_profile.owner_whatsapp_number %}
-        <a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">{% brand_icon "whatsapp" size=16 %}</a>
-        {% endif %}
-        {% if owner_profile.owner_instagram_url %}
-        <a href="{{ owner_profile.owner_instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
-        </a>
-        {% endif %}
-        {% if owner_profile.owner_facebook_url %}
-        <a href="{{ owner_profile.owner_facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.87v-6.98H7.9V12h2.5V9.8c0-2.5 1.49-3.88 3.77-3.88 1.09 0 2.23.2 2.23.2v2.45h-1.25c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.98A10 10 0 0 0 22 12Z"/></svg>
-        </a>
-        {% endif %}
-        {% if owner_profile.owner_youtube_url %}
-        <a href="{{ owner_profile.owner_youtube_url }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23 12s0-3.6-.46-5.3a3 3 0 0 0-2.1-2.1C18.7 4.1 12 4.1 12 4.1s-6.7 0-8.44.5a3 3 0 0 0-2.1 2.1C1 8.4 1 12 1 12s0 3.6.46 5.3a3 3 0 0 0 2.1 2.1c1.74.5 8.44.5 8.44.5s6.7 0 8.44-.5a3 3 0 0 0 2.1-2.1C23 15.6 23 12 23 12ZM9.75 15.5v-7l6 3.5-6 3.5Z"/></svg>
-        </a>
-        {% endif %}
-        {% if owner_profile.owner_tiktok_url %}
-        <a href="{{ owner_profile.owner_tiktok_url }}" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16.6 5.82c-.97-.98-1.52-2.28-1.52-3.65V2h-3.42v14.4a2.6 2.6 0 1 1-1.85-2.49v-3.5a6.05 6.05 0 0 0-1.14-.11 6.14 6.14 0 1 0 6.14 6.14V9.4a7.6 7.6 0 0 0 4.45 1.43v-3.4a4.16 4.16 0 0 1-2.66-1.61z"/></svg>
-        </a>
-        {% endif %}
+  <div id="rev-slider" class="reveal relative">
+    {% for group in review_groups %}
+    <div class="rev-panel {% if not forloop.first %}hidden{% endif %}" data-rev-panel>
+      <div class="grid gap-6 md:grid-cols-3">
+        {% for item in group %}
+        <figure class="relative flex flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
+          <i class="fa-solid fa-quote-right absolute right-7 top-7 text-3xl text-brand-100"></i>
+          {% if reviews %}
+            <div class="mb-4 text-brand-500">{% for i in "12345" %}{% if forloop.counter <= item.rating %}<i class="fa-solid fa-star"></i>{% else %}<i class="fa-regular fa-star"></i>{% endif %}{% endfor %}</div>
+            <blockquote class="flex-1 text-lg font-bold leading-snug">&ldquo;{{ item.comment|truncatewords:26 }}&rdquo;</blockquote>
+            <figcaption class="mt-6 flex items-center gap-3">
+              <span class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-500 font-bold text-white">{{ item.user.get_full_name|default:item.user.username|first|upper }}</span>
+              <span class="text-sm"><b class="block">{{ item.user.get_full_name|default:item.user.username }}</b><span class="text-slate-500">{{ item.property.title|truncatechars:30 }}</span></span>
+            </figcaption>
+          {% else %}
+            <span class="mb-3 w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500">Example</span>
+            <div class="mb-4 text-brand-500"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+            <blockquote class="flex-1 text-lg font-bold leading-snug">&ldquo;{{ item.text }}&rdquo;</blockquote>
+            <figcaption class="mt-6 flex items-center gap-3">
+              <span class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-600">{{ item.role|first|upper }}</span>
+              <span class="text-sm font-bold">{{ item.role }}</span>
+            </figcaption>
+          {% endif %}
+        </figure>
+        {% endfor %}
       </div>
+    </div>
+    {% endfor %}
+
+    {% if review_groups|length > 1 %}
+    <div class="mt-8 flex items-center justify-center gap-3">
+      <button type="button" data-rev="-1" class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 hover:border-brand-500" aria-label="Previous reviews"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="flex gap-2" id="rev-dots">
+        {% for group in review_groups %}<button type="button" data-rev-dot="{{ forloop.counter0 }}" class="h-2.5 rounded-full transition-all {% if forloop.first %}w-8 bg-brand-500{% else %}w-2.5 bg-slate-300{% endif %}" aria-label="Reviews group {{ forloop.counter }}"></button>{% endfor %}
+      </div>
+      <button type="button" data-rev="1" class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-500 text-white hover:bg-brand-600" aria-label="Next reviews"><i class="fa-solid fa-arrow-right"></i></button>
     </div>
     {% endif %}
   </div>
+</section>
 
-  <div class="pp-footer-bottom">
-    <p>&copy; {% now "Y" %} {{ brand_name }}. All Rights Reserved.</p>
-    <p class="pp-footer-sub">Powered by 2Hame</p>
+<!-- ═════════ FAQ ═════════ -->
+<section id="faq" class="bg-white py-16 sm:py-20">
+  <div class="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-12 lg:px-8">
+    <div class="reveal lg:col-span-4">
+      <p class="mb-3 text-sm font-bold uppercase tracking-widest text-brand-600">FAQ</p>
+      <h2 class="text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">Got questions? We&rsquo;re here to help.</h2>
+      <p class="mt-5 text-slate-500">Quick answers about viewing, pricing and getting in touch with {{ brand_name }}. Can&rsquo;t find yours? Send a message and you&rsquo;ll hear back directly.</p>
+      <a href="#connect" class="mt-7 inline-flex items-center gap-2 rounded-full bg-ink-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-600">Ask a question <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="reveal space-y-3 lg:col-span-5" id="faq-list">
+      <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAFAFA]">
+        <button type="button" class="faq-btn flex w-full items-center justify-between gap-4 p-5 text-left font-bold" aria-expanded="false">
+          How do I book a viewing?
+          <span class="faq-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm transition"><i class="fa-solid fa-plus"></i></span>
+        </button>
+        <div class="faq-body"><div class="overflow-hidden"><p class="px-5 pb-5 text-slate-500">Open any property, then use the contact form{% if owner_profile.owner_whatsapp_number %} or WhatsApp button{% endif %} to ask for a viewing. {{ brand_name }} will confirm a time with you directly.</p></div></div>
+      </div>
+      <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAFAFA]">
+        <button type="button" class="faq-btn flex w-full items-center justify-between gap-4 p-5 text-left font-bold" aria-expanded="false">
+          Are these listings real and verified?
+          <span class="faq-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm transition"><i class="fa-solid fa-plus"></i></span>
+        </button>
+        <div class="faq-body"><div class="overflow-hidden"><p class="px-5 pb-5 text-slate-500">All properties here are posted by {{ brand_name }}, a verified owner on {{ site_name }}. Still, always view a property in person before paying any money.</p></div></div>
+      </div>
+      <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAFAFA]">
+        <button type="button" class="faq-btn flex w-full items-center justify-between gap-4 p-5 text-left font-bold" aria-expanded="false">
+          Are the prices negotiable, and what is included?
+          <span class="faq-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm transition"><i class="fa-solid fa-plus"></i></span>
+        </button>
+        <div class="faq-body"><div class="overflow-hidden"><p class="px-5 pb-5 text-slate-500">Prices are shown in Kenyan shillings. What is included (deposit, service charge, utilities) is on each property page &mdash; ask {{ brand_name }} if anything is unclear.</p></div></div>
+      </div>
+      <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAFAFA]">
+        <button type="button" class="faq-btn flex w-full items-center justify-between gap-4 p-5 text-left font-bold" aria-expanded="false">
+          Do I need an account to enquire?
+          <span class="faq-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm transition"><i class="fa-solid fa-plus"></i></span>
+        </button>
+        <div class="faq-body"><div class="overflow-hidden"><p class="px-5 pb-5 text-slate-500">No. You can browse and send a message without signing up. An account on {{ site_name }} lets you save properties and track your move.</p></div></div>
+      </div>
+      <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAFAFA]">
+        <button type="button" class="faq-btn flex w-full items-center justify-between gap-4 p-5 text-left font-bold" aria-expanded="false">
+          I&rsquo;m already a tenant &mdash; how do I pay rent?
+          <span class="faq-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm transition"><i class="fa-solid fa-plus"></i></span>
+        </button>
+        <div class="faq-body"><div class="overflow-hidden"><p class="px-5 pb-5 text-slate-500">Log in to your {{ site_name }} account and open your profile to see your bills. Report your payment there and {{ brand_name }} will confirm it.</p></div></div>
+      </div>
+    </div>
+
+    <div class="reveal hidden lg:col-span-3 lg:block">
+      <img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=800&q=75" alt="" loading="lazy" class="h-full max-h-[34rem] w-full rounded-[2rem] object-cover" />
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═════════ FOOTER ═════════ -->
+<footer class="relative isolate overflow-hidden bg-ink-900 pt-24 text-white">
+  <div class="watermark absolute inset-x-0 bottom-[-0.1em] -z-10 select-none overflow-hidden whitespace-nowrap text-center text-[9.5vw] text-white/[0.05]" aria-hidden="true">{{ brand_name|truncatechars:13 }}</div>
+
+  <div class="mx-auto max-w-7xl px-5 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">Discover places you&rsquo;ll never want to leave</h2>
+      <a href="#listings" class="mt-9 inline-flex items-center gap-3 rounded-full bg-brand-500 px-8 py-4 font-bold text-white shadow-xl shadow-brand-500/30 transition hover:bg-brand-600">View properties <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="mt-20 grid gap-10 border-t border-white/10 pt-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <p class="text-xl font-extrabold">{{ brand_name }}</p>
+        <p class="mt-3 text-sm leading-relaxed text-white/60">{{ owner_profile.bio|truncatewords:22|default:"Verified property listings and direct, honest communication from first message to move-in day." }}</p>
+      </div>
+      <div>
+        <p class="mb-4 text-sm font-bold uppercase tracking-widest text-white/50">Explore</p>
+        <ul class="space-y-2.5 text-sm text-white/80">
+          <li><a href="#about" class="hover:text-brand-400">About</a></li>
+          <li><a href="#featured" class="hover:text-brand-400">Featured</a></li>
+          <li><a href="#listings" class="hover:text-brand-400">All properties</a></li>
+          <li><a href="#reviews" class="hover:text-brand-400">Reviews</a></li>
+          {% if is_own_profile %}
+            <li><a href="{% url 'analytics:profile_analytics' username=owner_profile.user.username %}" class="hover:text-brand-400">Analytics</a></li>
+          {% else %}
+            <li><a href="{% url 'register' %}" class="hover:text-brand-400">Get your own profile</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div>
+        <p class="mb-4 text-sm font-bold uppercase tracking-widest text-white/50">Contact</p>
+        <ul class="space-y-2.5 text-sm text-white/80">
+          {% if owner_profile.phone_number %}<li><i class="fa-solid fa-phone mr-2 text-brand-400"></i><a href="{{ owner_profile.phone_number|tel_href }}" class="hover:text-brand-400">{{ owner_profile.phone_number }}</a></li>{% endif %}
+          {% if owner_profile.user.email %}<li><i class="fa-solid fa-envelope mr-2 text-brand-400"></i><a href="mailto:{{ owner_profile.user.email }}" class="hover:text-brand-400">{{ owner_profile.user.email }}</a></li>{% endif %}
+          {% if owner_cities %}<li><i class="fa-solid fa-location-dot mr-2 text-brand-400"></i>{{ owner_cities|first }}, Kenya</li>{% endif %}
+        </ul>
+      </div>
+      <div>
+        <p class="mb-4 text-sm font-bold uppercase tracking-widest text-white/50">Follow</p>
+        <div class="flex flex-wrap gap-3">
+          {% if owner_profile.owner_whatsapp_number %}<a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}" target="_blank" rel="noopener noreferrer" class="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-brand-500" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>{% endif %}
+          {% if owner_profile.owner_facebook_url %}<a href="{{ owner_profile.owner_facebook_url }}" target="_blank" rel="noopener noreferrer" class="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-brand-500" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>{% endif %}
+          {% if owner_profile.owner_instagram_url %}<a href="{{ owner_profile.owner_instagram_url }}" target="_blank" rel="noopener noreferrer" class="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-brand-500" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>{% endif %}
+          {% if owner_profile.owner_youtube_url %}<a href="{{ owner_profile.owner_youtube_url }}" target="_blank" rel="noopener noreferrer" class="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-brand-500" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>{% endif %}
+          {% if owner_profile.owner_tiktok_url %}<a href="{{ owner_profile.owner_tiktok_url }}" target="_blank" rel="noopener noreferrer" class="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-brand-500" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>{% endif %}
+          {% if not owner_profile.owner_whatsapp_number and not owner_profile.owner_facebook_url and not owner_profile.owner_instagram_url and not owner_profile.owner_youtube_url and not owner_profile.owner_tiktok_url %}
+            <p class="text-sm text-white/50">No social links yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 py-7 text-sm text-white/50 sm:flex-row">
+      <p>&copy; {% now "Y" %} {{ brand_name }}. All rights reserved. Powered by <a href="{{ site_url }}/" class="font-semibold text-white/80 hover:text-brand-400">{{ site_name }}</a>.</p>
+      <div class="flex gap-6">
+        <a href="{% url 'home:privacy_policy' %}" class="hover:text-white">Privacy Policy</a>
+        <a href="{% url 'home:terms_of_service' %}" class="hover:text-white">Terms of Use</a>
+      </div>
+    </div>
   </div>
 </footer>
 
-<!-- ─── FLOATING ACTIONS (WhatsApp quick-contact + back-to-top) ─── -->
 {% if owner_profile.owner_whatsapp_number %}
-<a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi {{ brand_name }}, I found your profile on 2Hame and would love to know more about your listings.{% endfilter %}"
-   target="_blank" rel="noopener noreferrer" class="pp-float-whatsapp" aria-label="Chat on WhatsApp">
-  {% brand_icon "whatsapp" class_name="pp-whatsapp-icon" %}
+<a href="https://wa.me/{{ owner_profile.owner_whatsapp_number }}?text={% filter urlencode %}Hi {{ brand_name }}, I found your profile on {{ site_name }} and would love to know more about your listings.{% endfilter %}"
+   target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp"
+   class="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-2xl text-white shadow-xl transition hover:scale-110">
+  <i class="fa-brands fa-whatsapp"></i>
 </a>
 {% endif %}
 
-<button type="button" class="pp-float-top" id="pp-back-to-top" aria-label="Back to top">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-</button>
-
-{% endblock content %}
-
-{% block extra_js %}
 <script>
-  (function () {
-    // Hero slideshow - simple fade cycle through the (already-cached, see
-    // home/portfolio.py) images passed in by the view.
-    var slides = document.querySelectorAll('[data-pp-slide]');
-    if (slides.length > 1) {
-      var current = 0;
-      setInterval(function () {
-        slides[current].classList.remove('pp-hero-slide-active');
-        current = (current + 1) % slides.length;
-        slides[current].classList.add('pp-hero-slide-active');
-      }, 5000);
-    }
-  })();
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  (function () {
-    // Rotating line under the hero's hr divider - owner's own tagline
-    // first (see Profile.owner_tagline), then a few generic phrases,
-    // cross-fading every few seconds. See the CSS comment on
-    // .pp-hero-rotating-tagline for why this stays a normal block-flow
-    // element with an explicit width rather than absolutely positioned.
-    var el = document.getElementById('pp-hero-rotating-tagline');
-    var dataEl = document.getElementById('pp-hero-taglines-data');
-    if (!el || !dataEl) return;
-    var phrases = JSON.parse(dataEl.textContent || '[]');
-    if (phrases.length < 2) return;
-    var idx = 0;
+  // Header: transparent over the hero, solid once scrolled
+  var nav = $('#nav');
+  function onScroll() {
+    var solid = window.scrollY > 40;
+    nav.classList.toggle('bg-ink-900/90', solid);
+    nav.classList.toggle('backdrop-blur-md', solid);
+    nav.classList.toggle('shadow-lg', solid);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // Mobile menu
+  var btn = $('#menu-btn'), menu = $('#mobile-menu');
+  btn.addEventListener('click', function () {
+    var open = menu.classList.toggle('hidden') === false;
+    btn.setAttribute('aria-expanded', open);
+    btn.innerHTML = open ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+  });
+  $$('a', menu).forEach(function (a) { a.addEventListener('click', function () { menu.classList.add('hidden'); btn.setAttribute('aria-expanded', false); btn.innerHTML = '<i class="fa-solid fa-bars"></i>'; }); });
+
+  // Hero slideshow
+  var slides = $$('[data-hero-slide]'), cur = 0;
+  if (slides.length > 1) {
     setInterval(function () {
-      el.style.opacity = 0;
-      setTimeout(function () {
-        idx = (idx + 1) % phrases.length;
-        el.textContent = phrases[idx];
-        el.style.opacity = 1;
-      }, 500);
-    }, 4000);
-  })();
+      slides[cur].classList.remove('is-active');
+      cur = (cur + 1) % slides.length;
+      slides[cur].classList.add('is-active');
+    }, 6000);
+  }
 
-  (function () {
-    // "What Our Partners Say" carousel - each panel is a grid of up to 3
-    // review cards (see review_groups in the view); only one panel is
-    // shown at a time, crossfading on an interval, looping forever. The
-    // track's height is synced to whichever panel is active on every
-    // show (and once up front) because the panels are stacked via
-    // position:absolute, so nothing else sizes the track automatically -
-    // and a 1-column mobile stack of 3 cards is far taller than the same
-    // cards in a 3-across desktop row.
-    var track = document.getElementById('pp-review-track');
-    var panels = document.querySelectorAll('[data-pp-review-slide]');
-    var dots = document.querySelectorAll('[data-pp-review-dot]');
-    if (!track || !panels.length) return;
-    var current = 0;
-    var timer;
-
-    function syncHeight() {
-      track.style.height = panels[current].scrollHeight + 'px';
-    }
-
-    function show(i) {
-      panels[current].classList.remove('pp-review-panel-active');
-      dots.forEach(function (d) { d.classList.remove('pp-review-dot-active'); });
-      current = i;
-      panels[current].classList.add('pp-review-panel-active');
-      if (dots[current]) dots[current].classList.add('pp-review-dot-active');
-      syncHeight();
-    }
-
-    function startAutoplay() {
-      if (panels.length < 2) return;
-      timer = setInterval(function () { show((current + 1) % panels.length); }, 6000);
-    }
-
-    dots.forEach(function (dot) {
-      dot.addEventListener('click', function () {
-        clearInterval(timer);
-        show(parseInt(dot.dataset.ppReviewDot, 10));
-        startAutoplay();
-      });
+  // Featured slider arrows
+  var track = $('#featured-track');
+  $$('[data-slide]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var card = track.firstElementChild;
+      var step = card ? card.getBoundingClientRect().width + 24 : 320;
+      track.scrollBy({ left: step * parseInt(b.getAttribute('data-slide'), 10), behavior: 'smooth' });
     });
+  });
 
-    syncHeight();
-    window.addEventListener('resize', syncHeight, { passive: true });
-    startAutoplay();
-  })();
-
-  (function () {
-    // Animated counters on the hero - count up once, when scrolled near.
-    var counters = document.querySelectorAll('[data-pp-count]');
-    if (!counters.length) return;
-    function animate(el) {
-      var target = parseInt(el.getAttribute('data-pp-count'), 10) || 0;
-      var suffix = el.getAttribute('data-pp-count-suffix') || '';
-      var start = 0;
-      var duration = 1200;
-      var startTime = null;
-      function step(ts) {
-        if (!startTime) startTime = ts;
-        var progress = Math.min((ts - startTime) / duration, 1);
-        el.textContent = Math.floor(progress * target) + suffix;
-        if (progress < 1) requestAnimationFrame(step);
-        else el.textContent = target + suffix;
-      }
-      requestAnimationFrame(step);
-    }
-    counters.forEach(function (el) { animate(el); });
-  })();
-
-  (function () {
-    // Mobile filter drawer
-    var filters = document.getElementById('pp-filters');
-    var toggle = document.getElementById('pp-filters-toggle');
-    var backdrop = document.getElementById('pp-filters-backdrop');
-    function open() {
-      filters.classList.add('pp-filters-open');
-      backdrop.classList.add('pp-filters-backdrop-visible');
-    }
-    function close() {
-      filters.classList.remove('pp-filters-open');
-      backdrop.classList.remove('pp-filters-backdrop-visible');
-    }
-    if (toggle) toggle.addEventListener('click', open);
-    if (backdrop) backdrop.addEventListener('click', close);
-  })();
-
-  (function () {
-    // Subtle fade-up reveal for section content as it scrolls into view -
-    // kept to opacity/translate only, respects prefers-reduced-motion via
-    // CSS, and reveals immediately for anyone without IntersectionObserver
-    // rather than leaving content permanently invisible.
-    var targets = document.querySelectorAll('.pp-reveal');
-    if (!('IntersectionObserver' in window)) {
-      targets.forEach(function (el) { el.classList.add('pp-revealed'); });
-      return;
-    }
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('pp-revealed');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15 });
-    targets.forEach(function (el) { observer.observe(el); });
-  })();
-
-  (function () {
-    // AJAX pagination for the listings grid - clicking a page link fetches
-    // just that page and swaps the grid + pagination in place, no full
-    // reload. Falls back to a normal navigation on any fetch failure.
-    var results = document.getElementById('pp-listings-results');
-    if (!results) return;
-
-    function markRevealed(container) {
-      container.querySelectorAll('.pp-reveal').forEach(function (el) {
-        el.classList.add('pp-revealed');
-      });
-    }
-
-    function loadPage(url, pushState) {
-      results.classList.add('pp-listings-loading');
-      fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(function (res) {
-          if (!res.ok) throw new Error('Bad response');
-          return res.text();
-        })
-        .then(function (html) {
-          var doc = new DOMParser().parseFromString(html, 'text/html');
-          var fresh = doc.getElementById('pp-listings-results');
-          if (!fresh) throw new Error('No results container in response');
-          results.innerHTML = fresh.innerHTML;
-          markRevealed(results);
-          if (pushState) window.history.pushState({ ppListingsUrl: url }, '', url);
-          var listingsSection = document.getElementById('listings');
-          if (listingsSection) listingsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        })
-        .catch(function () {
-          window.location.href = url;
-        })
-        .finally(function () {
-          results.classList.remove('pp-listings-loading');
-        });
-    }
-
-    results.addEventListener('click', function (e) {
-      var link = e.target.closest('.pp-pagination a');
-      if (!link || !results.contains(link)) return;
-      e.preventDefault();
-      loadPage(link.getAttribute('href'), true);
+  // FAQ accordion (one open at a time)
+  $$('.faq-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var item = b.closest('.faq-item'), willOpen = !item.classList.contains('is-open');
+      $$('.faq-item').forEach(function (i) { i.classList.remove('is-open'); $('.faq-btn', i).setAttribute('aria-expanded', false); });
+      if (willOpen) { item.classList.add('is-open'); b.setAttribute('aria-expanded', true); }
     });
+  });
 
-    window.addEventListener('popstate', function (e) {
-      if (e.state && e.state.ppListingsUrl) {
-        loadPage(e.state.ppListingsUrl, false);
-      }
-    });
-  })();
-  (function () {
-    // Back-to-top button: hidden until the visitor has scrolled a full
-    // viewport height, then fades in. Kept as a simple scroll listener
-    // (not IntersectionObserver) since it needs a continuously-updating
-    // scroll position, not a one-time "entered view" trigger.
-    var btn = document.getElementById('pp-back-to-top');
-    if (!btn) return;
-    function toggle() {
-      if (window.scrollY > window.innerHeight * 0.8) {
-        btn.classList.add('pp-float-top-visible');
-      } else {
-        btn.classList.remove('pp-float-top-visible');
-      }
-    }
-    window.addEventListener('scroll', toggle, { passive: true });
-    toggle();
-    btn.addEventListener('click', function () {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  })();
+  // Testimonials
+  var panels = $$('[data-rev-panel]'), dots = $$('[data-rev-dot]'), ri = 0;
+  function showRev(n) {
+    if (!panels.length) return;
+    ri = (n + panels.length) % panels.length;
+    panels.forEach(function (p, i) { p.classList.toggle('hidden', i !== ri); });
+    dots.forEach(function (d, i) { d.className = 'h-2.5 rounded-full transition-all ' + (i === ri ? 'w-8 bg-brand-500' : 'w-2.5 bg-slate-300'); });
+  }
+  $$('[data-rev]').forEach(function (b) { b.addEventListener('click', function () { showRev(ri + parseInt(b.getAttribute('data-rev'), 10)); }); });
+  dots.forEach(function (d) { d.addEventListener('click', function () { showRev(parseInt(d.getAttribute('data-rev-dot'), 10)); }); });
+  if (panels.length > 1) setInterval(function () { showRev(ri + 1); }, 8000);
+
+  // Scroll reveal
+  var els = $$('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    els.forEach(function (el) { io.observe(el); });
+  } else { els.forEach(function (el) { el.classList.add('is-in'); }); }
+})();
 </script>
-{% endblock extra_js %}
+</body>
+</html>

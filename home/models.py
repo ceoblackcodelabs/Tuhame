@@ -518,3 +518,49 @@ class ServiceReview(models.Model):
 
     def __str__(self):
         return f"{self.rating}/5 for {self.provider}"
+
+
+
+# ─── Landing-page lead capture ───
+
+class Lead(models.Model):
+    """A visitor who filled in the landing-page popup: who they are and what
+    they are looking for, so the team can follow up."""
+
+    INTEREST_CHOICES = [
+        ('rent', 'Rent a home'),
+        ('buy', 'Buy a property'),
+        ('list', 'List my property / manage rent'),
+        ('service', 'Hire a service pro (plumber, electrician…)'),
+        ('move', 'Moving services'),
+        ('other', 'Something else'),
+    ]
+    STATUS_CHOICES = [('new', 'New'), ('contacted', 'Contacted'), ('closed', 'Closed')]
+
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField(blank=True)
+    interest = models.CharField(max_length=10, choices=INTEREST_CHOICES)
+    location = models.CharField(max_length=100, blank=True, help_text="Area or city they care about")
+    budget = models.PositiveIntegerField(null=True, blank=True, help_text="Monthly budget / price, KES")
+    message = models.TextField(blank=True, max_length=500)
+    consent = models.BooleanField(default=False, help_text="Agreed to be contacted about this request")
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
+    notes = models.TextField(blank=True, help_text="Internal follow-up notes")
+
+    # Abuse tracing without storing a raw IP address.
+    ip_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    user_agent = models.CharField(max_length=255, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leads')
+    source_path = models.CharField(max_length=200, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['status', '-created_at'])]
+
+    def __str__(self):
+        return f"{self.name} – {self.get_interest_display()}"

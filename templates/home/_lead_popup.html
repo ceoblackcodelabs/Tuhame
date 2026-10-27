@@ -1,0 +1,198 @@
+{% load formguard %}
+<dialog id="lead-dialog" class="lead-dialog" aria-labelledby="lead-title">
+  <div class="lead-card">
+    <button type="button" class="lead-close" id="lead-close" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l12 12M13 1L1 13"/></svg>
+    </button>
+
+    <div class="lead-progress" id="lead-progress" aria-hidden="true"><span></span></div>
+
+    <form id="lead-form" method="post" action="{% url 'home:lead_submit' %}" novalidate>
+      {% csrf_token %}
+      {% form_guard %}
+
+      <!-- ── Step 1: what do you want? one tap, no typing ── -->
+      <section class="lead-step is-active" data-step="1">
+        <p class="lead-kicker">Welcome to {{ site_name }}</p>
+        <h2 id="lead-title" class="lead-h">What brings you here today?</h2>
+        <fieldset class="lead-options">
+          <legend class="sr-only">I want to</legend>
+          <label class="lead-opt"><input type="radio" name="interest" value="rent"><span class="lead-opt-in"><i>&#127968;</i><b>Rent a home</b><small>Apartments &amp; houses</small></span></label>
+          <label class="lead-opt"><input type="radio" name="interest" value="buy"><span class="lead-opt-in"><i>&#128273;</i><b>Buy a property</b><small>Homes &amp; land</small></span></label>
+          <label class="lead-opt"><input type="radio" name="interest" value="list"><span class="lead-opt-in"><i>&#128202;</i><b>List &amp; manage rent</b><small>For landlords</small></span></label>
+          <label class="lead-opt"><input type="radio" name="interest" value="service"><span class="lead-opt-in"><i>&#128295;</i><b>Hire a pro</b><small>Plumber, electrician&hellip;</small></span></label>
+          <label class="lead-opt"><input type="radio" name="interest" value="move"><span class="lead-opt-in"><i>&#128666;</i><b>Moving</b><small>Trucks &amp; movers</small></span></label>
+          <label class="lead-opt"><input type="radio" name="interest" value="other"><span class="lead-opt-in"><i>&#10024;</i><b>Something else</b><small>Tell us more</small></span></label>
+        </fieldset>
+        <p class="lead-error" id="lead-error-1" role="alert" hidden></p>
+        <button type="button" class="lead-link" id="lead-skip">Just browsing</button>
+      </section>
+
+      <!-- ── Step 2: who should we reply to? ── -->
+      <section class="lead-step" data-step="2" hidden>
+        <button type="button" class="lead-back" id="lead-back" aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+          <span id="lead-chosen"></span>
+        </button>
+        <h2 class="lead-h" id="lead-h2">Where should we send it?</h2>
+        <p class="lead-sub" id="lead-sub">Leave your details and we&rsquo;ll get back to you.</p>
+
+        <div class="lead-field">
+          <label for="lead-name">Your name</label>
+          <input id="lead-name" type="text" name="name" maxlength="100" autocomplete="name" placeholder="Jane Wanjiru" required
+                 value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}">
+          <small class="lead-err" data-err="name" role="alert"></small>
+        </div>
+
+        <div class="lead-field">
+          <label for="lead-phone">Phone number</label>
+          <div class="lead-phone">
+            <span class="lead-prefix" aria-hidden="true">&#127472;&#127466; +254</span>
+            <input id="lead-phone" type="tel" name="phone" maxlength="25" autocomplete="tel-national" inputmode="tel" placeholder="712 345 678" required
+                   value="{% if user.is_authenticated and user.profile.phone_number %}{{ user.profile.phone_number }}{% endif %}">
+          </div>
+          <small class="lead-err" data-err="phone" role="alert"></small>
+        </div>
+
+        <details class="lead-more" id="lead-more">
+          <summary><span class="lead-plus" aria-hidden="true">+</span> Add more details <em>(optional)</em></summary>
+          <div class="lead-more-body">
+            <div class="lead-row">
+              <div class="lead-field" id="lead-f-location"><label for="lead-location" id="lead-l-location">Area</label>
+                <input id="lead-location" type="text" name="location" maxlength="100" placeholder="e.g. Kilimani">
+                <small class="lead-err" data-err="location" role="alert"></small></div>
+              <div class="lead-field" id="lead-f-budget"><label for="lead-budget">Budget (KES)</label>
+                <input id="lead-budget" type="text" name="budget" maxlength="15" inputmode="numeric" placeholder="e.g. 45,000">
+                <small class="lead-err" data-err="budget" role="alert"></small></div>
+            </div>
+            <div class="lead-field"><label for="lead-email">Email</label>
+              <input id="lead-email" type="email" name="email" maxlength="254" autocomplete="email" placeholder="you@example.com" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}">
+              <small class="lead-err" data-err="email" role="alert"></small></div>
+            <div class="lead-field"><label for="lead-message" id="lead-l-message">Anything else?</label>
+              <textarea id="lead-message" name="message" rows="2" maxlength="500" placeholder="Bedrooms, move-in date, the job to be done…"></textarea>
+              <small class="lead-err" data-err="message" role="alert"></small></div>
+          </div>
+        </details>
+
+        <label class="lead-consent">
+          <input type="checkbox" name="consent">
+          <span>I agree to be contacted about this request. <a href="{% url 'home:privacy_policy' %}" target="_blank" rel="noopener">Privacy policy</a></span>
+        </label>
+        <small class="lead-err" data-err="consent" role="alert"></small>
+
+        <p class="lead-error" id="lead-error" role="alert" hidden></p>
+        <button type="submit" class="lead-submit" id="lead-submit"><span>Send my request</span></button>
+      </section>
+    </form>
+
+    <!-- ── Done ── -->
+    <section class="lead-step lead-success" id="lead-success" hidden aria-live="polite">
+      <svg class="lead-check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="3"/><path d="M15 27l8 8 14-16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h2 class="lead-h">You&rsquo;re all set</h2>
+      <p id="lead-success-msg"></p>
+      <button type="button" class="lead-submit" id="lead-done"><span>Continue to {{ site_name }}</span></button>
+    </section>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  var dlg = document.getElementById('lead-dialog');
+  if (!dlg || typeof dlg.showModal !== 'function') return;          // very old browsers: skip quietly
+  var $ = function (s, r) { return (r || dlg).querySelector(s); };
+  var form = $('#lead-form'), steps = dlg.querySelectorAll('.lead-step'), bar = $('#lead-progress span');
+  var submit = $('#lead-submit'), errTop = $('#lead-error'), errPick = $('#lead-error-1'), closeTimer;
+
+  var COPY = {
+    rent:    { h: 'Where should we send rental options?', sub: 'We’ll match you with homes that fit.', area: 'Area you like', budget: true,  msg: 'Anything else?', open: false },
+    buy:     { h: 'Where should we send listings?', sub: 'Share what you’re after and we’ll follow up.', area: 'Area you like', budget: true, msg: 'Anything else?', open: false },
+    list:    { h: 'Let’s get your property listed', sub: 'We’ll call to set up your listing and rent tools.', area: 'Where is it?', budget: false, msg: 'About your property', open: false },
+    service: { h: 'Which pro do you need?', sub: 'Tell us the job and we’ll connect you.', area: 'Your area', budget: false, msg: 'What needs doing?', open: true },
+    move:    { h: 'Where are you moving?', sub: 'We’ll help you find a mover.', area: 'Moving from → to', budget: false, msg: 'Anything else?', open: false },
+    other:   { h: 'How can we help?', sub: 'Leave your details and a note — we’ll reply.', area: 'Area', budget: false, msg: 'Tell us more', open: true }
+  };
+  var NAMES = { rent: 'Rent a home', buy: 'Buy a property', list: 'List & manage rent', service: 'Hire a pro', move: 'Moving', other: 'Something else' };
+
+  function go(n) {
+    steps.forEach(function (s) {
+      var on = s.getAttribute('data-step') === String(n);
+      s.hidden = !on; s.classList.toggle('is-active', on);
+    });
+    bar.style.width = (n === 1 ? 50 : 100) + '%';
+    var target = n === 1 ? $('.lead-h') : $('#lead-name');
+    if (target) setTimeout(function () { target.focus && target.focus({ preventScroll: true }); }, 60);
+  }
+  function open() { if (!dlg.open) { dlg.showModal(); go(1); } }
+  function close() { clearTimeout(closeTimer); if (dlg.open) dlg.close(); }
+  $('#lead-title').setAttribute('tabindex', '-1');
+
+  setTimeout(open, 900);                                              // shows on every load of the landing page
+  ['lead-close', 'lead-skip', 'lead-done'].forEach(function (id) { $('#' + id).addEventListener('click', close); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) close(); });
+  $('#lead-back').addEventListener('click', function () { go(1); });
+
+  // ── step 1: one tap picks and advances ──
+  dlg.querySelectorAll('input[name="interest"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      var c = COPY[r.value];
+      $('#lead-chosen').textContent = NAMES[r.value];
+      $('#lead-h2').textContent = c.h; $('#lead-sub').textContent = c.sub;
+      $('#lead-l-location').textContent = c.area; $('#lead-l-message').textContent = c.msg;
+      $('#lead-f-budget').hidden = !c.budget;
+      $('#lead-more').open = c.open;
+      errPick.hidden = true;
+      setTimeout(function () { go(2); }, 160);
+    });
+  });
+
+  // ── light client-side checks (the server re-validates everything) ──
+  function setErr(name, text) {
+    var out = $('[data-err="' + name + '"]'); if (out) out.textContent = text || '';
+    var input = form.elements[name]; if (input && input.classList) input.classList.toggle('is-bad', !!text);
+    if (text && name !== 'consent' && ['location', 'budget', 'email', 'message'].indexOf(name) > -1) $('#lead-more').open = true;
+  }
+  function checkName() { var v = form.elements.name.value.trim(); setErr('name', v.length < 2 ? 'Please enter your name.' : ''); return v.length >= 2; }
+  function checkPhone() {
+    var d = form.elements.phone.value.replace(/[\s\-().+]/g, '');
+    var ok = /^\d{9,15}$/.test(d); setErr('phone', ok ? '' : 'Enter a valid phone number, e.g. 712 345 678.'); return ok;
+  }
+  form.elements.name.addEventListener('blur', function () { if (this.value) checkName(); });
+  form.elements.phone.addEventListener('blur', function () { if (this.value) checkPhone(); });
+  form.elements.name.addEventListener('input', function () { setErr('name', ''); });
+  form.elements.phone.addEventListener('input', function () { setErr('phone', ''); });
+
+  function server(fields, general) {
+    Object.keys(fields || {}).forEach(function (k) { setErr(k, fields[k]); });
+    if (fields && fields.interest) { go(1); errPick.textContent = fields.interest; errPick.hidden = false; return; }
+    if (general) { errTop.textContent = general; errTop.hidden = false; }
+    var bad = form.querySelector('.is-bad'); if (bad) bad.focus();
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    errTop.hidden = true;
+    var picked = form.querySelector('input[name="interest"]:checked');
+    if (!picked) { go(1); errPick.textContent = 'Pick one so we know how to help.'; errPick.hidden = false; return; }
+    var a = checkName(), b = checkPhone();
+    if (!form.elements.consent.checked) { setErr('consent', 'Please tick this so we can contact you.'); } else { setErr('consent', ''); }
+    if (!(a && b && form.elements.consent.checked)) { var f = form.querySelector('.is-bad'); if (f) f.focus(); return; }
+
+    submit.disabled = true; submit.classList.add('is-busy');
+    fetch(form.action, {
+      method: 'POST', body: new FormData(form), credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    }).then(function (r) {
+      return r.json().catch(function () { return { ok: false, error: 'Something went wrong. Please try again.' }; });
+    }).then(function (data) {
+      if (data.ok) {
+        $('#lead-success-msg').textContent = data.message;
+        steps.forEach(function (s) { s.hidden = true; });
+        $('#lead-success').hidden = false; $('#lead-success').classList.add('is-active');
+        bar.style.width = '100%'; closeTimer = setTimeout(close, 7000);
+      } else { server(data.fields, data.fields ? '' : (data.error || 'Could not send. Please try again.')); }
+    }).catch(function () {
+      server(null, 'No connection — please check your internet and try again.');
+    }).finally(function () { submit.disabled = false; submit.classList.remove('is-busy'); });
+  });
+})();
+</script>

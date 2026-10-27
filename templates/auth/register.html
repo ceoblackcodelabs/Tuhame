@@ -1,4 +1,5 @@
 {% load static %}
+{% load formguard %}
 {% load icons %}
 
 <!DOCTYPE html>
@@ -213,6 +214,7 @@
 
       <form id="register-form" method="post" action="{% url 'register' %}" style="margin-top:1.25rem;">
         {% csrf_token %}
+{% form_guard %}
 
         <!-- Non-field errors -->
         {% if form.non_field_errors %}

@@ -1,5 +1,6 @@
 {% extends "home/base.html" %}
 {% load static %}
+{% load formguard %}
 {% load icons %}
 
 <!-- ─── SEO BLOCKS ─── -->
@@ -197,6 +198,7 @@
 
         <form method="post" novalidate>
           {% csrf_token %}
+{% form_guard %}
           <div class="contact-form-row">
             <div class="form-group">
               <label class="form-label" for="{{ form.name.id_for_label }}">Full Name <span style="color:#DC2626;">*</span></label>

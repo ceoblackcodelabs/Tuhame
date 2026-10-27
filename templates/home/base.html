@@ -4,6 +4,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>document.documentElement.classList.add("js")</script>
   <!-- ─── PRIMARY SEO ─── -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -135,7 +136,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" href="{% static 'assets/css/style.css' %}" as="style" />
-  <link rel="preload" href="{% static 'assets/js/main.js' %}" as="script" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
 
   <!-- ─── PERFORMANCE OPTIMIZATION ─── -->
   <meta http-equiv="x-dns-prefetch-control" content="on" />
@@ -156,8 +157,8 @@
   <nav class="navbar transparent {% block nav_class %}{% endblock nav_class %}" role="navigation" aria-label="Main navigation">
     <div class="nav-container">
       <a href="{% url 'home:home' %}" class="nav-logo" aria-label="2Hame Home - Kenya's Real Estate Platform">
-        <img src="{% static 'assets/img/logo.png' %}" alt="2Hame - Kenya's Real Estate Platform" class="nav-logo-img theme-logo-light" width="120" height="40" />
-        <img src="{% static 'assets/img/logo-dark-mode.png' %}" alt="2Hame - Kenya's Real Estate Platform" class="nav-logo-img theme-logo-dark" width="120" height="40" />
+        <img src="{% static 'assets/img/logo-nav.webp' %}" alt="2Hame - Kenya's Real Estate Platform" class="nav-logo-img theme-logo-light" width="120" height="40" decoding="async" />
+        <img src="{% static 'assets/img/logo-dark-nav.webp' %}" alt="2Hame - Kenya's Real Estate Platform" class="nav-logo-img theme-logo-dark" width="120" height="40" />
       </a>
       <ul class="nav-menu" role="menubar">
         <li role="none"><a href="{% url 'home:properties' %}" class="nav-link" role="menuitem">Homes</a></li>
@@ -214,8 +215,8 @@
   <!-- Mobile Menu -->
   <div class="mobile-menu" role="dialog" aria-label="Mobile navigation">
     <div style="display:flex;align-items:center;gap:0.6rem;font-family:var(--font-display);font-weight:800;font-size:1.2rem;color:var(--primary);padding:0.5rem 1rem 1rem;">
-      <img src="{% static 'assets/img/logo.png' %}" alt="2Hame" class="theme-logo-light" style="width:32px;height:32px;border-radius:9px;object-fit:cover;" />
-      <img src="{% static 'assets/img/logo-dark-mode.png' %}" alt="2Hame" class="theme-logo-dark" style="width:32px;height:32px;border-radius:9px;object-fit:cover;" />
+      <img src="{% static 'assets/img/logo-nav.webp' %}" alt="2Hame" class="theme-logo-light" style="width:32px;height:32px;border-radius:9px;object-fit:cover;" />
+      <img src="{% static 'assets/img/logo-dark-nav.webp' %}" alt="2Hame" class="theme-logo-dark" style="width:32px;height:32px;border-radius:9px;object-fit:cover;" />
       2Hame
     </div>
     <a href="{% url 'home:home' %}">{% icon "home" %} Home</a>
@@ -255,7 +256,7 @@
       <div class="footer-grid">
         <div>
           <div class="footer-brand-logo">
-            <img src="{% static 'assets/img/logo-dark-mode.png' %}" alt="2Hame - Kenya's Real Estate Platform" class="footer-logo-img" width="120" height="40" />
+            <img src="{% static 'assets/img/logo-dark-nav.webp' %}" alt="2Hame - Kenya's Real Estate Platform" class="footer-logo-img" width="120" height="40" />
           </div>
           <div class="footer-tagline">Find • Move • Settle</div>
           <p class="footer-desc">Kenya's smartest real estate platform. Discover properties, list your rentals, and connect with verified movers across the country.</p>

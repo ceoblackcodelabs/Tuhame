@@ -1,4 +1,5 @@
 {% extends "home/base.html" %}
+{% load formguard %}
 {% load static %}
 {% load icons %}
 {% load phone_filters %}
@@ -104,6 +105,7 @@
         {% else %}
         <form method="post" action="{% url 'home:service_request_create' provider.user.username %}" class="book-form">
           {% csrf_token %}
+{% form_guard %}
           <label>What needs doing?<textarea name="description" rows="3" required minlength="10" placeholder="e.g. Kitchen sink is leaking under the cabinet"></textarea></label>
           <label>Address<input type="text" name="address" required maxlength="255" placeholder="Estate, building, house no."></label>
           <label>Your phone<input type="tel" name="phone" required value="{{ prefill_phone }}" placeholder="07XX XXX XXX"></label>

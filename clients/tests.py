@@ -11,7 +11,17 @@ from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.core.cache import cache as _cache
+from django.test import TestCase as _DjangoTestCase, override_settings
+
+
+class TestCase(_DjangoTestCase):
+    """Rate-limit counters live in the shared cache, so start every test clean."""
+
+    def _pre_setup(self):
+        super()._pre_setup()
+        _cache.clear()
+
 from django.urls import reverse
 from django.utils import timezone
 
@@ -48,7 +58,7 @@ def make_user(username, role='hunter', verified_owner=False):
     return User.objects.get(pk=user.pk)
 
 
-@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False)
 class RentCollectionFlowTests(TestCase):
     def setUp(self):
         self.landlord = make_user('landlord', 'owner', verified_owner=True)
@@ -180,7 +190,7 @@ class RentCollectionFlowTests(TestCase):
         self.assertEqual(Bill.objects.count(), count)
 
 
-@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False)
 class UnifiedLedgerTests(TestCase):
     """Invoice payments and confirmed tenant bill payments must both count
     everywhere money-in is reported."""
@@ -258,7 +268,7 @@ class UnifiedLedgerTests(TestCase):
         self.assertEqual(Report.objects.get(generated_by=self.other).total_revenue, Decimal('0'))
 
 
-@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False)
 class RecurringBacklogTests(TestCase):
     def setUp(self):
         self.landlord = make_user('landlord', 'owner', verified_owner=True)
@@ -307,7 +317,7 @@ class RecurringBacklogTests(TestCase):
         self.assertFalse(bill.is_recurring)
 
 
-@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False)
 class InvoiceRetirementTests(TestCase):
     """Bills are the one billing system: invoices are read-only history, and
     `migrate_invoices_to_bills` moves them over without double counting."""
@@ -395,7 +405,7 @@ class InvoiceRetirementTests(TestCase):
         self.assertEqual(ledger.collected(self.landlord), before)
 
 
-@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False)
 class ServicesDirectoryTests(TestCase):
     def register(self, **extra):
         data = {
@@ -438,7 +448,7 @@ class ServicesDirectoryTests(TestCase):
         self.assertContains(self.client.get(reverse('home:home')), reverse('home:services'))
 
 
-@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False)
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False)
 class ServiceBookingFlowTests(TestCase):
     def setUp(self):
         self.provider = make_user('fundi', 'provider')
@@ -546,7 +556,7 @@ class ServiceBookingFlowTests(TestCase):
         self.assertNotIn('over-hero', self.client.get(reverse('home:properties')).content.decode().split('<nav class="navbar')[1][:60])
 
 
-@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False,
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False,
                    SITE_URL='https://example.test', SITE_NAME='BrandX')
 class SeoTests(TestCase):
     def setUp(self):
@@ -614,3 +624,314 @@ class SeoTests(TestCase):
         self.assertIn('Sitemap: https://example.test/sitemap.xml', robots)
         self.assertIn('Disallow: /services/requests/', robots)
         self.assertIn('noindex', self.html('/users/login/'))
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False, FORMGUARD_ENABLED=False, RATELIMIT_ENABLED=False,
+                   SITE_URL='https://example.test', SITE_NAME='BrandX')
+class OwnerPublicProfileTests(TestCase):
+    def setUp(self):
+        self.owner = make_user('landlord', 'owner', verified_owner=True)
+        Profile.objects.filter(user=self.owner).update(
+            owner_brand_name='Acme Homes', owner_tagline='Homes chosen with care', bio='We list verified homes.',
+            owner_whatsapp_number='254712345678', phone_number='0712345678', city='Nairobi')
+        self.p1 = make_property(self.owner, 'Garden Villa')
+        self.p2 = make_property(self.owner, 'City Studio')
+        Property.objects.filter(pk=self.p2.pk).update(city='Mombasa', price=Decimal('9000'))
+        self.url = reverse('home:owner_portfolio', args=['landlord'])
+
+    def test_new_design_renders_with_real_data(self):
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        self.assertIn('cdn.tailwindcss.com', html)           # the new Tailwind design, not the old stylesheet
+        self.assertNotIn('public-profile.css', html)
+        for needle in ('Acme Homes', 'Homes chosen with care', 'Garden Villa', 'City Studio', 'Our Story',
+                       'Got questions?', 'Testimonials', 'wa.me/254712345678'):
+            self.assertIn(needle, html)
+        self.assertIn('rel="canonical" href="https://example.test/owners/landlord/"', html)
+        self.assertIn('Example', html)                       # clearly-labelled sample reviews while none exist
+        self.assertEqual(html.count('<h1'), 1)
+
+    def test_filters_search_and_pagination_still_work(self):
+        titles = lambda q: {p.title for p in self.client.get(self.url + q).context['properties']}
+        self.assertEqual(titles('?search=villa'), {'Garden Villa'})
+        self.assertEqual(titles('?city=Mombasa'), {'City Studio'})
+        self.assertEqual(titles('?price_max=10000'), {'City Studio'})
+        self.assertEqual(titles(''), {'Garden Villa', 'City Studio'})
+        self.assertContains(self.client.get(self.url + '?search=nomatch'), 'No properties match')
+
+    def test_contact_form_posts_to_the_owner(self):
+        from home.models import ContactMessage
+        r = self.client.post(reverse('home:owner_portfolio_contact', args=['landlord']), {
+            'name': 'Visitor', 'email': 'v@example.com', 'message': 'Is the villa available?'})
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(ContactMessage.objects.get().owner, self.owner)
+        self.assertIn('class="field"', self.client.get(self.url).content.decode())
+
+    def test_reviews_show_real_ratings_and_owner_links(self):
+        from properties.models import PropertyReview
+        PropertyReview.objects.create(property=self.p1, user=self.owner_visitor(), rating=5, comment='Wonderful stay')
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('Wonderful stay', html)
+        self.assertIn('"aggregateRating"', html)
+        self.assertNotIn('>Example<', html)
+        self.assertNotIn(reverse('dashboard'), html)         # dashboard link is owner-only
+        self.client.force_login(self.owner)
+        self.assertIn(reverse('dashboard'), self.client.get(self.url).content.decode())
+
+    def owner_visitor(self):
+        return make_user('visitor')
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Security: lead popup, rate limiting, bot guard, login lockout
+# ─────────────────────────────────────────────────────────────────────────────
+import time as _time
+from unittest import mock
+
+from django.test import Client as DjangoClient
+
+from home.models import Lead
+from Tuhame import formguard
+
+
+def fresh_token(age=10):
+    """A valid guard token that looks `age` seconds old."""
+    with mock.patch('Tuhame.formguard.time.time', return_value=_time.time() - age):
+        return formguard.issue_token()
+
+
+LEAD = {'name': 'Jane Wanjiru', 'phone': '0712 345 678', 'email': 'Jane@Example.com', 'interest': 'rent',
+        'location': 'Kilimani', 'budget': 'KES 45,000', 'message': 'Two bedrooms please', 'consent': 'on'}
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False,
+                   SITE_URL='https://example.test', SITE_NAME='BrandX')
+class LeadPopupTests(TestCase):
+    url = '/lead/submit/'
+
+    def post(self, data=None, client=None, token=True, **extra):
+        c = client or self.client
+        payload = {**LEAD, **(data or {})}
+        if token:
+            payload['_fg'] = fresh_token()
+        return c.post(self.url, payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest', **extra)
+
+    def test_popup_is_on_every_load_of_the_landing_page_only(self):
+        for _ in range(3):  # "every refresh"
+            html = self.client.get('/').content.decode()
+            self.assertIn('id="lead-dialog"', html)
+            self.assertIn('showModal', html)
+            self.assertIn('name="_fg"', html)
+            self.assertIn('name="website_url"', html)
+        self.assertNotIn('lead-dialog', self.client.get('/contact/').content.decode())
+        self.assertNotIn('lead-dialog', self.client.get('/properties/listing/').content.decode()
+                         if False else self.client.get('/services/').content.decode())
+
+    def test_valid_submission_saves_a_clean_lead_and_returns_success(self):
+        r = self.post()
+        self.assertEqual(r.status_code, 200)
+        body = r.json()
+        self.assertTrue(body['ok'])
+        self.assertIn('Thank you, Jane', body['message'])
+        lead = Lead.objects.get()
+        self.assertEqual((lead.name, lead.phone, lead.email, lead.interest, lead.budget),
+                         ('Jane Wanjiru', '254712345678', 'jane@example.com', 'rent', 45000))
+        self.assertTrue(lead.consent)
+        self.assertEqual(len(lead.ip_hash), 64)               # hashed, not a raw IP address
+        self.assertNotIn('127.0.0.1', lead.ip_hash)
+
+    def test_phone_accepts_the_formats_people_actually_type(self):
+        from home.forms import normalize_ke_phone
+        for raw in ('712 345 678', '0712 345 678', '+254 712 345 678', '254712345678', '0712-345-678', '112345678'):
+            self.assertTrue(normalize_ke_phone(raw).startswith('254'), raw)
+        self.assertEqual(normalize_ke_phone('712 345 678'), '254712345678')
+        for bad in ('abc', '123', '', '07123'):
+            self.assertIsNone(normalize_ke_phone(bad), bad)
+
+    def test_popup_is_two_short_steps_with_only_name_and_phone_required(self):
+        html = self.client.get('/').content.decode()
+        dialog = html.split('id="lead-dialog"')[1].split('</dialog>')[0]
+        self.assertIn('data-step="1"', dialog)
+        self.assertIn('data-step="2"', dialog)
+        self.assertEqual(dialog.count('name="interest"'), 6)
+        self.assertIn('name="consent"', dialog)
+        # the extras live behind the optional toggle, not in the main flow
+        before_toggle = dialog.split('id="lead-more"')[0]
+        for optional in ('name="email"', 'name="location"', 'name="budget"', 'name="message"'):
+            self.assertNotIn(optional, before_toggle)
+            self.assertIn(optional, dialog)
+
+    def test_resubmitting_the_same_request_does_not_duplicate(self):
+        self.post(); self.post()
+        self.assertEqual(Lead.objects.count(), 1)
+
+    @override_settings(RATELIMIT_ENABLED=False)   # this test fires many bad submissions on purpose
+    def test_validation_rejects_bad_input_with_field_errors(self):
+        cases = {
+            'name': {'name': 'x'}, 'phone': {'phone': 'abc'}, 'email': {'email': 'not-an-email'},
+            'budget': {'budget': 'lots'}, 'interest': {'interest': 'hack'},
+            'message': {'message': 'see http://a.com and http://b.com'},
+        }
+        for field, bad in cases.items():
+            r = self.post(bad)
+            self.assertEqual(r.status_code, 400, field)
+            self.assertIn(field, r.json()['fields'])
+        payload = {k: v for k, v in LEAD.items() if k != 'consent'}
+        r = self.client.post(self.url, {**payload, '_fg': fresh_token()}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertIn('consent', r.json()['fields'])
+        self.assertEqual(Lead.objects.count(), 0)
+
+    def test_output_is_escaped_and_html_never_trusted(self):
+        self.post({'name': '<script>alert(1)</script> Eve', 'message': '<img src=x onerror=alert(1)>'})
+        lead = Lead.objects.get()
+        from django.template import Template, Context
+        rendered = Template('{{ l.name }}|{{ l.message }}').render(Context({'l': lead}))
+        self.assertNotIn('<script>', rendered)
+        self.assertNotIn('<img', rendered)
+
+    def test_csrf_is_enforced(self):
+        strict = DjangoClient(enforce_csrf_checks=True)
+        r = self.post(client=strict)
+        self.assertEqual(r.status_code, 403)
+        self.assertEqual(Lead.objects.count(), 0)
+
+    def test_get_is_not_allowed(self):
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    @override_settings(RATELIMIT_ENABLED=False)   # isolate the bot guard from the limiter
+    def test_bots_are_rejected(self):
+        # honeypot filled
+        self.assertEqual(self.post({'website_url': 'http://spam.example'}).status_code, 400)
+        # no token at all
+        self.assertEqual(self.post(token=False).status_code, 400)
+        # forged token
+        self.assertEqual(self.client.post(self.url, {**LEAD, '_fg': 'forged:token'}).status_code, 400)
+        # submitted instantly (script speed)
+        quick = self.client.post(self.url, {**LEAD, '_fg': fresh_token(age=0)}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(quick.status_code, 400)
+        # a token from long ago (page left open for a day)
+        old = self.client.post(self.url, {**LEAD, '_fg': fresh_token(age=7 * 3600)})
+        self.assertEqual(old.status_code, 400)
+        self.assertEqual(Lead.objects.count(), 0)
+
+    def test_rate_limit_blocks_the_fourth_attempt_in_ten_minutes(self):
+        for i in range(3):
+            r = self.post({'phone': f'07123456{i}0', 'interest': 'rent'})
+            self.assertEqual(r.status_code, 200, i)
+        r = self.post({'phone': '0799999999'})
+        self.assertEqual(r.status_code, 429)
+        self.assertFalse(r.json()['ok'])
+        self.assertIn('try again in', r.json()['error'])
+        self.assertTrue(int(r['Retry-After']) > 0)
+        self.assertEqual(Lead.objects.count(), 3)
+
+    def test_rate_limit_is_per_ip_and_forwarded_header_cannot_dodge_it(self):
+        for i in range(3):
+            self.post({'phone': f'07123456{i}0'})
+        # a forged X-Forwarded-For must not give a fresh allowance (proxy hops = 0)
+        r = self.post({'phone': '0788888888'}, HTTP_X_FORWARDED_FOR='9.9.9.9')
+        self.assertEqual(r.status_code, 429)
+        # a genuinely different client address is counted separately
+        other = DjangoClient(REMOTE_ADDR='10.1.2.3')
+        self.assertEqual(self.post({'phone': '0722222222'}, client=other).status_code, 200)
+
+    @override_settings(RATELIMIT_PROXY_HOPS=1)
+    def test_trusted_proxy_uses_the_right_most_forwarded_ip(self):
+        from Tuhame.ratelimit import client_ip
+        from django.test import RequestFactory
+        req = RequestFactory().get('/', HTTP_X_FORWARDED_FOR='6.6.6.6, 203.0.113.7', REMOTE_ADDR='10.0.0.1')
+        self.assertEqual(client_ip(req), '203.0.113.7')      # the hop our proxy added, not the forgeable left-most one
+
+    def test_html_form_posts_get_a_readable_429_page(self):
+        for i in range(3):
+            self.post({'phone': f'07123456{i}0'})
+        r = self.client.post(self.url, {**LEAD, '_fg': fresh_token(), 'phone': '0700000001'})
+        self.assertEqual(r.status_code, 429)
+        self.assertContains(r, 'Too many attempts', status_code=429)
+
+
+@override_settings(STORAGES=TEST_STORAGES, ALLOWED_HOSTS=['*'], SECURE_SSL_REDIRECT=False,
+                   SITE_URL='https://example.test', SITE_NAME='BrandX')
+class FormSecurityEverywhereTests(TestCase):
+    """Rate limits and the bot guard apply to the OTHER forms too, centrally."""
+
+    def setUp(self):
+        self.owner = make_user('landlord', 'owner', verified_owner=True)
+        self.user = make_user('tenant')
+
+    def test_every_public_form_page_carries_the_guard(self):
+        for url in ('/contact/', '/users/login/', '/users/register/', '/users/password-reset/',
+                    reverse('home:owner_portfolio', args=['landlord'])):
+            html = self.client.get(url).content.decode()
+            self.assertIn('name="_fg"', html, url)
+            self.assertIn('name="website_url"', html, url)
+
+    def test_contact_form_rejects_bots_and_accepts_humans(self):
+        data = {'name': 'Sam', 'email': 's@example.com', 'subject': 'general', 'message': 'Hello there team'}
+        self.assertEqual(self.client.post('/contact/', data).status_code, 400)                     # no token
+        self.assertEqual(self.client.post('/contact/', {**data, '_fg': fresh_token(), 'website_url': 'x'}).status_code, 400)
+        ok = self.client.post('/contact/', {**data, '_fg': fresh_token()})
+        self.assertEqual(ok.status_code, 302)
+
+    def test_owner_contact_is_guarded(self):
+        url = reverse('home:owner_portfolio_contact', args=['landlord'])
+        data = {'name': 'V', 'email': 'v@example.com', 'message': 'Is it free?'}
+        self.assertEqual(self.client.post(url, data).status_code, 400)
+        self.assertEqual(self.client.post(url, {**data, '_fg': fresh_token()}).status_code, 302)
+
+    def test_registration_and_password_reset_are_rate_limited(self):
+        for i in range(5):
+            self.client.post('/users/register/', {'_fg': fresh_token(), 'username': 'x'})
+        r = self.client.post('/users/register/', {'_fg': fresh_token(), 'username': 'x'})
+        self.assertEqual(r.status_code, 429)
+        for i in range(5):
+            self.client.post('/users/password-reset/', {'_fg': fresh_token(), 'email': 'a@b.com'})
+        self.assertEqual(self.client.post('/users/password-reset/', {'_fg': fresh_token(), 'email': 'a@b.com'}).status_code, 429)
+
+    def test_any_other_post_hits_the_generic_cap(self):
+        self.client.force_login(self.user)
+        codes = [self.client.post('/clients/tenants/999/remove/').status_code for _ in range(65)]
+        self.assertEqual(codes[:60].count(429), 0)
+        self.assertEqual(codes[60:], [429] * 5)
+
+    def test_per_user_limits_follow_the_account(self):
+        self.client.force_login(self.user)
+        url = '/clients/bills/1/pay/'
+        codes = [self.client.post(url, {'payment_method': 'mpesa'}).status_code for _ in range(12)]
+        self.assertEqual(codes[10:], [429, 429])
+
+    def test_payment_gateway_callback_is_never_throttled(self):
+        codes = {self.client.post('/settings/mpesa/subscription-callback/', data='{}', content_type='application/json').status_code
+                 for _ in range(80)}
+        self.assertNotIn(429, codes)
+
+    def test_login_locks_out_password_guessing_even_for_the_right_password(self):
+        user = make_user('victim')
+        for i in range(5):
+            r = self.client.post('/users/login/', {'username': 'victim', 'password': f'wrong{i}', '_fg': fresh_token()})
+            self.assertEqual(r.status_code, 200)
+        locked = self.client.post('/users/login/', {'username': 'victim', 'password': 'pass12345', '_fg': fresh_token()})
+        self.assertEqual(locked.status_code, 429)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        # a different username from the same IP is unaffected
+        make_user('bystander')
+        ok = self.client.post('/users/login/', {'username': 'bystander', 'password': 'pass12345', '_fg': fresh_token()})
+        self.assertEqual(ok.status_code, 302)
+
+    def test_login_success_clears_the_failure_count(self):
+        make_user('forgetful')
+        for i in range(3):
+            self.client.post('/users/login/', {'username': 'forgetful', 'password': 'bad', '_fg': fresh_token()})
+        good = self.client.post('/users/login/', {'username': 'forgetful', 'password': 'pass12345', '_fg': fresh_token()})
+        self.assertEqual(good.status_code, 302)
+        self.client.logout()
+        for i in range(4):  # would be locked if the earlier 3 still counted (3+4 > 5)
+            r = self.client.post('/users/login/', {'username': 'forgetful', 'password': 'bad', '_fg': fresh_token()})
+            self.assertEqual(r.status_code, 200)
+
+    def test_security_can_be_switched_off_only_by_settings(self):
+        with override_settings(RATELIMIT_ENABLED=False, FORMGUARD_ENABLED=False):
+            r = self.client.post('/contact/', {'name': 'Sam', 'email': 's@example.com', 'subject': 'general', 'message': 'Hello there team'})
+            self.assertEqual(r.status_code, 302)

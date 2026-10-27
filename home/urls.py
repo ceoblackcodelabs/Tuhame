@@ -11,6 +11,7 @@ urlpatterns = [
     path("property/map-list/", PropertyMapSearchListView.as_view(), name="property_map"),
     path('property/map-data/', PropertyMapDataView.as_view(), name='property_map_data'),
     path("contact/", ContactView.as_view(), name="contact"),
+    path("lead/submit/", LeadSubmitView.as_view(), name="lead_submit"),
     path("services/", ServicesDirectoryView.as_view(), name="services"),
     path("services/map/", ServicesMapView.as_view(), name="services_map"),
     path("api/services/map-data/", ServicesMapDataView.as_view(), name="services_map_data"),

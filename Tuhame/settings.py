@@ -75,6 +75,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'Tuhame.security_middleware.RateLimitMiddleware',
+    'Tuhame.security_middleware.FormGuardMiddleware',
     'Tuhame.dashboard_access.DashboardAccessMiddleware',
     'analytics.middleware.PageVisitMiddleware',
 ]
@@ -413,6 +415,8 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='TuHame <no-reply@tuhame.co.ke>')
+# Where new website leads are emailed (leave empty to skip the email; leads are always saved).
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='')
 # Only used when EMAIL_BACKEND is set to Tuhame.email_backends.BrevoAPIBackend
 # (sends via Brevo's HTTP API instead of SMTP - see that file for why).
 # This is a Brevo API key, not an SMTP password - those are different
@@ -463,3 +467,56 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+# ============ FORM SECURITY: RATE LIMITS + BOT GUARD ============
+# Enforced centrally by Tuhame/security_middleware.py, so EVERY form is
+# covered - a view never has to remember. (name, url regex, max requests,
+# window in seconds, who: 'ip' or 'user'). Counters live in the cache above
+# (shared across processes), so they hold across Passenger workers.
+RATELIMIT_ENABLED = config('RATELIMIT_ENABLED', default=True, cast=bool)
+# Number of trusted reverse proxies in front of the app (0 = none, use
+# REMOTE_ADDR). Only raise this if a proxy YOU control sets X-Forwarded-For.
+RATELIMIT_PROXY_HOPS = config('RATELIMIT_PROXY_HOPS', default=0, cast=int)
+RATELIMIT_DEFAULT = (60, 300)  # every other POST: 60 per 5 min per IP
+RATELIMIT_RULES = [
+    # public lead popup
+    ('lead', r'^/lead/submit/$', 3, 600, 'ip'),
+    ('lead-day', r'^/lead/submit/$', 10, 86400, 'ip'),
+    # authentication
+    ('login', r'^/users/login/$', 8, 300, 'ip'),
+    ('admin-login', r'^/admin/login/', 8, 300, 'ip'),
+    ('register', r'^/users/register/$', 5, 3600, 'ip'),
+    ('account-email', r'^/users/(password-reset|resend-verification)/', 5, 3600, 'ip'),
+    # public contact forms
+    ('contact', r'^/contact/$', 5, 3600, 'ip'),
+    ('owner-contact', r'^/owners/[^/]+/contact/$', 5, 3600, 'ip'),
+    ('newsletter', r'^/blog/subscribe/$', 5, 3600, 'ip'),
+    ('blog-comment', r'^/blog/[^/]+/comment/$', 10, 600, 'user'),
+    # logged-in actions
+    ('service-request', r'^/services/provider/[^/]+/request/$', 10, 3600, 'user'),
+    ('service-review', r'^/services/requests/\d+/review/$', 10, 3600, 'user'),
+    ('service-action', r'^/services/requests/\d+/[a-z]+/$', 60, 3600, 'user'),
+    ('property-review-or-viewing', r'^/property/listing/[^/]+/', 15, 3600, 'user'),
+    ('move-request', r'^/submit-move-request/$', 10, 3600, 'user'),
+    # money: each STK push pops a prompt on someone's phone
+    ('stk-push', r'^/settings/plans/\d+/pay/$', 5, 600, 'user'),
+    ('tenant-pay', r'^/clients/bills/\d+/pay/$', 10, 3600, 'user'),
+]
+# Server-to-server callbacks must never be throttled by client rules.
+RATELIMIT_EXEMPT = [r'^/settings/mpesa/subscription-callback/$']
+
+# Public forms that carry {% form_guard %} (honeypot + timing token).
+FORMGUARD_ENABLED = config('FORMGUARD_ENABLED', default=True, cast=bool)
+FORMGUARD_PATHS = [
+    r'^/lead/submit/$',
+    r'^/contact/$',
+    r'^/owners/[^/]+/contact/$',
+    r'^/users/register/$',
+    r'^/users/login/$',
+    r'^/users/password-reset/$',
+    r'^/services/provider/[^/]+/request/$',
+]
+
+SECURE_REFERRER_POLICY = 'same-origin'
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # the lead popup / fetch() forms read the token

@@ -362,3 +362,36 @@ class HeroSlideAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" style="height:32px;width:56px;object-fit:cover;border-radius:4px;" />', obj.image.url)
         return format_html('<span style="color:#9CA3AF;">No media set</span>')
     preview.short_description = 'Preview'
+
+
+
+from .models import Lead
+
+
+@admin.register(Lead)
+class LeadAdmin(admin.ModelAdmin):
+    list_display = ('name', 'phone', 'interest', 'location', 'budget', 'status', 'created_at')
+    list_filter = ('status', 'interest', 'created_at')
+    search_fields = ('name', 'phone', 'email', 'location', 'message')
+    list_editable = ('status',)
+    date_hierarchy = 'created_at'
+    readonly_fields = ('name', 'phone', 'email', 'interest', 'location', 'budget', 'message', 'consent',
+                       'ip_hash', 'user_agent', 'user', 'source_path', 'created_at', 'updated_at')
+    fieldsets = (
+        ('Who', {'fields': ('name', 'phone', 'email', 'user')}),
+        ('What they want', {'fields': ('interest', 'location', 'budget', 'message', 'consent')}),
+        ('Follow-up', {'fields': ('status', 'notes')}),
+        ('Technical', {'fields': ('source_path', 'ip_hash', 'user_agent', 'created_at', 'updated_at'), 'classes': ('collapse',)}),
+    )
+    actions = ['mark_contacted', 'mark_closed']
+
+    def has_add_permission(self, request):
+        return False  # leads only come from the website
+
+    @admin.action(description='Mark selected as contacted')
+    def mark_contacted(self, request, queryset):
+        self.message_user(request, f'{queryset.update(status="contacted")} lead(s) marked contacted.')
+
+    @admin.action(description='Mark selected as closed')
+    def mark_closed(self, request, queryset):
+        self.message_user(request, f'{queryset.update(status="closed")} lead(s) closed.')

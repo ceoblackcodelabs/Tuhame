@@ -4,8 +4,8 @@ from django.views.generic import TemplateView, ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from properties.models import Property, PropertyStatus, PropertyType, Amenity, PropertyReview
 from django.db import models
-from .forms import ViewingScheduleForm, ReviewForm, ContactForm, OwnerContactForm
-from .models import Partner, Testimonial, HeroSlide
+from .forms import ViewingScheduleForm, ReviewForm, ContactForm, OwnerContactForm, LeadForm
+from .models import Partner, Testimonial, HeroSlide, Lead
 from django.contrib import messages
 import json
 from django.http import JsonResponse, Http404, HttpResponseForbidden
@@ -863,7 +863,13 @@ class OwnerPortfolioView(DetailView):
         property_type = request.GET.get('property_type')
         city = request.GET.get('city')
         status = request.GET.get('status')
+        search = request.GET.get('search', '').strip()
 
+        if search:
+            properties = properties.filter(
+                Q(title__icontains=search) | Q(city__icontains=search) |
+                Q(state__icontains=search) | Q(address__icontains=search)
+            )
         if price_min:
             properties = properties.filter(price__gte=price_min)
         if price_max:
@@ -992,13 +998,13 @@ class OwnerPortfolioView(DetailView):
             Property.objects.filter(owner=owner_user, is_active=True)
             .exclude(main_image='')
             .annotate(avg_rating=Avg('reviews__rating'), rating_count=Count('reviews'))
-            .order_by('-created_at')[:3]
+            .order_by('-created_at')[:8]
         )
         if not featured_properties:
             featured_properties = list(
                 Property.objects.filter(owner=owner_user, is_active=True)
                 .annotate(avg_rating=Avg('reviews__rating'), rating_count=Count('reviews'))
-                .order_by('-created_at')[:3]
+                .order_by('-created_at')[:8]
             )
 
         # Preserve applied filters across pagination links, but not the page
@@ -1579,3 +1585,68 @@ class ServiceReviewCreateView(LoginRequiredMixin, View):
         )
         messages.success(request, 'Thanks - your review is live on their page.')
         return redirect('home:provider_detail', username=job.provider.username)
+
+
+
+class LeadSubmitView(View):
+    """Landing-page popup: a visitor leaves their details and what they want.
+    JSON in, JSON out. Throttled + bot-checked centrally by
+    Tuhame/security_middleware.py (3 per 10 min / 10 per day per IP,
+    honeypot + timing token); CSRF is enforced by Django as usual."""
+    http_method_names = ['post']
+
+    def post(self, request):
+        import hashlib
+        from django.conf import settings as dj_settings
+        from Tuhame import ratelimit
+
+        form = LeadForm(request.POST)
+        if not form.is_valid():
+            return JsonResponse({
+                'ok': False, 'error': 'Please fix the highlighted fields.',
+                'fields': {k: v[0] for k, v in form.errors.items()},
+            }, status=400)
+
+        data = form.cleaned_data
+        ip = ratelimit.client_ip(request)
+        ip_hash = hashlib.sha256(f'{dj_settings.SECRET_KEY}:{ip}'.encode()).hexdigest()
+
+        # The same person double-clicking / resubmitting is a success, not a second lead.
+        recent = timezone.now() - timezone.timedelta(minutes=10)
+        if Lead.objects.filter(phone=data['phone'], interest=data['interest'], created_at__gte=recent).exists():
+            return JsonResponse({'ok': True, 'message': _lead_success_message(data['name'])})
+
+        lead = Lead.objects.create(
+            name=data['name'], phone=data['phone'], email=data['email'], interest=data['interest'],
+            location=data['location'], budget=data['budget'], message=data['message'], consent=True,
+            ip_hash=ip_hash, user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
+            user=request.user if request.user.is_authenticated else None,
+            source_path=request.META.get('HTTP_REFERER', '')[:200],
+        )
+        _notify_new_lead(lead)
+        return JsonResponse({'ok': True, 'message': _lead_success_message(lead.name)})
+
+
+def _lead_success_message(name):
+    first = (name or '').split(' ')[0]
+    return f"Thank you, {first}! We've received your request and will get back to you shortly."
+
+
+def _notify_new_lead(lead):
+    """Best-effort email to the team; never blocks or fails the visitor."""
+    from django.conf import settings as dj_settings
+    from Tuhame.email_utils import send_mail_async
+    recipient = getattr(dj_settings, 'ADMIN_EMAIL', '') or ''
+    if not recipient:
+        return
+    clean = lambda v: ' '.join(str(v).split())[:200]
+    body = (
+        f"New lead from the website\n\n"
+        f"Name: {clean(lead.name)}\nPhone: {clean(lead.phone)}\nEmail: {clean(lead.email) or '-'}\n"
+        f"Looking for: {lead.get_interest_display()}\nArea: {clean(lead.location) or '-'}\n"
+        f"Budget: {lead.budget or '-'}\n\nMessage:\n{lead.message or '-'}\n"
+    )
+    send_mail_async(
+        f"New lead: {clean(lead.name)} - {lead.get_interest_display()}", body,
+        getattr(dj_settings, 'DEFAULT_FROM_EMAIL', None), [recipient],
+    )

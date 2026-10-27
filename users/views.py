@@ -66,6 +66,29 @@ class LoginView(FormView):
             return redirect(self.get_success_url(request.user))
         return super().dispatch(request, *args, **kwargs)
 
+    # Brute-force protection: after MAX_FAILURES bad passwords for the same
+    # username from the same IP, further attempts are refused for LOCK_SECONDS
+    # (even with the right password), so a guessing script gets nowhere.
+    MAX_FAILURES = 5
+    LOCK_SECONDS = 900
+
+    def _fail_key(self):
+        from Tuhame.ratelimit import client_ip
+        username = (self.request.POST.get('username') or '').strip().lower()[:150]
+        return f'login-fail:{client_ip(self.request)}:{username}'
+
+    def post(self, request, *args, **kwargs):
+        from Tuhame import ratelimit
+        count, wait = ratelimit.peek(self._fail_key())
+        if count >= self.MAX_FAILURES:
+            messages.error(
+                request,
+                f'Too many failed sign-in attempts. Try again in {ratelimit.human_wait(wait)}, '
+                'or reset your password.'
+            )
+            return self.render_to_response(self.get_context_data(form=self.get_form()), status=429)
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
         """Process valid form and log in user"""
         username = form.cleaned_data.get('username')
@@ -73,6 +96,8 @@ class LoginView(FormView):
         user = authenticate(self.request, username=username, password=password)
 
         if user is not None:
+            from Tuhame import ratelimit
+            ratelimit.reset(self._fail_key())
             login(self.request, user)
             messages.success(self.request, f'Welcome back, {user.get_full_name() or user.username}!')
             return redirect(self.get_success_url(user))
@@ -81,7 +106,10 @@ class LoginView(FormView):
             return self.form_invalid(form)
 
     def form_invalid(self, form):
-        """Handle invalid form submission"""
+        """Handle invalid form submission (a wrong password counts as a failure)"""
+        from Tuhame import ratelimit
+        if self.request.POST.get('username'):
+            ratelimit.hit(self._fail_key(), self.LOCK_SECONDS)
         messages.error(self.request, 'Please correct the errors below.')
         return super().form_invalid(form)
 
